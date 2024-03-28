@@ -1,0 +1,15 @@
+package indexView
+
+import (
+	"github.com/fossyy/filekeeper/view/layout"
+)
+
+templ content(title string) {
+    @layout.Base(title){
+        <h1>Hello World 🌏</h1>
+    }
+}
+
+templ Main(title string) {
+	@content(title)
+}
