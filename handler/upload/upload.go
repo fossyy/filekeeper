@@ -3,9 +3,11 @@ package uploadHandler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/types"
 	filesView "github.com/fossyy/filekeeper/view/upload"
+	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"os"
@@ -24,11 +26,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseMultipartForm(10 << 20)
 
+	fileName := r.FormValue("name")
+
 	uploadDir := "uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
 		os.Mkdir(uploadDir, os.ModePerm)
 	}
-	fileName := r.FormValue("name")
 	saveFolder := fmt.Sprintf("%s/%s/%s", uploadDir, userSession.UserID, fileName)
 
 	if r.FormValue("done") != "true" {
@@ -81,7 +84,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(r.FormValue("done"))
+
 	outFile, err := os.Create(fmt.Sprintf("%s/%s", saveFolder, fileInfo.Name))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -104,9 +107,19 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(i)
 	}
 	outFile.Close()
+	newFile := db.File{
+		ID:         uuid.New(),
+		OwnerID:    userSession.UserID,
+		Name:       fileInfo.Name,
+		Size:       fileInfo.Size,
+		Downloaded: 0,
+	}
+	err = db.DB.Create(&newFile).Error
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	w.WriteHeader(http.StatusOK)
 	return
 }

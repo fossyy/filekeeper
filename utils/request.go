@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/http"
@@ -38,6 +39,18 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func ConvertFileSize(byte int) string {
+	if byte < 1024 {
+		return fmt.Sprintf("%d B", byte)
+	} else if byte < 1024*1024 {
+		return fmt.Sprintf("%d KB", byte/1024)
+	} else if byte < 1024*1024*1024 {
+		return fmt.Sprintf("%d MB", byte/(1024*1024))
+	} else {
+		return fmt.Sprintf("%d GB", byte/(1024*1024*1024))
+	}
 }
 
 func GenerateRandomString(length int) string {

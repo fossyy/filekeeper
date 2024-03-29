@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	downloadHandler "github.com/fossyy/filekeeper/handler/download"
+	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
 	errorHandler "github.com/fossyy/filekeeper/handler/error"
 	indexHandler "github.com/fossyy/filekeeper/handler/index"
 	logoutHandler "github.com/fossyy/filekeeper/handler/logout"
@@ -79,6 +81,24 @@ func main() {
 
 	handler.HandleFunc("/upload/init", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Auth(initialisation.POST, w, r)
+	})
+
+	handler.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Auth(downloadHandler.GET, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	handler.HandleFunc("/download/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			downloadFileHandler.GET(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
 	})
 
 	handler.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {

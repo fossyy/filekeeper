@@ -10,10 +10,18 @@ import (
 var DB *gorm.DB
 
 type User struct {
-	UserID   uuid.UUID `gorm:"primaryKey;not null"`
+	UserID   uuid.UUID `gorm:"primaryKey;not null;unique"`
 	Username string    `gorm:"unique;not null"`
 	Email    string    `gorm:"unique;not null"`
 	Password string    `gorm:"not null"`
+}
+
+type File struct {
+	ID         uuid.UUID `gorm:"primaryKey;not null;unique"`
+	OwnerID    uuid.UUID `gorm:"not null"`
+	Name       string    `gorm:"not null"`
+	Size       int       `gorm:"not null"`
+	Downloaded int       `gorm:"not null;default=0"`
 }
 
 func init() {
@@ -25,4 +33,5 @@ func init() {
 		panic("failed to connect database")
 	}
 	DB.AutoMigrate(User{})
+	DB.AutoMigrate(File{})
 }

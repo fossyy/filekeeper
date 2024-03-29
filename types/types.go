@@ -1,6 +1,8 @@
 package types
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type Message struct {
 	Code    int
@@ -16,6 +18,13 @@ type User struct {
 
 type FileInfo struct {
 	Name  string `json:"name"`
-	Size  int64  `json:"size"`
+	Size  int    `json:"size"`
 	Chunk int    `json:"chunk"`
+}
+
+type FileData struct {
+	ID         string
+	Name       string
+	Size       string
+	Downloaded int
 }

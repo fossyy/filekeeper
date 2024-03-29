@@ -13,6 +13,6 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	component := userView.Main("anjay mabar", userSession.Email, userSession.Username)
+	component := userView.Main("User Page", userSession.Email, userSession.Username)
 	component.Render(r.Context(), w)
 }
