@@ -46,6 +46,12 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
 		return
 	}
+	cookie := &http.Cookie{
+		Name:  "redirect",
+		Value: r.URL.String(),
+		Path:  "/",
+	}
+	http.SetCookie(w, cookie)
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 	return
 }

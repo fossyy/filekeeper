@@ -1,6 +1,7 @@
 package signinHandler
 
 import (
+	"errors"
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/types"
@@ -43,11 +44,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			Authenticated: true,
 		}
 		err = session.Save(r, w)
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		cookie, err := r.Cookie("redirect")
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
+		http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 		return
 	}
 	component := signinView.Main("Sign in Page", types.Message{
