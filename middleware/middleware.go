@@ -7,6 +7,7 @@ import (
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/gorilla/sessions"
 	"net/http"
+	"strings"
 )
 
 var Store *sessions.CookieStore
@@ -31,8 +32,15 @@ func init() {
 
 func Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:8000")
-		writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		address := strings.Split(utils.Getenv("CORS_LIST"), ",")
+
+		for _, addr := range address {
+			if request.Host == addr {
+				writer.Header().Set("Access-Control-Allow-Origin", fmt.Sprintf("%s://%s", utils.Getenv("CORS_PROTO"), addr))
+				fmt.Println(fmt.Sprintf("%s://%s", utils.Getenv("CORS_PROTO"), addr))
+			}
+		}
+		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
 		writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		next.ServeHTTP(writer, request)
 		fmt.Printf("%s %s %s \n", utils.ClientIP(request), request.Method, request.RequestURI)

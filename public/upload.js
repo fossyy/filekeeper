@@ -23,7 +23,7 @@ async function handleFile(file){
         "chunk": chunks,
     });
 
-    fetch('http://localhost:8000/upload/init', {
+    fetch('/upload/init', {
         method: 'POST',
         body: data,
     }).then(async response => {
@@ -132,7 +132,7 @@ async function uploadChunks(name, chunks) {
         progress1.setAttribute("aria-valuenow", percentComplete);
         progress2.style.width = `${percentComplete}%`;
         progress3.innerText = `${percentComplete}%`;
-        await fetch('http://localhost:8000/upload', {
+        await fetch('/upload', {
             method: 'POST',
             body: formData
         });
@@ -142,7 +142,7 @@ async function uploadChunks(name, chunks) {
     const formData = new FormData();
     formData.append('name', name);
     formData.append('done', true);
-    return fetch('http://localhost:8000/upload', {
+    return fetch('/upload', {
         method: 'POST',
         body: formData
     });

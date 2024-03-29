@@ -2,9 +2,12 @@ package utils
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -51,6 +54,14 @@ func ConvertFileSize(byte int) string {
 	} else {
 		return fmt.Sprintf("%d GB", byte/(1024*1024*1024))
 	}
+}
+
+func Getenv(key string) string {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+	}
+	return os.Getenv(key)
 }
 
 func GenerateRandomString(length int) string {

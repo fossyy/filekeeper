@@ -14,13 +14,14 @@ import (
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	"github.com/fossyy/filekeeper/middleware"
+	"github.com/fossyy/filekeeper/utils"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
 func main() {
-	serverAddr := "localhost:8000"
 	handler := mux.NewRouter()
+	serverAddr := fmt.Sprintf("%s:%s", utils.Getenv("SERVER_HOST"), utils.Getenv("SERVER_PORT"))
 	server := http.Server{
 		Addr:    serverAddr,
 		Handler: middleware.Handler(handler),
@@ -121,5 +122,4 @@ func main() {
 	if err != nil {
 		return
 	}
-
 }
