@@ -27,15 +27,18 @@ async function handleFile(file){
         method: 'POST',
         body: data,
     }).then(async response => {
-        console.log(response.status);
-        console.log('File uploaded successfully.');
-        if (response.status !== 200) {
-            alert("file already exist")
-            return
+        const responseData = await response.json()
+        if (responseData.status === "ok") {
+            addNewUploadElement(file)
+            const fileChunks = await splitFile(file, chunkSize);
+            await uploadChunks(file.name,file.size, fileChunks);
+        } else {
+            console.log(responseData.status)
+            addNewUploadElement(file)
+            const fileChunks = await splitFile(file, chunkSize);
+            await uploadChunks(file.name,file.size, fileChunks, responseData.status);
         }
-        addNewUploadElement(file)
-        const fileChunks = await splitFile(file, chunkSize);
-        await uploadChunks(file.name,file.size, fileChunks);
+
     }).catch(error => {
         console.error('Error uploading file:', error);
     });
@@ -122,36 +125,47 @@ async function splitFile(file, chunkSize) {
     return fileChunks;
 }
 
-async function uploadChunks(name, size, chunks) {
+async function uploadChunks(name, size, chunks, uploadedChunk=0) {
     let byteUploaded = 0
+    var progress1 = document.getElementById(`progress-${name}-1`);
+    var progress2 = document.getElementById(`progress-${name}-2`);
+    var progress3 = document.getElementById(`progress-${name}-3`);
+    var progress4 = document.getElementById(`progress-${name}-4`);
     for (let index = 0; index < chunks.length; index++) {
-        const chunk = chunks[index];
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('chunk', chunk);
-        formData.append('index', index);
-        formData.append('done', false);
         const percentComplete = Math.round((index + 1) / chunks.length * 100);
-        var progress1 = document.getElementById(`progress-${name}-1`);
-        var progress2 = document.getElementById(`progress-${name}-2`);
-        var progress3 = document.getElementById(`progress-${name}-3`);
-        var progress4 = document.getElementById(`progress-${name}-4`);
-        progress1.setAttribute("aria-valuenow", percentComplete);
-        progress2.style.width = `${percentComplete}%`;
+        if (!(index <= uploadedChunk)) {
+            const chunk = chunks[index];
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('chunk', chunk);
+            formData.append('index', index);
+            formData.append('done', false);
 
-        const startTime = performance.now();
-        await fetch('/upload', {
-            method: 'POST',
-            body: formData
-        });
+            progress1.setAttribute("aria-valuenow", percentComplete);
+            progress2.style.width = `${percentComplete}%`;
 
-        const endTime = performance.now();
-        const totalTime = (endTime - startTime) / 1000;
-        const totalDataUploaded = 2 * 1024 * 1024;
-        const uploadSpeed = totalDataUploaded / totalTime / 1024 / 1024;
-        byteUploaded += totalDataUploaded
-        progress3.innerText = `${uploadSpeed.toFixed(2)} MB/s`;
-        progress4.innerText = `Uploading ${percentComplete}% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
+            const startTime = performance.now();
+            await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const endTime = performance.now();
+            const totalTime = (endTime - startTime) / 1000;
+            const totalDataUploaded = 2 * 1024 * 1024;
+            const uploadSpeed = totalDataUploaded / totalTime / 1024 / 1024;
+            byteUploaded += totalDataUploaded
+            progress3.innerText = `${uploadSpeed.toFixed(2)} MB/s`;
+            progress4.innerText = `Uploading ${percentComplete}% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
+            console.log(`${index} belum di upload ${uploadedChunk}`)
+        } else {
+            progress1.setAttribute("aria-valuenow", percentComplete);
+            progress2.style.width = `${percentComplete}%`;
+            const totalDataUploaded = 2 * 1024 * 1024;
+            byteUploaded += totalDataUploaded
+            console.log(`${index} sudah di upload`)
+        }
+
     }
 
     const formData = new FormData();

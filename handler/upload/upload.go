@@ -34,8 +34,26 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	saveFolder := fmt.Sprintf("%s/%s/%s", uploadDir, userSession.UserID, fileName)
 
-	if r.FormValue("done") != "true" {
+	open, err := os.Open(fmt.Sprintf("%s/info.json", saveFolder))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	all, err := io.ReadAll(open)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	open.Close()
+	var fileInfo types.FileInfo
+	err = json.Unmarshal(all, &fileInfo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if r.FormValue("done") != "true" {
 		chunkIndexStr := r.FormValue("index")
 		chunkIndex, err := strconv.Atoi(chunkIndexStr)
 		if err != nil {
@@ -53,7 +71,6 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		fileData, err := io.ReadAll(chunkFile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		chunkFile.Close()
@@ -62,26 +79,22 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		updatedFileInfo := types.FileInfoUploaded{
+			Name:          fileInfo.Name,
+			Size:          fileInfo.Size,
+			Chunk:         fileInfo.Chunk,
+			UploadedChunk: chunkIndex,
+		}
+		updatedJSON, err := json.Marshal(updatedFileInfo)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), updatedJSON, 0644)
+
 		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	open, err := os.Open(fmt.Sprintf("%s/info.json", saveFolder))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	all, err := io.ReadAll(open)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	open.Close()
-	var fileInfo types.FileInfo
-	err = json.Unmarshal(all, &fileInfo)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

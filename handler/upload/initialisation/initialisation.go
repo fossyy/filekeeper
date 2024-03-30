@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 func POST(w http.ResponseWriter, r *http.Request) {
@@ -46,11 +47,36 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			}
 
 			saveFolder = fmt.Sprintf("%s/%s/%s", uploadDir, userSession.UserID, fileInfo.Name)
-			os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), body, 0644)
-			w.WriteHeader(http.StatusOK)
-			return
+			w.Header().Set("Content-Type", "application/json")
+
+			if _, err := os.Stat(fmt.Sprintf("%s/info.json", saveFolder)); err == nil {
+				open, _ := os.Open(fmt.Sprintf("%s/info.json", saveFolder))
+				all, _ := io.ReadAll(open)
+				var fileInfoUploaded types.FileInfoUploaded
+				err := json.Unmarshal(all, &fileInfoUploaded)
+				if err != nil {
+					fmt.Println(err.Error())
+					return
+				}
+				data := map[string]string{
+					"status": strconv.Itoa(fileInfoUploaded.UploadedChunk),
+				}
+				json.NewEncoder(w).Encode(data)
+				return
+			} else if os.IsNotExist(err) {
+				os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), body, 0644)
+				data := map[string]string{
+					"status": "ok",
+				}
+				json.NewEncoder(w).Encode(data)
+				return
+			}
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	data := map[string]string{
+		"status": "conflict",
+	}
 	w.WriteHeader(http.StatusConflict)
+	json.NewEncoder(w).Encode(data)
 }
