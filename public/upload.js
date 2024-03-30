@@ -125,7 +125,7 @@ async function splitFile(file, chunkSize) {
     return fileChunks;
 }
 
-async function uploadChunks(name, size, chunks, uploadedChunk=0) {
+async function uploadChunks(name, size, chunks, uploadedChunk= -1) {
     let byteUploaded = 0
     var progress1 = document.getElementById(`progress-${name}-1`);
     var progress2 = document.getElementById(`progress-${name}-2`);
@@ -165,7 +165,6 @@ async function uploadChunks(name, size, chunks, uploadedChunk=0) {
             byteUploaded += totalDataUploaded
             console.log(`${index} sudah di upload`)
         }
-
     }
 
     const formData = new FormData();
