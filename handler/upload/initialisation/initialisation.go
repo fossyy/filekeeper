@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/types"
 	"gorm.io/gorm"
@@ -14,19 +15,28 @@ import (
 	"strconv"
 )
 
+var log *logger.AggregatedLogger
+
+func init() {
+	log = logger.Logger()
+}
+
 func POST(w http.ResponseWriter, r *http.Request) {
+
 	session, _ := middleware.Store.Get(r, "session")
 	userSession := middleware.GetUser(session)
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		log.Error("Failed to read request body")
 		return
 	}
 
 	var fileInfo types.FileInfo
 	if err := json.Unmarshal(body, &fileInfo); err != nil {
-		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
 		return
 	}
 
@@ -36,13 +46,19 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			uploadDir := "uploads"
 			if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-				os.Mkdir(uploadDir, os.ModePerm)
+				err := os.Mkdir(uploadDir, os.ModePerm)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					log.Error(err.Error())
+					return
+				}
 			}
 
 			saveFolder := fmt.Sprintf("%s/%s/%s/tmp", uploadDir, userSession.UserID, fileInfo.Name)
 			err = os.MkdirAll(saveFolder, os.ModePerm)
 			if err != nil {
-				fmt.Println(err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Error(err.Error())
 				return
 			}
 
@@ -55,28 +71,51 @@ func POST(w http.ResponseWriter, r *http.Request) {
 				var fileInfoUploaded types.FileInfoUploaded
 				err := json.Unmarshal(all, &fileInfoUploaded)
 				if err != nil {
-					fmt.Println(err.Error())
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					log.Error(err.Error())
 					return
 				}
 				data := map[string]string{
 					"status": strconv.Itoa(fileInfoUploaded.UploadedChunk),
 				}
-				json.NewEncoder(w).Encode(data)
+				err = json.NewEncoder(w).Encode(data)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					log.Error(err.Error())
+					return
+				}
 				return
 			} else if os.IsNotExist(err) {
-				os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), body, 0644)
+				err := os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), body, 0644)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					log.Error(err.Error())
+					return
+				}
 				data := map[string]string{
 					"status": "ok",
 				}
-				json.NewEncoder(w).Encode(data)
+				err = json.NewEncoder(w).Encode(data)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					log.Error(err.Error())
+					return
+				}
 				return
 			}
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
 	}
 	data := map[string]string{
 		"status": "conflict",
 	}
 	w.WriteHeader(http.StatusConflict)
-	json.NewEncoder(w).Encode(data)
+	err = json.NewEncoder(w).Encode(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
+	return
 }

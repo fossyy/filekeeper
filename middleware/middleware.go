@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/gob"
 	"fmt"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/gorilla/sessions"
@@ -11,6 +12,8 @@ import (
 )
 
 var Store *sessions.CookieStore
+
+var log *logger.AggregatedLogger
 
 func init() {
 	authKeyOne := []byte{230, 131, 74, 255, 62, 51, 213, 168, 242, 70, 226, 115, 188, 243, 116, 226, 49, 12, 53, 17, 122, 162, 44, 185, 83, 53, 239, 16, 238, 154, 247, 222, 114, 86, 118, 242, 172, 97, 98, 47, 53, 219, 121, 89, 73, 124, 149, 116, 37, 122, 221, 47, 117, 142, 143, 139, 225, 180, 130, 93, 48, 83, 49, 165}
@@ -26,7 +29,7 @@ func init() {
 		MaxAge:   60 * 60 * 24 * 7,
 		HttpOnly: true,
 	}
-
+	log = logger.Logger()
 	gob.Register(types.User{})
 }
 
@@ -37,13 +40,12 @@ func Handler(next http.Handler) http.Handler {
 		for _, addr := range address {
 			if request.Host == addr {
 				writer.Header().Set("Access-Control-Allow-Origin", fmt.Sprintf("%s://%s", utils.Getenv("CORS_PROTO"), addr))
-				fmt.Println(fmt.Sprintf("%s://%s", utils.Getenv("CORS_PROTO"), addr))
 			}
 		}
 		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
 		writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		next.ServeHTTP(writer, request)
-		fmt.Printf("%s %s %s \n", utils.ClientIP(request), request.Method, request.RequestURI)
+		log.Info(fmt.Sprintf("%s %s %s \n", utils.ClientIP(request), request.Method, request.RequestURI))
 	})
 }
 

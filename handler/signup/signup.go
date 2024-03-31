@@ -2,6 +2,7 @@ package signupHandler
 
 import (
 	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 	signupView "github.com/fossyy/filekeeper/view/signup"
@@ -9,18 +10,30 @@ import (
 	"net/http"
 )
 
+var log *logger.AggregatedLogger
+
+func init() {
+	log = logger.Logger()
+}
+
 func GET(w http.ResponseWriter, r *http.Request) {
 	component := signupView.Main("Sign up Page", types.Message{
 		Code:    3,
 		Message: "",
 	})
-	component.Render(r.Context(), w)
+	err := component.Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Error parsing form", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
 		return
 	}
 	email := r.Form.Get("email")
@@ -40,9 +53,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		component := signupView.Main("Sign up Page", types.Message{
 			Code:    0,
-			Message: "Username atau Email sudah terdaftar",
+			Message: "Username or Password has been registered",
 		})
-		component.Render(r.Context(), w)
+		err := component.Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
+			return
+		}
 		return
 	}
 
@@ -50,5 +68,10 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		Code:    1,
 		Message: "User creation success",
 	})
-	component.Render(r.Context(), w)
+	err = component.Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
 }

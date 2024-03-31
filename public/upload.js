@@ -133,8 +133,8 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1) {
     var progress4 = document.getElementById(`progress-${name}-4`);
     for (let index = 0; index < chunks.length; index++) {
         const percentComplete = Math.round((index + 1) / chunks.length * 100);
+        const chunk = chunks[index];
         if (!(index <= uploadedChunk)) {
-            const chunk = chunks[index];
             const formData = new FormData();
             formData.append('name', name);
             formData.append('chunk', chunk);
@@ -152,18 +152,14 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1) {
 
             const endTime = performance.now();
             const totalTime = (endTime - startTime) / 1000;
-            const totalDataUploaded = 2 * 1024 * 1024;
-            const uploadSpeed = totalDataUploaded / totalTime / 1024 / 1024;
-            byteUploaded += totalDataUploaded
+            const uploadSpeed = chunk.size / totalTime / 1024 / 1024;
+            byteUploaded += chunk.size
             progress3.innerText = `${uploadSpeed.toFixed(2)} MB/s`;
             progress4.innerText = `Uploading ${percentComplete}% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
-            console.log(`${index} belum di upload ${uploadedChunk}`)
         } else {
             progress1.setAttribute("aria-valuenow", percentComplete);
             progress2.style.width = `${percentComplete}%`;
-            const totalDataUploaded = 2 * 1024 * 1024;
-            byteUploaded += totalDataUploaded
-            console.log(`${index} sudah di upload`)
+            byteUploaded += chunk.size
         }
     }
 

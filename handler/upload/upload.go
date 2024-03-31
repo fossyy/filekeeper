@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/types"
 	filesView "github.com/fossyy/filekeeper/view/upload"
@@ -15,22 +16,43 @@ import (
 	"strconv"
 )
 
+var log *logger.AggregatedLogger
+
+func init() {
+	log = logger.Logger()
+}
+
 func GET(w http.ResponseWriter, r *http.Request) {
 	component := filesView.Main("upload page")
-	component.Render(r.Context(), w)
+	err := component.Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
 	session, _ := middleware.Store.Get(r, "session")
 	userSession := middleware.GetUser(session)
 
-	r.ParseMultipartForm(10 << 20)
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
 
 	fileName := r.FormValue("name")
 
 	uploadDir := "uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-		os.Mkdir(uploadDir, os.ModePerm)
+		err := os.Mkdir(uploadDir, os.ModePerm)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
+			return
+		}
 	}
 	saveFolder := fmt.Sprintf("%s/%s/%s", uploadDir, userSession.UserID, fileName)
 
@@ -45,11 +67,17 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	open.Close()
+	err = open.Close()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
 	var fileInfo types.FileInfo
 	err = json.Unmarshal(all, &fileInfo)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
 		return
 	}
 
@@ -58,12 +86,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		chunkIndex, err := strconv.Atoi(chunkIndexStr)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
 			return
 		}
 
 		chunkFile, _, err := r.FormFile("chunk")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
 			return
 		}
 
@@ -71,12 +101,19 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		fileData, err := io.ReadAll(chunkFile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
 			return
 		}
-		chunkFile.Close()
+		err = chunkFile.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
+			return
+		}
 
 		if err := os.WriteFile(chunkName, fileData, 0644); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
 			return
 		}
 
@@ -89,10 +126,16 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		updatedJSON, err := json.Marshal(updatedFileInfo)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
 			return
 		}
 
-		os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), updatedJSON, 0644)
+		err = os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), updatedJSON, 0644)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
+			return
+		}
 
 		w.WriteHeader(http.StatusOK)
 		return
@@ -101,6 +144,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	outFile, err := os.Create(fmt.Sprintf("%s/%s", saveFolder, fileInfo.Name))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
 		return
 	}
 
@@ -113,7 +157,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		partFile.Close()
+		err = partFile.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
+			return
+		}
 
 		err = os.Remove(fmt.Sprintf("%s/tmp/chunk_%d", saveFolder, i))
 		if err != nil {
@@ -121,7 +170,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	outFile.Close()
+	err = outFile.Close()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
 	newFile := db.File{
 		ID:         uuid.New(),
 		OwnerID:    userSession.UserID,
@@ -131,7 +185,9 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	err = db.DB.Create(&newFile).Error
 	if err != nil {
-		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	return

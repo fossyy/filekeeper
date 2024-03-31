@@ -3,6 +3,7 @@ package signinHandler
 import (
 	"errors"
 	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -10,12 +11,23 @@ import (
 	"net/http"
 )
 
+var log *logger.AggregatedLogger
+
+func init() {
+	log = logger.Logger()
+}
+
 func GET(w http.ResponseWriter, r *http.Request) {
 	component := signinView.Main("Sign in Page", types.Message{
 		Code:    3,
 		Message: "",
 	})
-	component.Render(r.Context(), w)
+	err := component.Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
@@ -23,6 +35,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusBadRequest)
+		log.Error(err.Error())
 		return
 	}
 	email := r.Form.Get("email")
@@ -34,7 +47,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			Code:    0,
 			Message: "Database error : " + err.Error(),
 		})
-		component.Render(r.Context(), w)
+		err := component.Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
+			return
+		}
 	}
 	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
 		session.Values["user"] = types.User{
@@ -54,7 +72,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	component := signinView.Main("Sign in Page", types.Message{
 		Code:    0,
-		Message: "User atau password salah",
+		Message: "Incorrect Username or Password",
 	})
-	component.Render(r.Context(), w)
+	err = component.Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
 }
