@@ -1,9 +1,11 @@
 package downloadHandler
 
 import (
+	"errors"
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
+	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 	downloadView "github.com/fossyy/filekeeper/view/download"
@@ -17,8 +19,29 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	session, err := middleware.Store.Get(r, "session")
-	userSession := middleware.GetUser(session)
+	cookie, err := r.Cookie("Session")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			return
+		}
+		log.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	storeSession, err := session.Store.Get(cookie.Value)
+	if err != nil {
+		if errors.Is(err, &session.SessionNotFound{}) {
+			http.SetCookie(w, &http.Cookie{
+				Name:   "Session",
+				Value:  "",
+				MaxAge: -1,
+			})
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	userSession := middleware.GetUser(storeSession)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())

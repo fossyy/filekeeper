@@ -2,8 +2,7 @@ package logoutHandler
 
 import (
 	"github.com/fossyy/filekeeper/logger"
-	"github.com/fossyy/filekeeper/middleware"
-	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/session"
 	"net/http"
 )
 
@@ -14,19 +13,19 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	session, err := middleware.Store.Get(r, "session")
+	cookie, err := r.Cookie("Session")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(err.Error())
 		return
 	}
-	session.Options.MaxAge = -1
-	session.Values["user"] = types.User{}
-	err = session.Save(r, w)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(err.Error())
-		return
-	}
+
+	session.Store.Delete(cookie.Value)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:   "Session",
+		Value:  "",
+		MaxAge: -1,
+	})
+	
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
+	return
 }

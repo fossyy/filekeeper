@@ -7,6 +7,7 @@ import (
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
+	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"gorm.io/gorm"
 	"io"
@@ -22,9 +23,29 @@ func init() {
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
-
-	session, _ := middleware.Store.Get(r, "session")
-	userSession := middleware.GetUser(session)
+	cookie, err := r.Cookie("Session")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			return
+		}
+		log.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	storeSession, err := session.Store.Get(cookie.Value)
+	if err != nil {
+		if errors.Is(err, &session.SessionNotFound{}) {
+			http.SetCookie(w, &http.Cookie{
+				Name:   "Session",
+				Value:  "",
+				MaxAge: -1,
+			})
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	userSession := middleware.GetUser(storeSession)
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

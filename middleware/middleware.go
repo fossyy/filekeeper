@@ -1,36 +1,20 @@
 package middleware
 
 import (
-	"encoding/gob"
+	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/logger"
+	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
-	"github.com/gorilla/sessions"
 	"net/http"
 	"strings"
 )
 
-var Store *sessions.CookieStore
-
 var log *logger.AggregatedLogger
 
 func init() {
-	authKeyOne := []byte{230, 131, 74, 255, 62, 51, 213, 168, 242, 70, 226, 115, 188, 243, 116, 226, 49, 12, 53, 17, 122, 162, 44, 185, 83, 53, 239, 16, 238, 154, 247, 222, 114, 86, 118, 242, 172, 97, 98, 47, 53, 219, 121, 89, 73, 124, 149, 116, 37, 122, 221, 47, 117, 142, 143, 139, 225, 180, 130, 93, 48, 83, 49, 165}
-	encryptionKeyOne := []byte{20, 132, 251, 14, 203, 105, 189, 187, 10, 192, 68, 1, 100, 168, 213, 75, 127, 206, 42, 151, 208, 194, 38, 15, 34, 170, 28, 28, 55, 204, 45, 76}
-
-	Store = sessions.NewCookieStore(
-		authKeyOne,
-		encryptionKeyOne,
-	)
-
-	Store.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   60 * 60 * 24 * 7,
-		HttpOnly: true,
-	}
 	log = logger.Logger()
-	gob.Register(types.User{})
 }
 
 func Handler(next http.Handler) http.Handler {
@@ -50,25 +34,76 @@ func Handler(next http.Handler) http.Handler {
 }
 
 func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
-	session, _ := Store.Get(r, "session")
-	userSession := GetUser(session)
+	cookie, err := r.Cookie("Session")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			http.SetCookie(w, &http.Cookie{
+				Name:  "redirect",
+				Value: r.URL.String(),
+				Path:  "/",
+			})
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			return
+		}
+		log.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	storeSession, err := session.Store.Get(cookie.Value)
+	if err != nil {
+		if errors.Is(err, &session.SessionNotFound{}) {
+			http.SetCookie(w, &http.Cookie{
+				Name:   "Session",
+				Value:  "",
+				MaxAge: -1,
+			})
+		}
+		log.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	userSession := GetUser(storeSession)
 	if userSession.Authenticated {
 		next.ServeHTTP(w, r)
 		return
 	}
-	cookie := &http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:  "redirect",
 		Value: r.URL.String(),
 		Path:  "/",
-	}
-	http.SetCookie(w, cookie)
+	})
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 	return
 }
 
 func Guest(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
-	session, _ := Store.Get(r, "session")
-	userSession := GetUser(session)
+	cookie, err := r.Cookie("Session")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			next.ServeHTTP(w, r)
+			return
+		}
+		log.Error(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	storeSession, err := session.Store.Get(cookie.Value)
+	if err != nil {
+		if errors.Is(err, &session.SessionNotFound{}) {
+			http.SetCookie(w, &http.Cookie{
+				Name:   "Session",
+				Value:  "",
+				MaxAge: -1,
+			})
+			next.ServeHTTP(w, r)
+			return
+		} else {
+			log.Error(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	userSession := GetUser(storeSession)
 	if !userSession.Authenticated {
 		next.ServeHTTP(w, r)
 		return
@@ -77,7 +112,7 @@ func Guest(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func GetUser(s *sessions.Session) types.User {
+func GetUser(s *session.Session) types.User {
 	val := s.Values["user"]
 	var userSession = types.User{}
 	userSession, ok := val.(types.User)

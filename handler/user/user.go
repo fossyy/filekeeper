@@ -1,8 +1,10 @@
 package userHandler
 
 import (
+	"errors"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
+	"github.com/fossyy/filekeeper/session"
 	userView "github.com/fossyy/filekeeper/view/user"
 	"net/http"
 )
@@ -14,8 +16,23 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	session, err := middleware.Store.Get(r, "session")
-	userSession := middleware.GetUser(session)
+	cookie, err := r.Cookie("Session")
+	if err != nil {
+		return
+	}
+	storeSession, err := session.Store.Get(cookie.Value)
+	if err != nil {
+		if errors.Is(err, &session.SessionNotFound{}) {
+			http.SetCookie(w, &http.Cookie{
+				Name:   "Session",
+				Value:  "",
+				MaxAge: -1,
+			})
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	userSession := middleware.GetUser(storeSession)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
