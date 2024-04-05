@@ -61,10 +61,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			Username:      userData.Username,
 			Authenticated: true,
 		}
-		http.SetCookie(w, &http.Cookie{
-			Name:  "Session",
-			Value: storeSession.ID,
-		})
+		storeSession.Save(w)
 		cookie, err := r.Cookie("redirect")
 		if errors.Is(err, http.ErrNoCookie) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)

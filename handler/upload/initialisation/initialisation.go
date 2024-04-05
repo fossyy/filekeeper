@@ -3,7 +3,6 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
@@ -13,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -36,11 +36,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	storeSession, err := session.Store.Get(cookie.Value)
 	if err != nil {
 		if errors.Is(err, &session.SessionNotFound{}) {
-			http.SetCookie(w, &http.Cookie{
-				Name:   "Session",
-				Value:  "",
-				MaxAge: -1,
-			})
+			storeSession.Destroy(w)
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -75,7 +71,16 @@ func POST(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			saveFolder := fmt.Sprintf("%s/%s/%s/tmp", uploadDir, userSession.UserID, fileInfo.Name)
+			currentDir, _ := os.Getwd()
+			basePath := filepath.Join(currentDir, uploadDir)
+			saveFolder := filepath.Join(basePath, userSession.UserID.String(), fileInfo.Name)
+
+			if filepath.Dir(saveFolder) != filepath.Join(basePath, userSession.UserID.String()) {
+				log.Error("invalid path")
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			err = os.MkdirAll(saveFolder, os.ModePerm)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -83,11 +88,17 @@ func POST(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			saveFolder = fmt.Sprintf("%s/%s/%s", uploadDir, userSession.UserID, fileInfo.Name)
+			err = os.MkdirAll(filepath.Join(saveFolder, "tmp"), os.ModePerm)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Error(err.Error())
+				return
+			}
+
 			w.Header().Set("Content-Type", "application/json")
 
-			if _, err := os.Stat(fmt.Sprintf("%s/info.json", saveFolder)); err == nil {
-				open, _ := os.Open(fmt.Sprintf("%s/info.json", saveFolder))
+			if _, err := os.Stat(filepath.Join(saveFolder, "info.json")); err == nil {
+				open, _ := os.Open(filepath.Join(saveFolder, "info.json"))
 				all, _ := io.ReadAll(open)
 				var fileInfoUploaded types.FileInfoUploaded
 				err := json.Unmarshal(all, &fileInfoUploaded)
@@ -107,7 +118,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 				}
 				return
 			} else if os.IsNotExist(err) {
-				err := os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), body, 0644)
+				err := os.WriteFile(filepath.Join(saveFolder, "info.json"), body, 0644)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					log.Error(err.Error())

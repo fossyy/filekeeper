@@ -32,6 +32,8 @@ async function handleFile(file){
             addNewUploadElement(file)
             const fileChunks = await splitFile(file, chunkSize);
             await uploadChunks(file.name,file.size, fileChunks);
+        } else if (responseData.status === "conflict") {
+            alert("file already uploaded")
         } else {
             console.log(responseData.status)
             addNewUploadElement(file)

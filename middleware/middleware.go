@@ -52,11 +52,7 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	storeSession, err := session.Store.Get(cookie.Value)
 	if err != nil {
 		if errors.Is(err, &session.SessionNotFound{}) {
-			http.SetCookie(w, &http.Cookie{
-				Name:   "Session",
-				Value:  "",
-				MaxAge: -1,
-			})
+			storeSession.Destroy(w)
 		}
 		log.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)

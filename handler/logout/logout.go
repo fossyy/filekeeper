@@ -3,6 +3,7 @@ package logoutHandler
 import (
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
+	"github.com/fossyy/filekeeper/utils"
 	"net/http"
 )
 
@@ -21,11 +22,11 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	session.Store.Delete(cookie.Value)
 
 	http.SetCookie(w, &http.Cookie{
-		Name:   "Session",
+		Name:   utils.Getenv("SESSION_NAME"),
 		Value:  "",
 		MaxAge: -1,
 	})
-	
+
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 	return
 }

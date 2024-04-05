@@ -48,11 +48,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	storeSession, err := session.Store.Get(cookie.Value)
 	if err != nil {
 		if errors.Is(err, &session.SessionNotFound{}) {
-			http.SetCookie(w, &http.Cookie{
-				Name:   "Session",
-				Value:  "",
-				MaxAge: -1,
-			})
+			storeSession.Destroy(w)
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -77,9 +73,18 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	saveFolder := fmt.Sprintf("%s/%s/%s", uploadDir, userSession.UserID, fileName)
 
-	open, err := os.Open(fmt.Sprintf("%s/info.json", saveFolder))
+	currentDir, _ := os.Getwd()
+	basePath := filepath.Join(currentDir, uploadDir)
+	saveFolder := filepath.Join(basePath, userSession.UserID.String(), fileName)
+
+	if filepath.Dir(saveFolder) != filepath.Join(basePath, userSession.UserID.String()) {
+		log.Error("invalid path")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	open, err := os.Open(filepath.Join(saveFolder, "info.json"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -153,7 +158,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = os.WriteFile(fmt.Sprintf("%s/info.json", saveFolder), updatedJSON, 0644)
+		err = os.WriteFile(filepath.Join(saveFolder, "info.json"), updatedJSON, 0644)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Error(err.Error())
@@ -164,7 +169,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	outFile, err := os.Create(fmt.Sprintf("%s/%s", saveFolder, fileInfo.Name))
+	outFile, err := os.Create(filepath.Join(saveFolder, fileInfo.Name))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
@@ -172,7 +177,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i := 0; i <= fileInfo.Chunk-1; i += 1 {
-		partFile, err := os.Open(fmt.Sprintf("%s/tmp/chunk_%d", saveFolder, i))
+		partFile, err := os.Open(filepath.Join(saveFolder, "tmp", fmt.Sprintf("chunk_%d", i)))
 		if err != nil {
 			panic(err)
 		}
@@ -187,7 +192,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = os.Remove(fmt.Sprintf("%s/tmp/chunk_%d", saveFolder, i))
+		err = os.Remove(filepath.Join(saveFolder, "tmp", fmt.Sprintf("chunk_%d", i)))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

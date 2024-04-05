@@ -2,6 +2,8 @@ package session
 
 import (
 	"github.com/fossyy/filekeeper/utils"
+	"net/http"
+	"strconv"
 	"sync"
 )
 
@@ -46,4 +48,21 @@ func (s *StoreSession) Delete(id string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.Sessions, id)
+}
+
+func (s *Session) Save(w http.ResponseWriter) {
+	maxAge, _ := strconv.Atoi(utils.Getenv("SESSION_MAX_AGE"))
+	http.SetCookie(w, &http.Cookie{
+		Name:   utils.Getenv("SESSION_NAME"),
+		Value:  s.ID,
+		MaxAge: maxAge,
+	})
+}
+
+func (s *Session) Destroy(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:   utils.Getenv("SESSION_NAME"),
+		Value:  "",
+		MaxAge: -1,
+	})
 }
