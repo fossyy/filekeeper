@@ -74,3 +74,13 @@ func GenerateRandomString(length int) string {
 	}
 	return result.String()
 }
+
+func SanitizeFilename(filename string) string {
+	invalidChars := []string{"\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
+
+	for _, char := range invalidChars {
+		filename = strings.ReplaceAll(filename, char, "_")
+	}
+
+	return filename
+}

@@ -9,6 +9,7 @@ import (
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/utils"
 	filesView "github.com/fossyy/filekeeper/view/upload"
 	"github.com/google/uuid"
 	"io"
@@ -63,6 +64,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileName := r.FormValue("name")
+	fileName = utils.SanitizeFilename(fileName)
 
 	uploadDir := "uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
@@ -151,6 +153,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			Chunk:         fileInfo.Chunk,
 			UploadedChunk: chunkIndex,
 		}
+
 		updatedJSON, err := json.Marshal(updatedFileInfo)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -198,12 +201,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
 	err = outFile.Close()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
+
 	newFile := db.File{
 		ID:         uuid.New(),
 		OwnerID:    userSession.UserID,
@@ -211,12 +216,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		Size:       fileInfo.Size,
 		Downloaded: 0,
 	}
+
 	err = db.DB.Create(&newFile).Error
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 	return
 }
