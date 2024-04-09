@@ -2,15 +2,28 @@ package utils
 
 import (
 	"fmt"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
+
+type Env struct {
+	value map[string]string
+	mu    sync.Mutex
+}
+
+var env *Env
+var log *logger.AggregatedLogger
+
+func init() {
+	env = &Env{value: map[string]string{}}
+}
 
 func ClientIP(request *http.Request) string {
 	ip := request.Header.Get("X-Real-IP")
@@ -57,11 +70,22 @@ func ConvertFileSize(byte int) string {
 }
 
 func Getenv(key string) string {
+	env.mu.Lock()
+	defer env.mu.Unlock()
+
+	if val, ok := env.value[key]; ok {
+		return val
+	}
+
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatalf("Error loading .env file: %s", err)
+		log.Error("Error loading .env file: %s", err)
 	}
-	return os.Getenv(key)
+
+	val := os.Getenv(key)
+	env.value[key] = val
+
+	return val
 }
 
 func GenerateRandomString(length int) string {

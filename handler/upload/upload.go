@@ -9,6 +9,7 @@ import (
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
 	filesView "github.com/fossyy/filekeeper/view/upload"
 	"github.com/google/uuid"
@@ -209,7 +210,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newFile := db.File{
+	newFile := models.File{
 		ID:         uuid.New(),
 		OwnerID:    userSession.UserID,
 		Name:       fileInfo.Name,

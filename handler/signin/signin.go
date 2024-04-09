@@ -2,7 +2,7 @@ package signinHandler
 
 import (
 	"errors"
-	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/db/model/user"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
@@ -39,26 +39,27 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
-	var userData db.User
-
-	if err := db.DB.Table("users").Where("email = ?", email).First(&userData).Error; err != nil {
+	user, err := user.Get(email)
+	if err != nil {
 		component := signinView.Main("Sign in Page", types.Message{
 			Code:    0,
 			Message: "Database error : " + err.Error(),
 		})
-		err := component.Render(r.Context(), w)
+		err = component.Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Error(err.Error())
 			return
 		}
+		return
 	}
-	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
+
+	if email == user.Email && utils.CheckPasswordHash(password, user.Password) {
 		storeSession := session.Store.Create()
 		storeSession.Values["user"] = types.User{
-			UserID:        userData.UserID,
+			UserID:        user.UserID,
 			Email:         email,
-			Username:      userData.Username,
+			Username:      user.Username,
 			Authenticated: true,
 		}
 		storeSession.Save(w)

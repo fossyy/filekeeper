@@ -7,6 +7,7 @@ import (
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
 	downloadView "github.com/fossyy/filekeeper/view/download"
 	"net/http"
@@ -44,7 +45,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var files []db.File
+	var files []models.File
 	db.DB.Table("files").Where("owner_id = ?", userSession.UserID).Find(&files)
 	var filesData []types.FileData
 	for i := 0; i < len(files); i++ {

@@ -8,6 +8,7 @@ import (
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/types/models"
 	"gorm.io/gorm"
 	"io"
 	"net/http"
@@ -57,7 +58,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var currentInfo db.File
+	var currentInfo models.File
 	err = db.DB.Table("files").Where("name = ? AND owner_id = ?", fileInfo.Name, userSession.UserID).First(&currentInfo).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

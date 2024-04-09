@@ -4,6 +4,7 @@ import (
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
 	signupView "github.com/fossyy/filekeeper/view/signup"
 	"github.com/google/uuid"
@@ -41,7 +42,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	hashedPassword, err := utils.HashPassword(password)
 
-	newUser := db.User{
+	newUser := models.User{
 		UserID:   uuid.New(),
 		Username: username,
 		Email:    email,
