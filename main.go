@@ -27,7 +27,7 @@ func main() {
 
 	handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case http.MethodPost:
+		case http.MethodGet:
 			indexHandler.GET(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
