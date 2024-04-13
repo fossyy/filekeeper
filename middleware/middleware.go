@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	errorHandler "github.com/fossyy/filekeeper/handler/error"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
@@ -17,6 +18,23 @@ func init() {
 	log = logger.Logger()
 }
 
+type wrapper struct {
+	http.ResponseWriter
+	request    *http.Request
+	statusCode int
+}
+
+func (w *wrapper) WriteHeader(code int) {
+	if code == http.StatusNotFound {
+		w.Header().Set("Content-Type", "text/html")
+		errorHandler.ALL(w.ResponseWriter, w.request)
+		return
+	}
+	w.ResponseWriter.WriteHeader(code)
+	w.statusCode = code
+	return
+}
+
 func Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		address := strings.Split(utils.Getenv("CORS_LIST"), ",")
@@ -26,10 +44,16 @@ func Handler(next http.Handler) http.Handler {
 				writer.Header().Set("Access-Control-Allow-Origin", fmt.Sprintf("%s://%s", utils.Getenv("CORS_PROTO"), addr))
 			}
 		}
+
+		wrappedWriter := &wrapper{
+			ResponseWriter: writer,
+			request:        request,
+		}
+
 		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
 		writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		next.ServeHTTP(writer, request)
-		log.Info(fmt.Sprintf("%s %s %s \n", utils.ClientIP(request), request.Method, request.RequestURI))
+		next.ServeHTTP(wrappedWriter, request)
+		log.Info(fmt.Sprintf("%s %s %s %v \n", utils.ClientIP(request), request.Method, request.RequestURI, wrappedWriter.statusCode))
 	})
 }
 

@@ -5,7 +5,6 @@ import (
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types/models"
-	"github.com/gorilla/mux"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,10 +17,10 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	fileID := mux.Vars(r)
+	fileID := r.PathValue("id")
 
 	var file models.File
-	err := db.DB.Table("files").Where("id = ?", fileID["id"]).First(&file).Error
+	err := db.DB.Table("files").Where("id = ?", fileID).First(&file).Error
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())

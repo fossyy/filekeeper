@@ -4,7 +4,6 @@ import (
 	"fmt"
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
-	errorHandler "github.com/fossyy/filekeeper/handler/error"
 	indexHandler "github.com/fossyy/filekeeper/handler/index"
 	logoutHandler "github.com/fossyy/filekeeper/handler/logout"
 	miscHandler "github.com/fossyy/filekeeper/handler/misc"
@@ -15,12 +14,11 @@ import (
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/utils"
-	"github.com/gorilla/mux"
 	"net/http"
 )
 
 func main() {
-	handler := mux.NewRouter()
+	handler := http.NewServeMux()
 	serverAddr := fmt.Sprintf("%s:%s", utils.Getenv("SERVER_HOST"), utils.Getenv("SERVER_PORT"))
 	server := http.Server{
 		Addr:    serverAddr,
@@ -29,7 +27,7 @@ func main() {
 
 	handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case http.MethodGet:
+		case http.MethodPost:
 			indexHandler.GET(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -79,7 +77,12 @@ func main() {
 	})
 
 	handler.HandleFunc("/upload/init", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(initialisation.POST, w, r)
+		switch r.Method {
+		case http.MethodPost:
+			middleware.Auth(initialisation.POST, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
 	})
 
 	handler.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
@@ -109,13 +112,12 @@ func main() {
 	})
 
 	handler.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		miscHandler.Favicon(w, r)
+
+		http.Redirect(w, r, "/public/favicon.ico", http.StatusSeeOther)
 	})
 
-	handler.NotFoundHandler = http.HandlerFunc(errorHandler.ALL)
-
 	fileServer := http.FileServer(http.Dir("./public"))
-	handler.PathPrefix("/public/").Handler(http.StripPrefix("/public/", fileServer))
+	handler.Handle("/public/", http.StripPrefix("/public", fileServer))
 
 	fmt.Printf("Listening on http://%s\n", serverAddr)
 	err := server.ListenAndServe()
