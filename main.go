@@ -26,11 +26,16 @@ func main() {
 	}
 
 	handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			indexHandler.GET(w, r)
+		switch r.RequestURI {
+		case "/":
+			switch r.Method {
+			case http.MethodGet:
+				indexHandler.GET(w, r)
+			default:
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
 		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			w.WriteHeader(http.StatusNotFound)
 		}
 	})
 
@@ -40,8 +45,6 @@ func main() {
 			middleware.Guest(signinHandler.GET, w, r)
 		case http.MethodPost:
 			middleware.Guest(signinHandler.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
@@ -65,7 +68,11 @@ func main() {
 		}
 	})
 
-	handler.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
+	// Upload router
+	uploadRouter := http.NewServeMux()
+	handler.Handle("/upload/", http.StripPrefix("/upload", uploadRouter))
+
+	uploadRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			middleware.Auth(uploadHandler.GET, w, r)
@@ -76,7 +83,7 @@ func main() {
 		}
 	})
 
-	handler.HandleFunc("/upload/init", func(w http.ResponseWriter, r *http.Request) {
+	uploadRouter.HandleFunc("/init", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			middleware.Auth(initialisation.POST, w, r)
@@ -85,7 +92,10 @@ func main() {
 		}
 	})
 
-	handler.HandleFunc("/download", func(w http.ResponseWriter, r *http.Request) {
+	// Download router
+	downloadRouter := http.NewServeMux()
+	handler.Handle("/download/", http.StripPrefix("/download", downloadRouter))
+	downloadRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			middleware.Auth(downloadHandler.GET, w, r)
@@ -94,7 +104,7 @@ func main() {
 		}
 	})
 
-	handler.HandleFunc("/download/{id}", func(w http.ResponseWriter, r *http.Request) {
+	downloadRouter.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			downloadFileHandler.GET(w, r)
@@ -112,7 +122,6 @@ func main() {
 	})
 
 	handler.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-
 		http.Redirect(w, r, "/public/favicon.ico", http.StatusSeeOther)
 	})
 

@@ -68,6 +68,10 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
+		http.SetCookie(w, &http.Cookie{
+			Name:   "redirect",
+			MaxAge: -1,
+		})
 		http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 		return
 	}

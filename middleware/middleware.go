@@ -48,6 +48,7 @@ func Handler(next http.Handler) http.Handler {
 		wrappedWriter := &wrapper{
 			ResponseWriter: writer,
 			request:        request,
+			statusCode:     http.StatusOK,
 		}
 
 		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
@@ -63,7 +64,7 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, http.ErrNoCookie) {
 			http.SetCookie(w, &http.Cookie{
 				Name:  "redirect",
-				Value: r.URL.String(),
+				Value: r.RequestURI,
 				Path:  "/",
 			})
 			http.Redirect(w, r, "/signin", http.StatusSeeOther)
@@ -77,6 +78,8 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, &session.SessionNotFound{}) {
 			storeSession.Destroy(w)
+			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			return
 		}
 		log.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -89,7 +92,7 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:  "redirect",
-		Value: r.URL.String(),
+		Value: r.RequestURI,
 		Path:  "/",
 	})
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
