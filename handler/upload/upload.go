@@ -2,21 +2,22 @@ package uploadHandler
 
 import (
 	"errors"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-
+	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
 	filesView "github.com/fossyy/filekeeper/view/upload"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"sync"
 )
 
 var log *logger.AggregatedLogger
+var mu sync.Mutex
 
 func init() {
 	log = logger.Logger()
@@ -31,6 +32,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
+	fileID := r.PathValue("id")
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		handleError(w, err, http.StatusInternalServerError)
 		return
@@ -54,11 +56,9 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	userSession := middleware.GetUser(storeSession)
 
 	if r.FormValue("done") == "true" {
-		fmt.Println("done")
+		finalizeFileUpload(fileID)
 		return
 	}
-
-	uploadID := r.FormValue("uploadID")
 
 	uploadDir := "uploads"
 	if err := createUploadDirectory(uploadDir); err != nil {
@@ -66,7 +66,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, err := initialisation.GetUploadInfo(uploadID)
+	file, err := initialisation.GetUploadInfo(fileID)
 	if err != nil {
 		log.Error("error getting upload info: " + err.Error())
 		return
@@ -95,16 +95,22 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer dst.Close()
-
 	if _, err := io.Copy(dst, fileByte); err != nil {
 		handleError(w, err, http.StatusInternalServerError)
 		return
 	}
-
-	if err := updateIndex(r, uploadID); err != nil {
-		handleError(w, err, http.StatusInternalServerError)
+	rawIndex := r.FormValue("index")
+	index, err := strconv.Atoi(rawIndex)
+	if err != nil {
 		return
 	}
+	updateIndex(index, fileID)
+}
+
+func finalizeFileUpload(fileID string) {
+	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
+		"Done": true,
+	})
 }
 
 func createUploadDirectory(uploadDir string) error {
@@ -116,14 +122,10 @@ func createUploadDirectory(uploadDir string) error {
 	return nil
 }
 
-func updateIndex(r *http.Request, uploadID string) error {
-	rawIndex := r.FormValue("index")
-	index, err := strconv.Atoi(rawIndex)
-	if err != nil {
-		return err
-	}
-	initialisation.UpdateIndex(uploadID, index)
-	return nil
+func updateIndex(index int, fileID string) {
+	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
+		"Uploaded": index,
+	})
 }
 
 func handleCookieError(w http.ResponseWriter, r *http.Request, err error) {

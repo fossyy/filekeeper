@@ -32,7 +32,7 @@ async function handleFile(file){
         if (responseData.Done === false) {
             addNewUploadElement(file)
             const fileChunks = await splitFile(file, chunkSize);
-            await uploadChunks(file.name,file.size, fileChunks, responseData.Uploaded, responseData.UploadID);
+            await uploadChunks(file.name,file.size, fileChunks, responseData.Uploaded, responseData.FileID);
         } else {
             alert("file already uploaded")
         }
@@ -123,7 +123,7 @@ async function splitFile(file, chunkSize) {
     return fileChunks;
 }
 
-async function uploadChunks(name, size, chunks, uploadedChunk= -1, uploadID) {
+async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
     let byteUploaded = 0
     var progress1 = document.getElementById(`progress-${name}-1`);
     var progress2 = document.getElementById(`progress-${name}-2`);
@@ -137,14 +137,13 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1, uploadID) {
             formData.append('name', name);
             formData.append('chunk', chunk);
             formData.append('index', index);
-            formData.append('uploadID', uploadID);
             formData.append('done', false);
 
             progress1.setAttribute("aria-valuenow", percentComplete);
             progress2.style.width = `${percentComplete}%`;
 
             const startTime = performance.now();
-            await fetch('/upload/', {
+            await fetch(`/upload/${FileID}`, {
                 method: 'POST',
                 body: formData
             });
@@ -165,7 +164,7 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1, uploadID) {
     const formData = new FormData();
     formData.append('name', name);
     formData.append('done', true);
-    return fetch('/upload/', {
+    return fetch(`/upload/${FileID}`, {
         method: 'POST',
         body: formData
     });

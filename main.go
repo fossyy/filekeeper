@@ -76,6 +76,13 @@ func main() {
 		switch r.Method {
 		case http.MethodGet:
 			middleware.Auth(uploadHandler.GET, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	uploadRouter.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
 		case http.MethodPost:
 			middleware.Auth(uploadHandler.POST, w, r)
 		default:

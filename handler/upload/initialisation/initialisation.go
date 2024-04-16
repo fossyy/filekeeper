@@ -3,12 +3,6 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"sync"
-
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
@@ -17,16 +11,13 @@ import (
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
 )
 
 var log *logger.AggregatedLogger
-
-type Cache struct {
-	file map[string]*models.FilesUploaded
-	mu   sync.Mutex
-}
-
-var UploadCache = Cache{file: make(map[string]*models.FilesUploaded)}
 
 func init() {
 	log = logger.Logger()
@@ -76,7 +67,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := GetUploadInfoByFile(fileData.ID.String())
+	info, err := GetUploadInfo(fileData.ID.String())
 	if err != nil {
 		log.Error(err.Error())
 		return
@@ -156,31 +147,13 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded
 	return filesUploaded, nil
 }
 
-func GetUploadInfo(uploadID string) (*models.FilesUploaded, error) {
-	if data, ok := UploadCache.file[uploadID]; ok {
-		return data, nil
-	}
-
+func GetUploadInfo(fileID string) (*models.FilesUploaded, error) {
 	var data *models.FilesUploaded
-	err := db.DB.Table("files_uploadeds").Where("upload_id = ?", uploadID).First(&data).Error
+	err := db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).First(&data).Error
 	if err != nil {
 		return data, err
 	}
-	UploadCache.file[uploadID] = data
 	return data, nil
-}
-
-func GetUploadInfoByFile(fileID string) (*models.FilesUploaded, error) {
-	var uploadID string
-	err := db.DB.Table("files_uploadeds").Select("upload_id").Where("file_id = ?", fileID).Scan(&uploadID).Error
-	if err != nil {
-		return &models.FilesUploaded{}, err
-	}
-	return GetUploadInfo(uploadID)
-}
-
-func UpdateIndex(uploadID string, index int) {
-	UploadCache.file[uploadID].Uploaded = index
 }
 
 func respondJSON(w http.ResponseWriter, data interface{}) {
