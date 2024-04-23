@@ -8,6 +8,7 @@ import (
 	miscHandler "github.com/fossyy/filekeeper/handler/misc"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
+	signupVerifyHandler "github.com/fossyy/filekeeper/handler/signup/verify"
 	uploadHandler "github.com/fossyy/filekeeper/handler/upload"
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
@@ -41,7 +42,10 @@ func SetupRoutes() *http.ServeMux {
 		}
 	})
 
-	handler.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
+	signupRouter := http.NewServeMux()
+	handler.Handle("/signup", http.StripPrefix("/signup", signupRouter))
+
+	signupRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			middleware.Guest(signupHandler.GET, w, r)
@@ -50,6 +54,10 @@ func SetupRoutes() *http.ServeMux {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
+	})
+
+	signupRouter.HandleFunc("/verify/{id}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(signupVerifyHandler.GET, w, r)
 	})
 
 	handler.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
