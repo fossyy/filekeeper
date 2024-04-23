@@ -34,13 +34,13 @@ func form(err types.Message, title string) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"dark flex items-center min-h-screen p-4 sm:p-6 bg-gray-900\"><div class=\"mx-auto w-full max-w-md space-y-8\"><header class=\"text-center\"><div class=\"space-y-2\"><h1 class=\"text-3xl font-bold text-white\">Sign Up</h1><p class=\"text-gray-500 dark:text-gray-400\">Enter your email below to login to your account</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			switch err.Code {
 			case 0:
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400\" role=\"alert\"><span class=\"font-medium\">Danger alert!</span> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -53,12 +53,12 @@ func form(err types.Message, title string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			case 1:
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400\" role=\"alert\"><span class=\"font-medium\">Success alert!</span> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -71,12 +71,12 @@ func form(err types.Message, title string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 5)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 6)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></header><form class=\"space-y-4\" method=\"post\" action=\"\"><div class=\"space-y-2\"><label class=\"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white\" for=\"email\">Email</label> <input type=\"email\" class=\"flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white\" id=\"email\" name=\"email\" placeholder=\"m@example.com\" required=\"\"></div><div class=\"space-y-2\"><div class=\"flex items-center\"><label class=\"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white\" for=\"password\">Username</label></div><input type=\"text\" class=\"flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white\" id=\"username\" name=\"username\" required=\"\"></div><div class=\"space-y-2\"><div class=\"flex items-center\"><label class=\"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white\" for=\"password\">Password</label></div><input type=\"password\" class=\"flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white\" id=\"password\" name=\"password\" required=\"\"></div><button class=\"bg-slate-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full\" type=\"submit\">Sign up\r</button></form><div class=\"text-center text-sm text-white\">Already have an account?\r <a class=\"underline\" href=\"/signin\" rel=\"ugc\">Sign in\r</a></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -139,7 +139,7 @@ func EmailSend(title string) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 7)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<style>h1, h2, h3, h4, h5, h6 { font-family: 'Cormorant Garamond', serif; --font-serif: 'Cormorant Garamond'; }\r\n        </style> <style>body { font-family: 'Cormorant Garamond', serif; --font-serif: 'Cormorant Garamond'; }\r\n        </style> <div class=\"flex flex-col items-center justify-center min-h-[100dvh] bg-gray-100 dark:bg-gray-950 p-4 md:p-6\"><div class=\"max-w-md w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 space-y-4\"><div class=\"text-center\"><h1 class=\"text-2xl font-bold\">Verification Email Sent</h1><p class=\"text-gray-500 dark:text-gray-400 mt-2\">We've sent a verification email to your registered email address. Please check your inbox and follow the\r instructions to complete your account setup.\r</p></div><button class=\"inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full\">Close\r</button></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -178,7 +178,7 @@ func VerifySuccess(title string) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 8)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<style>h1, h2, h3, h4, h5, h6 { font-family: 'Arimo', sans-serif; --font-sans: 'Arimo'; }</style> <style>body { font-family: 'Libre Franklin', sans-serif; --font-sans: 'Libre Franklin'; }</style> <div class=\"flex flex-col items-center justify-center min-h-[80vh] gap-6\"><div class=\"bg-green-500 text-white rounded-full p-4\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"h-8 w-8\"><polyline points=\"20 6 9 17 4 12\"></polyline></svg></div><div class=\"space-y-2 text-center\"><h1 class=\"text-3xl font-bold\">Account Verified</h1><p class=\"text-gray-500 dark:text-gray-400\">Your account has been successfully verified. You can now access all the features of our platform.\r</p></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
