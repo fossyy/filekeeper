@@ -60,3 +60,57 @@ templ form(err types.Message, title string) {
 templ Main(title string, err types.Message) {
 	@form(err, title)
 }
+
+templ EmailSend(title string) {
+    @layout.Base(title){
+        <style>h1, h2, h3, h4, h5, h6 { font-family: 'Cormorant Garamond', serif; --font-serif: 'Cormorant Garamond'; }
+        </style>
+        <style>body { font-family: 'Cormorant Garamond', serif; --font-serif: 'Cormorant Garamond'; }
+        </style>
+        <div class="flex flex-col items-center justify-center min-h-[100dvh] bg-gray-100 dark:bg-gray-950 p-4 md:p-6">
+          <div class="max-w-md w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 space-y-4">
+            <div class="text-center">
+              <h1 class="text-2xl font-bold">Verification Email Sent</h1>
+              <p class="text-gray-500 dark:text-gray-400 mt-2">
+                We've sent a verification email to your registered email address. Please check your inbox and follow the
+                instructions to complete your account setup.
+              </p>
+            </div>
+            <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">
+              Close
+            </button>
+          </div>
+        </div>
+    }
+}
+
+templ VerifySuccess(title string) {
+    @layout.Base(title){
+        <style>h1, h2, h3, h4, h5, h6 { font-family: 'Arimo', sans-serif; --font-sans: 'Arimo'; }</style>
+        <style>body { font-family: 'Libre Franklin', sans-serif; --font-sans: 'Libre Franklin'; }</style>
+        <div class="flex flex-col items-center justify-center min-h-[80vh] gap-6">
+          <div class="bg-green-500 text-white rounded-full p-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="h-8 w-8"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div class="space-y-2 text-center">
+            <h1 class="text-3xl font-bold">Account Verified</h1>
+            <p class="text-gray-500 dark:text-gray-400">
+              Your account has been successfully verified. You can now access all the features of our platform.
+            </p>
+          </div>
+        </div>
+    }
+}

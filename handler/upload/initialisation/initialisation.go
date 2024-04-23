@@ -9,12 +9,12 @@ import (
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 )
 
 var log *logger.AggregatedLogger
@@ -26,14 +26,10 @@ func init() {
 func POST(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("Session")
 	if err != nil {
-		if errors.Is(err, http.ErrNoCookie) {
-			http.Redirect(w, r, "/signin", http.StatusSeeOther)
-			return
-		}
-		log.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err, http.StatusInternalServerError)
 		return
 	}
+
 	storeSession, err := session.Store.Get(cookie.Value)
 	if err != nil {
 		if errors.Is(err, &session.SessionNotFound{}) {
@@ -46,109 +42,133 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-		log.Error("Failed to read request body")
+		handleError(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	var fileInfo types.FileInfo
 	if err := json.Unmarshal(body, &fileInfo); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(err.Error())
+		handleError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	var currentInfo models.File
-	err = db.DB.Table("files").Where("name = ? AND owner_id = ?", fileInfo.Name, userSession.UserID).First(&currentInfo).Error
+	fileData, err := getFile(fileInfo.Name, userSession.UserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			uploadDir := "uploads"
-			if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-				err := os.Mkdir(uploadDir, os.ModePerm)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					log.Error(err.Error())
-					return
-				}
-			}
-
-			currentDir, _ := os.Getwd()
-			basePath := filepath.Join(currentDir, uploadDir)
-			saveFolder := filepath.Join(basePath, userSession.UserID.String(), fileInfo.Name)
-
-			if filepath.Dir(saveFolder) != filepath.Join(basePath, userSession.UserID.String()) {
-				log.Error("invalid path")
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			err = os.MkdirAll(saveFolder, os.ModePerm)
+			upload, err := handleNewUpload(userSession, fileInfo)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				log.Error(err.Error())
+				handleError(w, err, http.StatusInternalServerError)
 				return
 			}
-
-			err = os.MkdirAll(filepath.Join(saveFolder, "tmp"), os.ModePerm)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				log.Error(err.Error())
-				return
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-
-			if _, err := os.Stat(filepath.Join(saveFolder, "info.json")); err == nil {
-				open, _ := os.Open(filepath.Join(saveFolder, "info.json"))
-				all, _ := io.ReadAll(open)
-				var fileInfoUploaded types.FileInfoUploaded
-				err := json.Unmarshal(all, &fileInfoUploaded)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					log.Error(err.Error())
-					return
-				}
-				data := map[string]string{
-					"status": strconv.Itoa(fileInfoUploaded.UploadedChunk),
-				}
-				err = json.NewEncoder(w).Encode(data)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					log.Error(err.Error())
-					return
-				}
-				return
-			} else if os.IsNotExist(err) {
-				err := os.WriteFile(filepath.Join(saveFolder, "info.json"), body, 0644)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					log.Error(err.Error())
-					return
-				}
-				data := map[string]string{
-					"status": "ok",
-				}
-				err = json.NewEncoder(w).Encode(data)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					log.Error(err.Error())
-					return
-				}
-				return
-			}
+			respondJSON(w, upload)
+			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(err.Error())
+		respondErrorJSON(w, err, http.StatusInternalServerError)
+		return
 	}
-	data := map[string]string{
-		"status": "conflict",
-	}
-	w.WriteHeader(http.StatusConflict)
-	err = json.NewEncoder(w).Encode(data)
+
+	info, err := GetUploadInfo(fileData.ID.String())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
-	return
+
+	if info.Done {
+		respondJSON(w, map[string]bool{"Done": true})
+		return
+	}
+	respondJSON(w, info)
+}
+
+func getFile(name string, ownerID uuid.UUID) (models.File, error) {
+	var data models.File
+	err := db.DB.Table("files").Where("name = ? AND owner_id = ?", name, ownerID).First(&data).Error
+	if err != nil {
+		return data, err
+	}
+	return data, nil
+}
+
+func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded, error) {
+	uploadDir := "uploads"
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		log.Error(err.Error())
+		err := os.Mkdir(uploadDir, os.ModePerm)
+		if err != nil {
+			log.Error(err.Error())
+			return models.FilesUploaded{}, err
+		}
+	}
+
+	fileID := uuid.New()
+	ownerID := user.UserID
+
+	currentDir, _ := os.Getwd()
+	basePath := filepath.Join(currentDir, uploadDir)
+	saveFolder := filepath.Join(basePath, ownerID.String(), fileID.String())
+	if filepath.Dir(saveFolder) != filepath.Join(basePath, ownerID.String()) {
+		return models.FilesUploaded{}, errors.New("invalid path")
+	}
+
+	err := os.MkdirAll(saveFolder, os.ModePerm)
+	if err != nil {
+		log.Error(err.Error())
+		return models.FilesUploaded{}, err
+	}
+
+	newFile := models.File{
+		ID:         fileID,
+		OwnerID:    ownerID,
+		Name:       file.Name,
+		Size:       file.Size,
+		Downloaded: 0,
+	}
+	err = db.DB.Create(&newFile).Error
+	if err != nil {
+		log.Error(err.Error())
+		return models.FilesUploaded{}, err
+	}
+
+	filesUploaded := models.FilesUploaded{
+		UploadID: uuid.New(),
+		FileID:   fileID,
+		OwnerID:  ownerID,
+		Name:     file.Name,
+		Size:     file.Size,
+		Uploaded: -1,
+		Done:     false,
+	}
+
+	err = db.DB.Create(&filesUploaded).Error
+	if err != nil {
+		log.Error(err.Error())
+		return models.FilesUploaded{}, err
+	}
+	return filesUploaded, nil
+}
+
+func GetUploadInfo(fileID string) (*models.FilesUploaded, error) {
+	var data *models.FilesUploaded
+	err := db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).First(&data).Error
+	if err != nil {
+		return data, err
+	}
+	return data, nil
+}
+
+func respondJSON(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		handleError(w, err, http.StatusInternalServerError)
+	}
+}
+
+func respondErrorJSON(w http.ResponseWriter, err error, statusCode int) {
+	w.WriteHeader(statusCode)
+	respondJSON(w, map[string]string{"error": err.Error()})
+}
+
+func handleError(w http.ResponseWriter, err error, statusCode int) {
+	http.Error(w, err.Error(), statusCode)
+	log.Error(err.Error())
 }

@@ -39,12 +39,13 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
-	user, err := user.Get(email)
+	userData, err := user.Get(email)
 	if err != nil {
 		component := signinView.Main("Sign in Page", types.Message{
 			Code:    0,
-			Message: "Database error : " + err.Error(),
+			Message: "Incorrect Username or Password",
 		})
+		log.Error(err.Error())
 		err = component.Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,12 +55,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if email == user.Email && utils.CheckPasswordHash(password, user.Password) {
+	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
 		storeSession := session.Store.Create()
 		storeSession.Values["user"] = types.User{
-			UserID:        user.UserID,
+			UserID:        userData.UserID,
 			Email:         email,
-			Username:      user.Username,
+			Username:      userData.Username,
 			Authenticated: true,
 		}
 		storeSession.Save(w)
@@ -68,6 +69,10 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
+		http.SetCookie(w, &http.Cookie{
+			Name:   "redirect",
+			MaxAge: -1,
+		})
 		http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 		return
 	}

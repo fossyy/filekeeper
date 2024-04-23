@@ -28,17 +28,13 @@ async function handleFile(file){
         body: data,
     }).then(async response => {
         const responseData = await response.json()
-        if (responseData.status === "ok") {
+        console.log(responseData)
+        if (responseData.Done === false) {
             addNewUploadElement(file)
             const fileChunks = await splitFile(file, chunkSize);
-            await uploadChunks(file.name,file.size, fileChunks);
-        } else if (responseData.status === "conflict") {
-            alert("file already uploaded")
+            await uploadChunks(file.name,file.size, fileChunks, responseData.Uploaded, responseData.FileID);
         } else {
-            console.log(responseData.status)
-            addNewUploadElement(file)
-            const fileChunks = await splitFile(file, chunkSize);
-            await uploadChunks(file.name,file.size, fileChunks, responseData.status);
+            alert("file already uploaded")
         }
 
     }).catch(error => {
@@ -127,7 +123,7 @@ async function splitFile(file, chunkSize) {
     return fileChunks;
 }
 
-async function uploadChunks(name, size, chunks, uploadedChunk= -1) {
+async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
     let byteUploaded = 0
     var progress1 = document.getElementById(`progress-${name}-1`);
     var progress2 = document.getElementById(`progress-${name}-2`);
@@ -147,7 +143,7 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1) {
             progress2.style.width = `${percentComplete}%`;
 
             const startTime = performance.now();
-            await fetch('/upload', {
+            await fetch(`/upload/${FileID}`, {
                 method: 'POST',
                 body: formData
             });
@@ -168,7 +164,7 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1) {
     const formData = new FormData();
     formData.append('name', name);
     formData.append('done', true);
-    return fetch('/upload', {
+    return fetch(`/upload/${FileID}`, {
         method: 'POST',
         body: formData
     });

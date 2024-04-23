@@ -39,11 +39,6 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userSession := middleware.GetUser(storeSession)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(err.Error())
-		return
-	}
 
 	var files []models.File
 	db.DB.Table("files").Where("owner_id = ?", userSession.UserID).Find(&files)

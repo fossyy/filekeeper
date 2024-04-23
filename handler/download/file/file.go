@@ -1,7 +1,6 @@
 package downloadFileHandler
 
 import (
-	"fmt"
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types/models"
@@ -26,13 +25,24 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 	}
 
-	dir := fmt.Sprintf("uploads/%s/%s", file.OwnerID, file.Name)
-	filePath := filepath.Join(dir, file.Name)
-	openFile, err := os.OpenFile(filePath, os.O_RDONLY, 0)
+	uploadDir := "uploads"
+
+	currentDir, _ := os.Getwd()
+	basePath := filepath.Join(currentDir, uploadDir)
+	saveFolder := filepath.Join(basePath, file.OwnerID.String(), file.ID.String())
+
+	if filepath.Dir(saveFolder) != filepath.Join(basePath, file.OwnerID.String()) {
+		log.Error("invalid path")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	openFile, err := os.OpenFile(filepath.Join(saveFolder, file.Name), os.O_RDONLY, 0)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
 	}
+	defer openFile.Close()
 
 	stat, err := openFile.Stat()
 	if err != nil {
