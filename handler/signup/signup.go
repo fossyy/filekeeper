@@ -3,7 +3,9 @@ package signupHandler
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
@@ -12,6 +14,7 @@ import (
 	emailView "github.com/fossyy/filekeeper/view/email"
 	signupView "github.com/fossyy/filekeeper/view/signup"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -57,19 +60,47 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		Password: hashedPassword,
 	}
 
-	err = verifyEmail(&newUser)
+	var data models.User
+	err = db.DB.Table("users").Where("email = ?", userEmail).First(&data).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = verifyEmail(&newUser)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Error(err.Error())
+				return
+			}
 
+			component := signupView.EmailSend("Sign up Page")
+			err = component.Render(r.Context(), w)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Error(err.Error())
+				return
+			}
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Error(err.Error())
+		return
+	}
+	component := signupView.Main("Sign up Page", types.Message{
+		Code:    0,
+		Message: "Email or Username has been registered",
+	})
+	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
+	return
 }
 
 func verifyEmail(user *models.User) error {
 	var buffer bytes.Buffer
 	id := utils.GenerateRandomString(64)
-	err := emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://filekeeper.fossy.my.id/verify/%s", id)).Render(context.Background(), &buffer)
+	err := emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://%s/signup/verify/%s", utils.Getenv("DOMAIN"), id)).Render(context.Background(), &buffer)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package signupVerifyHandler
 
 import (
+	"fmt"
 	"github.com/fossyy/filekeeper/db"
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	"github.com/fossyy/filekeeper/logger"
@@ -17,7 +18,10 @@ func init() {
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
+	fmt.Println(id)
 	user, ok := signupHandler.VerifyUser[id]
+	fmt.Println("nih : ")
+	fmt.Println(signupHandler.VerifyUser[id])
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -27,7 +31,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		component := signupView.Main("Sign up Page", types.Message{
 			Code:    0,
-			Message: "Username or Password has been registered",
+			Message: "Email or Username has been registered",
 		})
 		err := component.Render(r.Context(), w)
 		if err != nil {
@@ -38,10 +42,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	component := signupView.Main("Sign up Page", types.Message{
-		Code:    1,
-		Message: "User creation success",
-	})
+	component := signupView.VerifySuccess("Verify page")
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
