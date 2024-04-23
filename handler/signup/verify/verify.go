@@ -39,6 +39,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 
 	component := signupView.VerifySuccess("Verify page")
+	delete(signupHandler.VerifyUser, id)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
