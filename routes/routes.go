@@ -43,7 +43,7 @@ func SetupRoutes() *http.ServeMux {
 	})
 
 	signupRouter := http.NewServeMux()
-	handler.Handle("/signup", http.StripPrefix("/signup", signupRouter))
+	handler.Handle("/signup/", http.StripPrefix("/signup", signupRouter))
 
 	signupRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

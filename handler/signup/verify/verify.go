@@ -20,6 +20,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	user, ok := signupHandler.VerifyUser[id]
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 	err := db.DB.Create(&user).Error
 
