@@ -1,7 +1,6 @@
 package signupVerifyHandler
 
 import (
-	"fmt"
 	"github.com/fossyy/filekeeper/db"
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	"github.com/fossyy/filekeeper/logger"
@@ -18,10 +17,7 @@ func init() {
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	fmt.Println(id)
 	user, ok := signupHandler.VerifyUser[id]
-	fmt.Println("nih : ")
-	fmt.Println(signupHandler.VerifyUser[id])
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return

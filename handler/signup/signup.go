@@ -61,7 +61,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data models.User
-	err = db.DB.Table("users").Where("email = ?", userEmail).First(&data).Error
+	err = db.DB.Table("users").Where("email = ? OR username = ?", userEmail, username).First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			err = verifyEmail(&newUser)
