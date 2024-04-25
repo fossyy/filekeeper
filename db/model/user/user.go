@@ -15,12 +15,12 @@ type Cache struct {
 }
 
 var log *logger.AggregatedLogger
-var cache *Cache
+var UserCache *Cache
 
 func init() {
 	log = logger.Logger()
 
-	cache = &Cache{users: make(map[string]*types.UserWithExpired)}
+	UserCache = &Cache{users: make(map[string]*types.UserWithExpired)}
 	ticker := time.NewTicker(time.Hour * 8)
 
 	go func() {
@@ -30,14 +30,14 @@ func init() {
 			cacheClean := 0
 			log.Info(fmt.Sprintf("Cache cleanup initiated at %02d:%02d:%02d", currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
-			cache.mu.Lock()
-			for _, user := range cache.users {
+			UserCache.mu.Lock()
+			for _, user := range UserCache.users {
 				if currentTime.Sub(user.AccessAt) > time.Hour*8 {
-					delete(cache.users, user.Email)
+					delete(UserCache.users, user.Email)
 					cacheClean++
 				}
 			}
-			cache.mu.Unlock()
+			UserCache.mu.Unlock()
 
 			log.Info(fmt.Sprintf("Cache cleanup completed: %d entries removed. Finished at %s", cacheClean, time.Since(currentTime)))
 		}
@@ -45,10 +45,10 @@ func init() {
 }
 
 func Get(email string) (*types.UserWithExpired, error) {
-	cache.mu.Lock()
-	defer cache.mu.Unlock()
+	UserCache.mu.Lock()
+	defer UserCache.mu.Unlock()
 
-	if user, ok := cache.users[email]; ok {
+	if user, ok := UserCache.users[email]; ok {
 		return user, nil
 	}
 
@@ -58,7 +58,7 @@ func Get(email string) (*types.UserWithExpired, error) {
 		return nil, err
 	}
 
-	cache.users[email] = &types.UserWithExpired{
+	UserCache.users[email] = &types.UserWithExpired{
 		UserID:   userData.UserID,
 		Username: userData.Username,
 		Email:    userData.Email,
@@ -67,4 +67,11 @@ func Get(email string) (*types.UserWithExpired, error) {
 	}
 
 	return &userData, nil
+}
+
+func DeleteCache(email string) {
+	UserCache.mu.Lock()
+	defer UserCache.mu.Unlock()
+
+	delete(UserCache.users, email)
 }

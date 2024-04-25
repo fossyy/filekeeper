@@ -1,9 +1,10 @@
 package routes
 
 import (
-	"fmt"
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
+	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
+	forgotPasswordVerifyHandler "github.com/fossyy/filekeeper/handler/forgotPassword/verify"
 	indexHandler "github.com/fossyy/filekeeper/handler/index"
 	logoutHandler "github.com/fossyy/filekeeper/handler/logout"
 	miscHandler "github.com/fossyy/filekeeper/handler/misc"
@@ -14,7 +15,6 @@ import (
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	"github.com/fossyy/filekeeper/middleware"
-	"github.com/fossyy/filekeeper/session"
 	"net/http"
 )
 
@@ -33,19 +33,6 @@ func SetupRoutes() *http.ServeMux {
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
-	})
-
-	handler.HandleFunc("/test/{email}", func(w http.ResponseWriter, r *http.Request) {
-		email := r.PathValue("email")
-		session.RemoveAllSession(email)
-	})
-
-	handler.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		var result string
-		for key, values := range session.Getses() {
-			result += key + ": [" + fmt.Sprintf("%v", values) + "]\n"
-		}
-		w.Write([]byte(result))
 	})
 
 	handler.HandleFunc("/signin", func(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +60,30 @@ func SetupRoutes() *http.ServeMux {
 
 	signupRouter.HandleFunc("/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Guest(signupVerifyHandler.GET, w, r)
+	})
+
+	forgotPasswordRouter := http.NewServeMux()
+	handler.Handle("/forgot-password/", http.StripPrefix("/forgot-password", forgotPasswordRouter))
+	forgotPasswordRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Guest(forgotPasswordHandler.GET, w, r)
+		case http.MethodPost:
+			middleware.Guest(forgotPasswordHandler.POST, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	forgotPasswordRouter.HandleFunc("/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Guest(forgotPasswordVerifyHandler.GET, w, r)
+		case http.MethodPost:
+			middleware.Guest(forgotPasswordVerifyHandler.POST, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
 	})
 
 	handler.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
