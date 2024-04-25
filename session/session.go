@@ -18,6 +18,7 @@ type StoreSession struct {
 }
 
 var Store = StoreSession{Sessions: make(map[string]*Session)}
+var userSessions = make(map[string][]string)
 
 type SessionNotFound struct{}
 
@@ -65,4 +66,35 @@ func (s *Session) Destroy(w http.ResponseWriter) {
 		Value:  "",
 		MaxAge: -1,
 	})
+}
+
+func AppendSession(email string, session *Session) {
+	userSessions[email] = append(userSessions[email], session.ID)
+}
+
+func RemoveSession(email string, id string) {
+	sessions := userSessions[email]
+	var updatedSessions []string
+	for _, userSession := range sessions {
+		if userSession != id {
+			updatedSessions = append(updatedSessions, userSession)
+		}
+	}
+	if len(updatedSessions) > 0 {
+		userSessions[email] = updatedSessions
+		return
+	}
+	delete(userSessions, email)
+}
+
+func RemoveAllSession(email string) {
+	sessions := userSessions[email]
+	for _, session := range sessions {
+		delete(Store.Sessions, session)
+	}
+	delete(userSessions, email)
+}
+
+func Getses() map[string][]string {
+	return userSessions
 }

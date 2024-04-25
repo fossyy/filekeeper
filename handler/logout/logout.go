@@ -1,8 +1,10 @@
 package logoutHandler
 
 import (
+	"errors"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
+	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 	"net/http"
 )
@@ -19,7 +21,17 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	storeSession, err := session.Store.Get(cookie.Value)
+	if err != nil {
+		if errors.Is(err, &session.SessionNotFound{}) {
+			storeSession.Destroy(w)
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	session.Store.Delete(cookie.Value)
+	session.RemoveSession(storeSession.Values["user"].(types.User).Email, cookie.Value)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:   utils.Getenv("SESSION_NAME"),

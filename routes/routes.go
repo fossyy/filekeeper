@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
 	indexHandler "github.com/fossyy/filekeeper/handler/index"
@@ -13,6 +14,7 @@ import (
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	"github.com/fossyy/filekeeper/middleware"
+	"github.com/fossyy/filekeeper/session"
 	"net/http"
 )
 
@@ -31,6 +33,19 @@ func SetupRoutes() *http.ServeMux {
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
+	})
+
+	handler.HandleFunc("/test/{email}", func(w http.ResponseWriter, r *http.Request) {
+		email := r.PathValue("email")
+		session.RemoveAllSession(email)
+	})
+
+	handler.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		var result string
+		for key, values := range session.Getses() {
+			result += key + ": [" + fmt.Sprintf("%v", values) + "]\n"
+		}
+		w.Write([]byte(result))
 	})
 
 	handler.HandleFunc("/signin", func(w http.ResponseWriter, r *http.Request) {
