@@ -1,0 +1,7 @@
+/tmp
+/uploads
+/public/output.css
+/log
+
+*_templ.txt
+*_templ.go
