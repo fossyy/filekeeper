@@ -16,13 +16,15 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	user, ok := signupHandler.VerifyUser[id]
+	code := r.PathValue("code")
+	data, ok := signupHandler.VerifyUser[code]
+
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	err := db.DB.Create(&user).Error
+
+	err := db.DB.Create(&data.User).Error
 
 	if err != nil {
 		component := signupView.Main("Sign up Page", types.Message{
@@ -38,8 +40,11 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	delete(signupHandler.VerifyUser, code)
+	delete(signupHandler.VerifyEmail, data.User.Email)
+
 	component := signupView.VerifySuccess("Verify page")
-	delete(signupHandler.VerifyUser, id)
+
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

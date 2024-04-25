@@ -16,16 +16,49 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"net/http"
+	"sync"
+	"time"
 )
+
+type UnverifiedUser struct {
+	User       *models.User
+	Code       string
+	mu         sync.Mutex
+	CreateTime time.Time
+}
 
 var log *logger.AggregatedLogger
 var mailServer *email.SmtpServer
-var VerifyUser map[string]*models.User
+var VerifyUser map[string]*UnverifiedUser
+var VerifyEmail map[string]string
 
 func init() {
 	log = logger.Logger()
 	mailServer = email.NewSmtpServer("mail.fossy.my.id", 25, "test@fossy.my.id", "Test123456")
-	VerifyUser = make(map[string]*models.User)
+	VerifyUser = make(map[string]*UnverifiedUser)
+	VerifyEmail = make(map[string]string)
+
+	ticker := time.NewTicker(time.Minute)
+	go func() {
+		for {
+			<-ticker.C
+			currentTime := time.Now()
+			cacheClean := 0
+			log.Info(fmt.Sprintf("Cache cleanup initiated at %02d:%02d:%02d", currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+
+			for _, data := range VerifyUser {
+				data.mu.Lock()
+				if currentTime.Sub(data.CreateTime) > time.Minute*1 {
+					delete(VerifyUser, data.Code)
+					delete(VerifyEmail, data.User.Email)
+					cacheClean++
+				}
+				data.mu.Unlock()
+			}
+
+			log.Info(fmt.Sprintf("Cache cleanup completed: %d entries removed. Finished at %s", cacheClean, time.Since(currentTime)))
+		}
+	}()
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -99,13 +132,30 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 func verifyEmail(user *models.User) error {
 	var buffer bytes.Buffer
-	id := utils.GenerateRandomString(64)
-	err := emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://%s/signup/verify/%s", utils.Getenv("DOMAIN"), id)).Render(context.Background(), &buffer)
+	var code string
+
+	code = VerifyEmail[user.Email]
+	userData, ok := VerifyUser[code]
+
+	if !ok {
+		code = utils.GenerateRandomString(64)
+	} else {
+		code = userData.Code
+	}
+
+	err := emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://%s/signup/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
 	if err != nil {
 		return err
 	}
 
-	VerifyUser[id] = user
+	unverifiedUser := UnverifiedUser{
+		User:       user,
+		Code:       code,
+		CreateTime: time.Now(),
+	}
+
+	VerifyUser[code] = &unverifiedUser
+	VerifyEmail[user.Email] = code
 
 	err = mailServer.Send(user.Email, "Account Registration Verification", buffer.String())
 	if err != nil {

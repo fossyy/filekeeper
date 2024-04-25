@@ -56,7 +56,7 @@ func SetupRoutes() *http.ServeMux {
 		}
 	})
 
-	signupRouter.HandleFunc("/verify/{id}", func(w http.ResponseWriter, r *http.Request) {
+	signupRouter.HandleFunc("/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Guest(signupVerifyHandler.GET, w, r)
 	})
 
