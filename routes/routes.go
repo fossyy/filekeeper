@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"encoding/json"
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
@@ -15,6 +16,7 @@ import (
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	"github.com/fossyy/filekeeper/middleware"
+	"github.com/fossyy/filekeeper/session"
 	"net/http"
 )
 
@@ -33,6 +35,10 @@ func SetupRoutes() *http.ServeMux {
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
+	})
+
+	handler.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(session.Getses())
 	})
 
 	handler.HandleFunc("/signin", func(w http.ResponseWriter, r *http.Request) {

@@ -1,8 +1,11 @@
 package userView
 
-import "github.com/fossyy/filekeeper/view/layout"
+import (
+    "github.com/fossyy/filekeeper/view/layout"
+    "github.com/fossyy/filekeeper/session"
+)
 
-templ content(email string, username string, title string) {
+templ content(email string, username string, title string, ListSession []*session.SessionInfo) {
     @layout.Base(title){
         <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
             <div class="grid gap-10 lg:grid-cols-[1fr_300px]">
@@ -107,48 +110,31 @@ templ content(email string, username string, title string) {
                                                 </tr>
                                             </thead>
                                             <tbody class="[&amp;_tr:last-child]:border-0">
+                                                for _, ses := range ListSession {
                                                 <tr
                                                     class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.IP}
+                                                    </td>
+                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.Browser + ses.Version}
+                                                    </td>
+                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.OS + ses.OSVersion}
+                                                    </td>
+                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.AccessAt}
+                                                    </td>
                                                     <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-                                                        192.168.1.100</td>
-                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">Chrome 89
-                                                    </td>
-                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">Desktop
-                                                    </td>
-                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">1 week
-                                                        ago
-                                                    </td>
-                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-                                                        <button
+                                                        <a
                                                             class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
                                                             type="button" id="radix-:rq:" aria-haspopup="menu"
-                                                            aria-expanded="false" data-state="closed">
+                                                            aria-expanded="false" data-state="closed"
+                                                            href="/">
                                                             Terminate
-                                                            <span class="sr-only">Actions</span>
-                                                        </button>
+                                                        </a>
                                                     </td>
                                                 </tr>
+                                                }
                                             </tbody>
                                         </table>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="grid gap-2">
-                                <label
-                                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    for="session-info">
-                                    Session Information
-                                </label>
-                                <div class="bg-gray-100 rounded-md p-4">
-                                    <p>
-                                        Logged in as <span class="font-medium">John Doe</span>
-                                    </p>
-                                    <p>
-                                        Logged in from <span class="font-medium">192.168.1.100</span>
-                                    </p>
-                                    <p>
-                                        Logged in at <span class="font-medium">2023-04-26 15:30:00</span>
-                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -218,18 +204,32 @@ templ content(email string, username string, title string) {
                         <div class="p-6 grid gap-4">
                             <div class="flex items-center justify-between">
                                 <span>Used</span>
-                                <span>12.5GB</span>
+                                <span>42.0GB</span>
                             </div>
                             <div class="w-full bg-gray-300 rounded-full h-2.5">
                                 <div class="bg-gray-800 h-2.5 rounded-full" style="width: 45%"></div>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span>Available</span>
-                                <span>37.5GB</span>
+                                <span>6.9GB</span>
                             </div>
                             <div class="w-full bg-gray-300 rounded-full h-2.5">
                                 <div class="bg-gray-800 h-2.5 rounded-full" style="width: 100%"></div>
                             </div>
+                            <a
+                                class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                                type="button" id="radix-:rq:" aria-haspopup="menu"
+                                aria-expanded="false" data-state="closed"
+                                href="/upload">
+                                Upload
+                            </a>
+                            <a
+                                class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                                type="button" id="radix-:rq:" aria-haspopup="menu"
+                                aria-expanded="false" data-state="closed"
+                                href="/download">
+                                Download
+                            </a>
                         </div>
                     </div>
                     <div class="rounded-lg border bg-card text-card-foreground shadow-sm" data-v0-t="card">
@@ -262,6 +262,6 @@ templ content(email string, username string, title string) {
     }
 }
 
-templ Main(title string, email string, username string) {
-	@content(email, username, title)
+templ Main(title string, email string, username string, ListSession []*session.SessionInfo) {
+	@content(email, username, title, ListSession)
 }

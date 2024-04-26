@@ -4,14 +4,22 @@ import (
 	"fmt"
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
-	"github.com/fossyy/filekeeper/types"
+	"github.com/google/uuid"
 	"sync"
 	"time"
 )
 
 type Cache struct {
-	users map[string]*types.UserWithExpired
+	users map[string]*UserWithExpired
 	mu    sync.Mutex
+}
+
+type UserWithExpired struct {
+	UserID   uuid.UUID
+	Username string
+	Email    string
+	Password string
+	AccessAt time.Time
 }
 
 var log *logger.AggregatedLogger
@@ -20,7 +28,7 @@ var UserCache *Cache
 func init() {
 	log = logger.Logger()
 
-	UserCache = &Cache{users: make(map[string]*types.UserWithExpired)}
+	UserCache = &Cache{users: make(map[string]*UserWithExpired)}
 	ticker := time.NewTicker(time.Hour * 8)
 
 	go func() {
@@ -44,7 +52,7 @@ func init() {
 	}()
 }
 
-func Get(email string) (*types.UserWithExpired, error) {
+func Get(email string) (*UserWithExpired, error) {
 	UserCache.mu.Lock()
 	defer UserCache.mu.Unlock()
 
@@ -52,13 +60,13 @@ func Get(email string) (*types.UserWithExpired, error) {
 		return user, nil
 	}
 
-	var userData types.UserWithExpired
+	var userData UserWithExpired
 	err := db.DB.Table("users").Where("email = ?", email).First(&userData).Error
 	if err != nil {
 		return nil, err
 	}
 
-	UserCache.users[email] = &types.UserWithExpired{
+	UserCache.users[email] = &UserWithExpired{
 		UserID:   userData.UserID,
 		Username: userData.Username,
 		Email:    userData.Email,

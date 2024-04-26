@@ -2,7 +2,6 @@ package types
 
 import (
 	"github.com/google/uuid"
-	"time"
 )
 
 type Message struct {
@@ -15,14 +14,6 @@ type User struct {
 	Email         string
 	Username      string
 	Authenticated bool
-}
-
-type UserWithExpired struct {
-	UserID   uuid.UUID
-	Username string
-	Email    string
-	Password string
-	AccessAt time.Time
 }
 
 type FileInfo struct {

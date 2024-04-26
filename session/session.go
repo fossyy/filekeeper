@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type Session struct {
@@ -17,8 +18,21 @@ type StoreSession struct {
 	mu       sync.Mutex
 }
 
+type SessionInfo struct {
+	SessionID string
+	Browser   string
+	Version   string
+	OS        string
+	OSVersion string
+	IP        string
+	Location  string
+	AccessAt  string
+}
+
+type ListSessionInfo map[string][]*SessionInfo
+
 var Store = StoreSession{Sessions: make(map[string]*Session)}
-var userSessions = make(map[string][]string)
+var UserSessions = make(ListSessionInfo)
 
 type SessionNotFound struct{}
 
@@ -68,33 +82,48 @@ func (s *Session) Destroy(w http.ResponseWriter) {
 	})
 }
 
-func AppendSession(email string, session *Session) {
-	userSessions[email] = append(userSessions[email], session.ID)
+func AppendSession(email string, sessionInfo *SessionInfo) {
+	UserSessions[email] = append(UserSessions[email], sessionInfo)
 }
 
 func RemoveSession(email string, id string) {
-	sessions := userSessions[email]
-	var updatedSessions []string
+	sessions := UserSessions[email]
+	var updatedSessions []*SessionInfo
 	for _, userSession := range sessions {
-		if userSession != id {
+		if userSession.SessionID != id {
 			updatedSessions = append(updatedSessions, userSession)
 		}
 	}
 	if len(updatedSessions) > 0 {
-		userSessions[email] = updatedSessions
+		UserSessions[email] = updatedSessions
 		return
 	}
-	delete(userSessions, email)
+	delete(UserSessions, email)
 }
 
 func RemoveAllSession(email string) {
-	sessions := userSessions[email]
+	sessions := UserSessions[email]
 	for _, session := range sessions {
-		delete(Store.Sessions, session)
+		delete(Store.Sessions, session.SessionID)
 	}
-	delete(userSessions, email)
+	delete(UserSessions, email)
 }
 
-func Getses() map[string][]string {
-	return userSessions
+func GetSessionInfo(email string, id string) *SessionInfo {
+	for _, session := range UserSessions[email] {
+		if session.SessionID == id {
+			return session
+		}
+	}
+	return nil
+}
+
+func (user *SessionInfo) UpdateAccessTime() {
+	currentTime := time.Now()
+	formattedTime := currentTime.Format("01-02-2006")
+	user.AccessAt = formattedTime
+}
+
+func Getses() *ListSessionInfo {
+	return &UserSessions
 }
