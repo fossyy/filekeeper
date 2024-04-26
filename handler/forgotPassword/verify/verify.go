@@ -94,7 +94,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	delete(forgotPasswordHandler.ListForgotPassword, data.User.Email)
 	delete(forgotPasswordHandler.UserForgotPassword, data.Code)
 
-	session.RemoveAllSession(data.User.Email)
+	session.RemoveAllSessions(data.User.Email)
 
 	user.DeleteCache(data.User.Email)
 

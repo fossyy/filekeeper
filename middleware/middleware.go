@@ -74,10 +74,10 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	storeSession, err := session.Store.Get(cookie.Value)
+	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
 
 	if err != nil {
-		if errors.Is(err, &session.SessionNotFound{}) {
+		if errors.Is(err, &session.SessionNotFoundError{}) {
 			storeSession.Destroy(w)
 			http.Redirect(w, r, "/signin", http.StatusSeeOther)
 			return
@@ -112,9 +112,9 @@ func Guest(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	storeSession, err := session.Store.Get(cookie.Value)
+	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
 	if err != nil {
-		if errors.Is(err, &session.SessionNotFound{}) {
+		if errors.Is(err, &session.SessionNotFoundError{}) {
 			http.SetCookie(w, &http.Cookie{
 				Name:   "Session",
 				Value:  "",
