@@ -34,7 +34,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 		return
 	}
-	component := userView.Main("User Page", userSession.Email, userSession.Username)
+
+	component := userView.Main("User Page", userSession.Email, userSession.Username, session.UserSessions[userSession.Email])
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

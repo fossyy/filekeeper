@@ -75,6 +75,7 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	storeSession, err := session.Store.Get(cookie.Value)
+
 	if err != nil {
 		if errors.Is(err, &session.SessionNotFound{}) {
 			storeSession.Destroy(w)
@@ -87,6 +88,7 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	}
 	userSession := GetUser(storeSession)
 	if userSession.Authenticated {
+		session.GetSessionInfo(storeSession.Values["user"].(types.User).Email, cookie.Value).UpdateAccessTime()
 		next.ServeHTTP(w, r)
 		return
 	}
