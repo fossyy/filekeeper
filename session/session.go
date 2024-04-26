@@ -13,7 +13,7 @@ type Session struct {
 	Values map[string]interface{}
 }
 
-type StoreSession struct {
+type SessionStore struct {
 	Sessions map[string]*Session
 	mu       sync.Mutex
 }
@@ -29,27 +29,27 @@ type SessionInfo struct {
 	AccessAt  string
 }
 
-type ListSessionInfo map[string][]*SessionInfo
+type SessionInfoList map[string][]*SessionInfo
 
-var Store = StoreSession{Sessions: make(map[string]*Session)}
-var UserSessions = make(ListSessionInfo)
+var GlobalSessionStore = SessionStore{Sessions: make(map[string]*Session)}
+var UserSessionInfoList = make(SessionInfoList)
 
-type SessionNotFound struct{}
+type SessionNotFoundError struct{}
 
-func (e *SessionNotFound) Error() string {
+func (e *SessionNotFoundError) Error() string {
 	return "session not found"
 }
 
-func (s *StoreSession) Get(id string) (*Session, error) {
+func (s *SessionStore) Get(id string) (*Session, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if session, ok := s.Sessions[id]; ok {
 		return session, nil
 	}
-	return nil, &SessionNotFound{}
+	return nil, &SessionNotFoundError{}
 }
 
-func (s *StoreSession) Create() *Session {
+func (s *SessionStore) Create() *Session {
 	id := utils.GenerateRandomString(128)
 	session := &Session{
 		ID:     id,
@@ -59,7 +59,7 @@ func (s *StoreSession) Create() *Session {
 	return session
 }
 
-func (s *StoreSession) Delete(id string) {
+func (s *SessionStore) Delete(id string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.Sessions, id)
@@ -82,48 +82,44 @@ func (s *Session) Destroy(w http.ResponseWriter) {
 	})
 }
 
-func AppendSession(email string, sessionInfo *SessionInfo) {
-	UserSessions[email] = append(UserSessions[email], sessionInfo)
+func AddSessionInfo(email string, sessionInfo *SessionInfo) {
+	UserSessionInfoList[email] = append(UserSessionInfoList[email], sessionInfo)
 }
 
-func RemoveSession(email string, id string) {
-	sessions := UserSessions[email]
-	var updatedSessions []*SessionInfo
-	for _, userSession := range sessions {
-		if userSession.SessionID != id {
-			updatedSessions = append(updatedSessions, userSession)
+func RemoveSessionInfo(email string, id string) {
+	sessionInfos := UserSessionInfoList[email]
+	var updatedSessionInfos []*SessionInfo
+	for _, sessionInfo := range sessionInfos {
+		if sessionInfo.SessionID != id {
+			updatedSessionInfos = append(updatedSessionInfos, sessionInfo)
 		}
 	}
-	if len(updatedSessions) > 0 {
-		UserSessions[email] = updatedSessions
+	if len(updatedSessionInfos) > 0 {
+		UserSessionInfoList[email] = updatedSessionInfos
 		return
 	}
-	delete(UserSessions, email)
+	delete(UserSessionInfoList, email)
 }
 
-func RemoveAllSession(email string) {
-	sessions := UserSessions[email]
-	for _, session := range sessions {
-		delete(Store.Sessions, session.SessionID)
+func RemoveAllSessions(email string) {
+	sessionInfos := UserSessionInfoList[email]
+	for _, sessionInfo := range sessionInfos {
+		delete(GlobalSessionStore.Sessions, sessionInfo.SessionID)
 	}
-	delete(UserSessions, email)
+	delete(UserSessionInfoList, email)
 }
 
 func GetSessionInfo(email string, id string) *SessionInfo {
-	for _, session := range UserSessions[email] {
-		if session.SessionID == id {
-			return session
+	for _, sessionInfo := range UserSessionInfoList[email] {
+		if sessionInfo.SessionID == id {
+			return sessionInfo
 		}
 	}
 	return nil
 }
 
-func (user *SessionInfo) UpdateAccessTime() {
+func (sessionInfo *SessionInfo) UpdateAccessTime() {
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("01-02-2006")
-	user.AccessAt = formattedTime
-}
-
-func Getses() *ListSessionInfo {
-	return &UserSessions
+	sessionInfo.AccessAt = formattedTime
 }

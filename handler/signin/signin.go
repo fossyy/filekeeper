@@ -57,7 +57,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
-		storeSession := session.Store.Create()
+		storeSession := session.GlobalSessionStore.Create()
 		storeSession.Values["user"] = types.User{
 			UserID:        userData.UserID,
 			Email:         email,
@@ -79,7 +79,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 		storeSession.Save(w)
-		session.AppendSession(email, &sessionInfo)
+		session.AddSessionInfo(email, &sessionInfo)
 
 		cookie, err := r.Cookie("redirect")
 		if errors.Is(err, http.ErrNoCookie) {

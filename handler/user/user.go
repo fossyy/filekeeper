@@ -20,9 +20,9 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	storeSession, err := session.Store.Get(cookie.Value)
+	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
 	if err != nil {
-		if errors.Is(err, &session.SessionNotFound{}) {
+		if errors.Is(err, &session.SessionNotFoundError{}) {
 			storeSession.Destroy(w)
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -35,7 +35,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	component := userView.Main("User Page", userSession.Email, userSession.Username, session.UserSessions[userSession.Email])
+	component := userView.Main("User Page", userSession.Email, userSession.Username, session.UserSessionInfoList[userSession.Email])
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -21,17 +21,17 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	storeSession, err := session.Store.Get(cookie.Value)
+	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
 	if err != nil {
-		if errors.Is(err, &session.SessionNotFound{}) {
+		if errors.Is(err, &session.SessionNotFoundError{}) {
 			storeSession.Destroy(w)
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	session.Store.Delete(cookie.Value)
-	session.RemoveSession(storeSession.Values["user"].(types.User).Email, cookie.Value)
+	session.GlobalSessionStore.Delete(cookie.Value)
+	session.RemoveSessionInfo(storeSession.Values["user"].(types.User).Email, cookie.Value)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:   utils.Getenv("SESSION_NAME"),

@@ -30,9 +30,9 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	storeSession, err := session.Store.Get(cookie.Value)
+	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
 	if err != nil {
-		if errors.Is(err, &session.SessionNotFound{}) {
+		if errors.Is(err, &session.SessionNotFoundError{}) {
 			storeSession.Destroy(w)
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
