@@ -5,6 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
@@ -15,10 +20,6 @@ import (
 	signupView "github.com/fossyy/filekeeper/view/signup"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"net/http"
-	"strconv"
-	"sync"
-	"time"
 )
 
 type UnverifiedUser struct {

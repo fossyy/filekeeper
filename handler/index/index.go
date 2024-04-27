@@ -1,9 +1,10 @@
 package indexHandler
 
 import (
-	"github.com/fossyy/filekeeper/logger"
-	"github.com/fossyy/filekeeper/view/index"
 	"net/http"
+
+	"github.com/fossyy/filekeeper/logger"
+	indexView "github.com/fossyy/filekeeper/view/index"
 )
 
 var log *logger.AggregatedLogger

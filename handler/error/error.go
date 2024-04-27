@@ -1,9 +1,10 @@
 package errorHandler
 
 import (
+	"net/http"
+
 	"github.com/fossyy/filekeeper/logger"
 	errorView "github.com/fossyy/filekeeper/view/error"
-	"net/http"
 )
 
 var log *logger.AggregatedLogger

@@ -2,18 +2,19 @@ package uploadHandler
 
 import (
 	"errors"
-	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/handler/upload/initialisation"
-	"github.com/fossyy/filekeeper/logger"
-	"github.com/fossyy/filekeeper/middleware"
-	"github.com/fossyy/filekeeper/session"
-	filesView "github.com/fossyy/filekeeper/view/upload"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
+
+	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/handler/upload/initialisation"
+	"github.com/fossyy/filekeeper/logger"
+	"github.com/fossyy/filekeeper/middleware"
+	"github.com/fossyy/filekeeper/session"
+	filesView "github.com/fossyy/filekeeper/view/upload"
 )
 
 var log *logger.AggregatedLogger

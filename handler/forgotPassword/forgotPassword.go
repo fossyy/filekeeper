@@ -5,6 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
@@ -14,10 +19,6 @@ import (
 	emailView "github.com/fossyy/filekeeper/view/email"
 	forgotPasswordView "github.com/fossyy/filekeeper/view/forgotPassword"
 	"gorm.io/gorm"
-	"net/http"
-	"strconv"
-	"sync"
-	"time"
 )
 
 type ForgotPassword struct {

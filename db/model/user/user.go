@@ -2,11 +2,12 @@ package user
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/google/uuid"
-	"sync"
-	"time"
 )
 
 type Cache struct {

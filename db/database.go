@@ -2,14 +2,14 @@ package db
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/utils"
 	"gorm.io/driver/mysql"
-	_ "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"os"
-	"strings"
 )
 
 var DB *gorm.DB
@@ -23,11 +23,11 @@ func init() {
 		Logger: gormLogger.Default.LogMode(gormLogger.Silent),
 	})
 	if err != nil {
-		panic("failed to connect database")
+		panic("failed to connect database" + err.Error())
 	}
 	file, err := os.ReadFile("schema.sql")
 	if err != nil {
-		log.Error("Error opening file: %v", err)
+		log.Error("Error opening file: %s", err.Error())
 	}
 	querys := strings.Split(string(file), "\n")
 	for _, query := range querys {

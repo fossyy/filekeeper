@@ -2,14 +2,15 @@ package signinHandler
 
 import (
 	"errors"
+	"net/http"
+	"strings"
+
 	"github.com/fossyy/filekeeper/db/model/user"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 	signinView "github.com/fossyy/filekeeper/view/signin"
-	"net/http"
-	"strings"
 )
 
 var log *logger.AggregatedLogger

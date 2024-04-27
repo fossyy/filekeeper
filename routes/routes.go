@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
@@ -15,7 +17,6 @@ import (
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	"github.com/fossyy/filekeeper/middleware"
-	"net/http"
 )
 
 func SetupRoutes() *http.ServeMux {

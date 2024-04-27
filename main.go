@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/routes"
 	"github.com/fossyy/filekeeper/utils"
-	"net/http"
 )
 
 func main() {

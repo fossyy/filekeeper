@@ -2,9 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"github.com/fossyy/filekeeper/logger"
-	"github.com/joho/godotenv"
-	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/http"
 	"os"
@@ -12,6 +9,10 @@ import (
 	"sync"
 	"time"
 	"unicode"
+
+	"github.com/fossyy/filekeeper/logger"
+	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Env struct {

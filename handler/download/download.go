@@ -2,6 +2,8 @@ package downloadHandler
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
@@ -10,7 +12,6 @@ import (
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
 	downloadView "github.com/fossyy/filekeeper/view/download"
-	"net/http"
 )
 
 var log *logger.AggregatedLogger

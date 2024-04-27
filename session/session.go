@@ -1,11 +1,12 @@
 package session
 
 import (
-	"github.com/fossyy/filekeeper/utils"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/fossyy/filekeeper/utils"
 )
 
 type Session struct {

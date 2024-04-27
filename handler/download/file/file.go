@@ -1,12 +1,13 @@
 package downloadFileHandler
 
 import (
-	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/logger"
-	"github.com/fossyy/filekeeper/types/models"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/logger"
+	"github.com/fossyy/filekeeper/types/models"
 )
 
 var log *logger.AggregatedLogger
