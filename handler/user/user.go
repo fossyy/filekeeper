@@ -2,11 +2,12 @@ package userHandler
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
 	userView "github.com/fossyy/filekeeper/view/user"
-	"net/http"
 )
 
 var log *logger.AggregatedLogger

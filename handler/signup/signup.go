@@ -5,6 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
@@ -15,9 +20,6 @@ import (
 	signupView "github.com/fossyy/filekeeper/view/signup"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"net/http"
-	"sync"
-	"time"
 )
 
 type UnverifiedUser struct {
@@ -34,7 +36,8 @@ var VerifyEmail map[string]string
 
 func init() {
 	log = logger.Logger()
-	mailServer = email.NewSmtpServer("mail.fossy.my.id", 25, "test@fossy.my.id", "Test123456")
+	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
+	mailServer = email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 	VerifyUser = make(map[string]*UnverifiedUser)
 	VerifyEmail = make(map[string]string)
 

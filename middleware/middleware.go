@@ -3,13 +3,14 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+
 	errorHandler "github.com/fossyy/filekeeper/handler/error"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
-	"net/http"
-	"strings"
 )
 
 var log *logger.AggregatedLogger

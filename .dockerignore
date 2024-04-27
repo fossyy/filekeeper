@@ -1,0 +1,8 @@
+staging.bat
+staging.sh
+uploads
+.idea
+.env
+tmp
+log
+/public/output.css

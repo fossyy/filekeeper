@@ -2,6 +2,9 @@
 /uploads
 /public/output.css
 /log
+/.idea
+
+.env
 
 *_templ.txt
 *_templ.go

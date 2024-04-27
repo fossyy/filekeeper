@@ -5,6 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
@@ -14,9 +19,6 @@ import (
 	emailView "github.com/fossyy/filekeeper/view/email"
 	forgotPasswordView "github.com/fossyy/filekeeper/view/forgotPassword"
 	"gorm.io/gorm"
-	"net/http"
-	"sync"
-	"time"
 )
 
 type ForgotPassword struct {
@@ -34,7 +36,8 @@ var UserForgotPassword = make(map[string]string)
 func init() {
 	log = logger.Logger()
 	ListForgotPassword = make(map[string]*ForgotPassword)
-	mailServer = email.NewSmtpServer("mail.fossy.my.id", 25, "test@fossy.my.id", "Test123456")
+	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
+	mailServer = email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 	ticker := time.NewTicker(time.Minute)
 	go func() {
 		for {

@@ -3,6 +3,11 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
@@ -11,10 +16,6 @@ import (
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
 )
 
 var log *logger.AggregatedLogger

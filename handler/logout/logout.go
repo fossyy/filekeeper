@@ -2,11 +2,12 @@ package logoutHandler
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
-	"net/http"
 )
 
 var log *logger.AggregatedLogger

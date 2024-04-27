@@ -2,9 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"github.com/fossyy/filekeeper/logger"
-	"github.com/joho/godotenv"
-	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/http"
 	"os"
@@ -12,6 +9,10 @@ import (
 	"sync"
 	"time"
 	"unicode"
+
+	"github.com/fossyy/filekeeper/logger"
+	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Env struct {
@@ -109,9 +110,11 @@ func Getenv(key string) string {
 		return val
 	}
 
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Error("Error loading .env file: %s", err)
+	if os.Getenv("HOSTNAME") == "" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Error("Error loading .env file: %s", err)
+		}
 	}
 
 	val := os.Getenv(key)
