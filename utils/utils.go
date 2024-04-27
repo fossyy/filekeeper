@@ -109,9 +109,11 @@ func Getenv(key string) string {
 		return val
 	}
 
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Error("Error loading .env file: %s", err)
+	if os.Getenv("HOSTNAME") == "" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Error("Error loading .env file: %s", err)
+		}
 	}
 
 	val := os.Getenv(key)
