@@ -20,7 +20,7 @@ var database db.Database
 
 func init() {
 	log = logger.Logger()
-	database = db.NewMYSQLdb(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
+	database = db.NewPostgresDB(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
 
 }
 
@@ -50,7 +50,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	var filesData []types.FileData
 	for i := 0; i < len(files); i++ {
 		filesData = append(filesData, types.FileData{
