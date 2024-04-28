@@ -25,8 +25,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := db.DB.Create(&data.User).Error
-
+	err := db.DB.CreateUser(data.User)
 	if err != nil {
 		component := signupView.Main("Sign up Page", types.Message{
 			Code:    0,

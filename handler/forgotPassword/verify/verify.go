@@ -18,6 +18,8 @@ var log *logger.AggregatedLogger
 
 func init() {
 	log = logger.Logger()
+	//TESTING
+
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +86,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.DB.Table("users").Where("email = ?", data.User.Email).Update("password", hashedPassword).Error
+	err = db.DB.UpdateUserPassword(data.User.Email, hashedPassword)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())

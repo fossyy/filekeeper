@@ -2,6 +2,7 @@ package uploadHandler
 
 import (
 	"errors"
+	"github.com/fossyy/filekeeper/db"
 	"io"
 	"net/http"
 	"os"
@@ -9,8 +10,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
@@ -57,7 +56,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	userSession := middleware.GetUser(storeSession)
 
 	if r.FormValue("done") == "true" {
-		finalizeFileUpload(fileID)
+		db.DB.FinalizeFileUpload(fileID)
 		return
 	}
 
@@ -67,7 +66,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, err := initialisation.GetUploadInfo(fileID)
+	file, err := db.DB.GetUploadInfo(fileID)
 	if err != nil {
 		log.Error("error getting upload info: " + err.Error())
 		return
@@ -105,13 +104,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	updateIndex(index, fileID)
-}
-
-func finalizeFileUpload(fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
-		"Done": true,
-	})
+	db.DB.UpdateUpdateIndex(index, fileID)
 }
 
 func createUploadDirectory(uploadDir string) error {
@@ -121,12 +114,6 @@ func createUploadDirectory(uploadDir string) error {
 		}
 	}
 	return nil
-}
-
-func updateIndex(index int, fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
-		"Uploaded": index,
-	})
 }
 
 func handleCookieError(w http.ResponseWriter, r *http.Request, err error) {

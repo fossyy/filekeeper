@@ -3,7 +3,6 @@ package signupHandler
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -19,7 +18,6 @@ import (
 	emailView "github.com/fossyy/filekeeper/view/email"
 	signupView "github.com/fossyy/filekeeper/view/signup"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type UnverifiedUser struct {
@@ -110,34 +108,28 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		Password: hashedPassword,
 	}
 
-	var data models.User
-	err = db.DB.Table("users").Where("email = ? OR username = ?", userEmail, username).First(&data).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = verifyEmail(&newUser)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				log.Error(err.Error())
-				return
-			}
-
-			component := signupView.EmailSend("Sign up Page")
-			err = component.Render(r.Context(), w)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				log.Error(err.Error())
-				return
-			}
+	if registered := db.DB.IsUserRegistered(userEmail, username); registered {
+		component := signupView.Main("Sign up Page", types.Message{
+			Code:    0,
+			Message: "Email or Username has been registered",
+		})
+		err = component.Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Error(err.Error())
 			return
 		}
+		return
+	}
+
+	err = verifyEmail(&newUser)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
-	component := signupView.Main("Sign up Page", types.Message{
-		Code:    0,
-		Message: "Email or Username has been registered",
-	})
+
+	component := signupView.EmailSend("Sign up Page")
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

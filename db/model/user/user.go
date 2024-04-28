@@ -61,8 +61,7 @@ func Get(email string) (*UserWithExpired, error) {
 		return user, nil
 	}
 
-	var userData UserWithExpired
-	err := db.DB.Table("users").Where("email = ?", email).First(&userData).Error
+	userData, err := db.DB.GetUser(email)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +74,7 @@ func Get(email string) (*UserWithExpired, error) {
 		AccessAt: time.Now(),
 	}
 
-	return &userData, nil
+	return UserCache.users[email], nil
 }
 
 func DeleteCache(email string) {

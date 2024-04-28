@@ -39,6 +39,7 @@ func init() {
 	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
 	mailServer = email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 	ticker := time.NewTicker(time.Minute)
+	//TESTING
 	go func() {
 		for {
 			<-ticker.C
@@ -84,8 +85,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	emailForm := r.Form.Get("email")
 
-	var user models.User
-	err = db.DB.Table("users").Where("email = ?", emailForm).First(&user).Error
+	user, err := db.DB.GetUser(emailForm)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		component := forgotPasswordView.Main(fmt.Sprintf("Account with this email address %s is not found", emailForm), types.Message{
 			Code:    0,
@@ -100,7 +100,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = verifyForgot(&user)
+	err = verifyForgot(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
