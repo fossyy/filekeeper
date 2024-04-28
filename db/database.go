@@ -211,13 +211,13 @@ func (db *mySQLdb) GetUploadInfo(fileID string) (*models.FilesUploaded, error) {
 }
 
 func (db *mySQLdb) UpdateUpdateIndex(index int, fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = $1", fileID).Updates(map[string]interface{}{
+	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
 		"Uploaded": index,
 	})
 }
 
 func (db *mySQLdb) FinalizeFileUpload(fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = $1", fileID).Updates(map[string]interface{}{
+	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
 		"Done": true,
 	})
 }
