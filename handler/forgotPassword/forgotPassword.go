@@ -33,9 +33,6 @@ var mailServer *email.SmtpServer
 var ListForgotPassword map[string]*ForgotPassword
 var UserForgotPassword = make(map[string]string)
 
-// TESTTING VAR
-var database db.Database
-
 func init() {
 	log = logger.Logger()
 	ListForgotPassword = make(map[string]*ForgotPassword)
@@ -43,7 +40,6 @@ func init() {
 	mailServer = email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 	ticker := time.NewTicker(time.Minute)
 	//TESTING
-	database = db.NewPostgresDB(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
 	go func() {
 		for {
 			<-ticker.C
@@ -89,7 +85,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	emailForm := r.Form.Get("email")
 
-	user, err := database.GetUser(emailForm)
+	user, err := db.DB.GetUser(emailForm)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		component := forgotPasswordView.Main(fmt.Sprintf("Account with this email address %s is not found", emailForm), types.Message{
 			Code:    0,

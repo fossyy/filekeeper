@@ -1,7 +1,6 @@
 package downloadFileHandler
 
 import (
-	"github.com/fossyy/filekeeper/utils"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,18 +11,13 @@ import (
 
 var log *logger.AggregatedLogger
 
-// TESTTING VAR
-var database db.Database
-
 func init() {
 	log = logger.Logger()
-	database = db.NewPostgresDB(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
-
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("id")
-	file, err := database.GetFile(fileID)
+	file, err := db.DB.GetFile(fileID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())

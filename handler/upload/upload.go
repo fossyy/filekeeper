@@ -3,7 +3,6 @@ package uploadHandler
 import (
 	"errors"
 	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/utils"
 	"io"
 	"net/http"
 	"os"
@@ -20,13 +19,8 @@ import (
 var log *logger.AggregatedLogger
 var mu sync.Mutex
 
-// TESTTING VAR
-var database db.Database
-
 func init() {
 	log = logger.Logger()
-	database = db.NewPostgresDB(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
-
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +56,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	userSession := middleware.GetUser(storeSession)
 
 	if r.FormValue("done") == "true" {
-		database.FinalizeFileUpload(fileID)
+		db.DB.FinalizeFileUpload(fileID)
 		return
 	}
 
@@ -72,7 +66,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, err := database.GetUploadInfo(fileID)
+	file, err := db.DB.GetUploadInfo(fileID)
 	if err != nil {
 		log.Error("error getting upload info: " + err.Error())
 		return
@@ -110,7 +104,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	database.UpdateUpdateIndex(index, fileID)
+	db.DB.UpdateUpdateIndex(index, fileID)
 }
 
 func createUploadDirectory(uploadDir string) error {

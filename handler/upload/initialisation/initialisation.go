@@ -3,7 +3,6 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
-	"github.com/fossyy/filekeeper/utils"
 	"io"
 	"net/http"
 	"os"
@@ -21,13 +20,8 @@ import (
 
 var log *logger.AggregatedLogger
 
-// TESTTING VAR
-var database db.Database
-
 func init() {
 	log = logger.Logger()
-	database = db.NewPostgresDB(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
-
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +53,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileData, err := database.GetUserFile(fileInfo.Name, userSession.UserID.String())
+	fileData, err := db.DB.GetUserFile(fileInfo.Name, userSession.UserID.String())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			upload, err := handleNewUpload(userSession, fileInfo)
@@ -74,7 +68,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := database.GetUploadInfo(fileData.ID.String())
+	info, err := db.DB.GetUploadInfo(fileData.ID.String())
 	if err != nil {
 		log.Error(err.Error())
 		return
@@ -122,7 +116,7 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded
 		Downloaded: 0,
 	}
 
-	err = database.CreateFile(&newFile)
+	err = db.DB.CreateFile(&newFile)
 	if err != nil {
 		log.Error(err.Error())
 		return models.FilesUploaded{}, err
@@ -138,7 +132,7 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded
 		Done:     false,
 	}
 
-	err = database.CreateUploadInfo(filesUploaded)
+	err = db.DB.CreateUploadInfo(filesUploaded)
 	if err != nil {
 		log.Error(err.Error())
 		return models.FilesUploaded{}, err

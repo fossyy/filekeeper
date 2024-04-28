@@ -16,13 +16,9 @@ import (
 
 var log *logger.AggregatedLogger
 
-// TESTTING VAR
-var database db.Database
-
 func init() {
 	log = logger.Logger()
 	//TESTING
-	database = db.NewPostgresDB(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
 
 }
 
@@ -90,7 +86,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = database.UpdateUserPassword(data.User.Email, hashedPassword)
+	err = db.DB.UpdateUserPassword(data.User.Email, hashedPassword)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())

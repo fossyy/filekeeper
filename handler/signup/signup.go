@@ -32,16 +32,12 @@ var mailServer *email.SmtpServer
 var VerifyUser map[string]*UnverifiedUser
 var VerifyEmail map[string]string
 
-// TESTTING VAR
-var database db.Database
-
 func init() {
 	log = logger.Logger()
 	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
 	mailServer = email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 	VerifyUser = make(map[string]*UnverifiedUser)
 	VerifyEmail = make(map[string]string)
-	database = db.NewPostgresDB(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
 
 	ticker := time.NewTicker(time.Minute)
 	go func() {
@@ -112,7 +108,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		Password: hashedPassword,
 	}
 
-	if registered := database.IsUserRegistered(userEmail, username); registered {
+	if registered := db.DB.IsUserRegistered(userEmail, username); registered {
 		component := signupView.Main("Sign up Page", types.Message{
 			Code:    0,
 			Message: "Email or Username has been registered",

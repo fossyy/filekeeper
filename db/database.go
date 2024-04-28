@@ -14,6 +14,7 @@ import (
 )
 
 var log *logger.AggregatedLogger
+var DB Database
 
 type mySQLdb struct {
 	*gorm.DB
@@ -22,6 +23,13 @@ type mySQLdb struct {
 type postgresDB struct {
 	*gorm.DB
 }
+
+type SSLMode string
+
+const (
+	DisableSSL SSLMode = "disable"
+	EnableSSL  SSLMode = "enable"
+)
 
 type Database interface {
 	IsUserRegistered(email string, username string) bool
@@ -79,9 +87,9 @@ func NewMYSQLdb(username, password, host, port, dbName string) Database {
 	return &mySQLdb{DB}
 }
 
-func NewPostgresDB(username, password, host, port, dbName string) Database {
+func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) Database {
 	var err error
-	connection := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Jakarta", host, username, password, dbName, port, "disable")
+	connection := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Jakarta", host, username, password, dbName, port, mode)
 	DB, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: connection,
 	}), &gorm.Config{

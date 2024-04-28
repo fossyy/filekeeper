@@ -2,7 +2,6 @@ package user
 
 import (
 	"fmt"
-	"github.com/fossyy/filekeeper/utils"
 	"sync"
 	"time"
 
@@ -27,12 +26,8 @@ type UserWithExpired struct {
 var log *logger.AggregatedLogger
 var UserCache *Cache
 
-// TESTTING VAR
-var database db.Database
-
 func init() {
 	log = logger.Logger()
-	database = db.NewPostgresDB(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
 
 	UserCache = &Cache{users: make(map[string]*UserWithExpired)}
 	ticker := time.NewTicker(time.Hour * 8)
@@ -66,7 +61,7 @@ func Get(email string) (*UserWithExpired, error) {
 		return user, nil
 	}
 
-	userData, err := database.GetUser(email)
+	userData, err := db.DB.GetUser(email)
 	if err != nil {
 		return nil, err
 	}
