@@ -33,12 +33,17 @@ var mailServer *email.SmtpServer
 var ListForgotPassword map[string]*ForgotPassword
 var UserForgotPassword = make(map[string]string)
 
+// TESTTING VAR
+var database db.Database
+
 func init() {
 	log = logger.Logger()
 	ListForgotPassword = make(map[string]*ForgotPassword)
 	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
 	mailServer = email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 	ticker := time.NewTicker(time.Minute)
+	//TESTING
+	database = db.NewMYSQLdb(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
 	go func() {
 		for {
 			<-ticker.C
@@ -84,8 +89,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	emailForm := r.Form.Get("email")
 
-	var user models.User
-	err = db.DB.Table("users").Where("email = ?", emailForm).First(&user).Error
+	user, err := database.GetUser(emailForm)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		component := forgotPasswordView.Main(fmt.Sprintf("Account with this email address %s is not found", emailForm), types.Message{
 			Code:    0,
@@ -100,7 +104,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = verifyForgot(&user)
+	err = verifyForgot(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())

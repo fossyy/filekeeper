@@ -9,15 +9,19 @@ import (
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
-	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
 	downloadView "github.com/fossyy/filekeeper/view/download"
 )
 
 var log *logger.AggregatedLogger
 
+// TESTTING VAR
+var database db.Database
+
 func init() {
 	log = logger.Logger()
+	database = db.NewMYSQLdb(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
+
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -41,8 +45,12 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 	userSession := middleware.GetUser(storeSession)
 
-	var files []models.File
-	db.DB.Table("files").Where("owner_id = ?", userSession.UserID).Find(&files)
+	files, err := database.GetFiles(userSession.UserID.String())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
 	var filesData []types.FileData
 	for i := 0; i < len(files); i++ {
 		filesData = append(filesData, types.FileData{

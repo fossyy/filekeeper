@@ -3,6 +3,7 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
+	"github.com/fossyy/filekeeper/utils"
 	"io"
 	"net/http"
 	"os"
@@ -20,8 +21,13 @@ import (
 
 var log *logger.AggregatedLogger
 
+// TESTTING VAR
+var database db.Database
+
 func init() {
 	log = logger.Logger()
+	database = db.NewMYSQLdb(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
+
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +59,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileData, err := getFile(fileInfo.Name, userSession.UserID)
+	fileData, err := database.GetUserFile(fileInfo.Name, userSession.UserID.String())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			upload, err := handleNewUpload(userSession, fileInfo)
@@ -68,7 +74,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := GetUploadInfo(fileData.ID.String())
+	info, err := database.GetUploadInfo(fileData.ID.String())
 	if err != nil {
 		log.Error(err.Error())
 		return
@@ -79,15 +85,6 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, info)
-}
-
-func getFile(name string, ownerID uuid.UUID) (models.File, error) {
-	var data models.File
-	err := db.DB.Table("files").Where("name = ? AND owner_id = ?", name, ownerID).First(&data).Error
-	if err != nil {
-		return data, err
-	}
-	return data, nil
 }
 
 func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded, error) {
@@ -124,7 +121,8 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded
 		Size:       file.Size,
 		Downloaded: 0,
 	}
-	err = db.DB.Create(&newFile).Error
+
+	err = database.CreateFile(&newFile)
 	if err != nil {
 		log.Error(err.Error())
 		return models.FilesUploaded{}, err
@@ -140,21 +138,12 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded
 		Done:     false,
 	}
 
-	err = db.DB.Create(&filesUploaded).Error
+	err = database.CreateUploadInfo(filesUploaded)
 	if err != nil {
 		log.Error(err.Error())
 		return models.FilesUploaded{}, err
 	}
 	return filesUploaded, nil
-}
-
-func GetUploadInfo(fileID string) (*models.FilesUploaded, error) {
-	var data *models.FilesUploaded
-	err := db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).First(&data).Error
-	if err != nil {
-		return data, err
-	}
-	return data, nil
 }
 
 func respondJSON(w http.ResponseWriter, data interface{}) {

@@ -16,8 +16,14 @@ import (
 
 var log *logger.AggregatedLogger
 
+// TESTTING VAR
+var database db.Database
+
 func init() {
 	log = logger.Logger()
+	//TESTING
+	database = db.NewMYSQLdb(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
+
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +90,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.DB.Table("users").Where("email = ?", data.User.Email).Update("password", hashedPassword).Error
+	err = database.UpdateUserPassword(data.User.Email, hashedPassword)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())

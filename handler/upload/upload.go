@@ -2,6 +2,8 @@ package uploadHandler
 
 import (
 	"errors"
+	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/utils"
 	"io"
 	"net/http"
 	"os"
@@ -9,8 +11,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/session"
@@ -20,8 +20,13 @@ import (
 var log *logger.AggregatedLogger
 var mu sync.Mutex
 
+// TESTTING VAR
+var database db.Database
+
 func init() {
 	log = logger.Logger()
+	database = db.NewMYSQLdb(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
+
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +62,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	userSession := middleware.GetUser(storeSession)
 
 	if r.FormValue("done") == "true" {
-		finalizeFileUpload(fileID)
+		database.FinalizeFileUpload(fileID)
 		return
 	}
 
@@ -67,7 +72,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, err := initialisation.GetUploadInfo(fileID)
+	file, err := database.GetUploadInfo(fileID)
 	if err != nil {
 		log.Error("error getting upload info: " + err.Error())
 		return
@@ -105,13 +110,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	updateIndex(index, fileID)
-}
-
-func finalizeFileUpload(fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
-		"Done": true,
-	})
+	database.UpdateUpdateIndex(index, fileID)
 }
 
 func createUploadDirectory(uploadDir string) error {
@@ -121,12 +120,6 @@ func createUploadDirectory(uploadDir string) error {
 		}
 	}
 	return nil
-}
-
-func updateIndex(index int, fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
-		"Uploaded": index,
-	})
 }
 
 func handleCookieError(w http.ResponseWriter, r *http.Request, err error) {

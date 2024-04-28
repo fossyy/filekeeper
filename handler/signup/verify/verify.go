@@ -1,6 +1,7 @@
 package signupVerifyHandler
 
 import (
+	"github.com/fossyy/filekeeper/utils"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/db"
@@ -12,8 +13,13 @@ import (
 
 var log *logger.AggregatedLogger
 
+// TESTTING VAR
+var database db.Database
+
 func init() {
 	log = logger.Logger()
+	database = db.NewMYSQLdb(utils.Getenv("DB_USERNAME"), utils.Getenv("DB_PASSWORD"), utils.Getenv("DB_HOST"), utils.Getenv("DB_PORT"), utils.Getenv("DB_NAME"))
+
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -25,8 +31,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := db.DB.Create(&data.User).Error
-
+	err := database.CreateUser(data.User)
 	if err != nil {
 		component := signupView.Main("Sign up Page", types.Message{
 			Code:    0,
