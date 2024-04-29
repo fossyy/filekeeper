@@ -45,7 +45,8 @@ func init() {
 			<-ticker.C
 			currentTime := time.Now()
 			cacheClean := 0
-			log.Info(fmt.Sprintf("Cache cleanup initiated at %02d:%02d:%02d", currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			cleanID := utils.GenerateRandomString(10)
+			log.Info(fmt.Sprintf("Cache cleanup [signup] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, data := range VerifyUser {
 				data.mu.Lock()
@@ -57,7 +58,7 @@ func init() {
 				data.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup completed: %d entries removed. Finished at %s", cacheClean, time.Since(currentTime)))
+			log.Info(fmt.Sprintf("Cache cleanup [signup] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 }
