@@ -105,7 +105,6 @@ func ConvertFileSize(byte int) string {
 func Getenv(key string) string {
 	env.mu.Lock()
 	defer env.mu.Unlock()
-
 	if val, ok := env.value[key]; ok {
 		return val
 	}

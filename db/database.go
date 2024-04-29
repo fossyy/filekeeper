@@ -3,7 +3,6 @@ package db
 import (
 	"errors"
 	"fmt"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -13,7 +12,6 @@ import (
 	"strings"
 )
 
-var log *logger.AggregatedLogger
 var DB Database
 
 type mySQLdb struct {
@@ -51,7 +49,28 @@ type Database interface {
 
 func NewMYSQLdb(username, password, host, port, dbName string) Database {
 	var err error
-	connection := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", username, password, host, port, dbName)
+	var count int64
+
+	connection := fmt.Sprintf("%s:%s@tcp(%s:%s)/", username, password, host, port)
+	initDB, err := gorm.Open(mysql.New(mysql.Config{
+		DSN:                       connection,
+		DefaultStringSize:         256,
+		DisableDatetimePrecision:  true,
+		DontSupportRenameIndex:    true,
+		DontSupportRenameColumn:   true,
+		SkipInitializeWithVersion: false,
+	}), &gorm.Config{
+		Logger: gormLogger.Default.LogMode(gormLogger.Silent),
+	})
+
+	initDB.Raw("SELECT count(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?", dbName).Scan(&count)
+	if count <= 0 {
+		if err := initDB.Exec("CREATE DATABASE IF NOT EXISTS " + dbName).Error; err != nil {
+			panic("Error creating database: " + err.Error())
+		}
+	}
+
+	connection = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", username, password, host, port, dbName)
 	DB, err := gorm.Open(mysql.New(mysql.Config{
 		DSN:                       connection,
 		DefaultStringSize:         256,
@@ -83,7 +102,6 @@ func NewMYSQLdb(username, password, host, port, dbName string) Database {
 			panic("Error executing query: " + err.Error())
 		}
 	}
-
 	return &mySQLdb{DB}
 }
 
