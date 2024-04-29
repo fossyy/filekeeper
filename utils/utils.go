@@ -125,7 +125,7 @@ func Getenv(key string) string {
 
 func GenerateRandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano() + int64(rand.Intn(9999))))
 	var result strings.Builder
 	for i := 0; i < length; i++ {
 		randomIndex := seededRand.Intn(len(charset))

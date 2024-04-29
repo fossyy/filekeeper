@@ -2,10 +2,10 @@ package signinHandler
 
 import (
 	"errors"
+	"github.com/fossyy/filekeeper/cache"
 	"net/http"
 	"strings"
 
-	"github.com/fossyy/filekeeper/db/model/user"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
@@ -41,7 +41,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
-	userData, err := user.Get(email)
+	userData, err := cache.GetUser(email)
 	if err != nil {
 		component := signinView.Main("Sign in Page", types.Message{
 			Code:    0,

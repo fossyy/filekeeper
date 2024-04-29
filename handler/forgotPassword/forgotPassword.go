@@ -5,12 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fossyy/filekeeper/cache"
+	"github.com/google/uuid"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
@@ -45,11 +46,12 @@ func init() {
 			<-ticker.C
 			currentTime := time.Now()
 			cacheClean := 0
-			log.Info(fmt.Sprintf("Cache cleanup initiated at %02d:%02d:%02d", currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			cleanID := utils.GenerateRandomString(10)
+			log.Info(fmt.Sprintf("Cache cleanup [Forgot Password] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, data := range ListForgotPassword {
 				data.mu.Lock()
-				if currentTime.Sub(data.CreateTime) > time.Minute*1 {
+				if currentTime.Sub(data.CreateTime) > time.Minute*10 {
 					delete(ListForgotPassword, data.User.Email)
 					delete(UserForgotPassword, data.Code)
 					cacheClean++
@@ -57,7 +59,7 @@ func init() {
 				data.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup completed: %d entries removed. Finished at %s", cacheClean, time.Since(currentTime)))
+			log.Info(fmt.Sprintf("Cache cleanup [Forgot Password] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 }
@@ -85,7 +87,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	emailForm := r.Form.Get("email")
 
-	user, err := db.DB.GetUser(emailForm)
+	user, err := cache.GetUser(emailForm)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		component := forgotPasswordView.Main(fmt.Sprintf("Account with this email address %s is not found", emailForm), types.Message{
 			Code:    0,
@@ -100,7 +102,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = verifyForgot(user)
+	userData := &models.User{
+		UserID:   uuid.UUID{},
+		Username: user.Username,
+		Email:    user.Email,
+		Password: "",
+	}
+
+	err = verifyForgot(userData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Error(err.Error())
