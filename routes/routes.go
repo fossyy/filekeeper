@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"net/http"
-
+	googleOauthHandler "github.com/fossyy/filekeeper/handler/auth/google"
+	googleOauthCallbackHandler "github.com/fossyy/filekeeper/handler/auth/google/callback"
+	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
@@ -17,6 +18,7 @@ import (
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	"github.com/fossyy/filekeeper/middleware"
+	"net/http"
 )
 
 func SetupRoutes() *http.ServeMux {
@@ -33,6 +35,38 @@ func SetupRoutes() *http.ServeMux {
 			}
 		default:
 			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+
+	authRouter := http.NewServeMux()
+	handler.Handle("/auth/", http.StripPrefix("/auth", authRouter))
+	authRouter.HandleFunc("/google", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Guest(googleOauthHandler.GET, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+
+	})
+
+	authRouter.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Guest(googleOauthCallbackHandler.GET, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	authRouter.HandleFunc("/google/setup/{code}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Guest(googleOauthSetupHandler.GET, w, r)
+		case http.MethodPost:
+			middleware.Guest(googleOauthSetupHandler.POST, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 

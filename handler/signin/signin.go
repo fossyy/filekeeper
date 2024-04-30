@@ -67,7 +67,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 		userAgent := r.Header.Get("User-Agent")
-		browserInfo, osInfo := parseUserAgent(userAgent)
+		browserInfo, osInfo := ParseUserAgent(userAgent)
 
 		sessionInfo := session.SessionInfo{
 			SessionID: storeSession.ID,
@@ -106,7 +106,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func parseUserAgent(userAgent string) (map[string]string, map[string]string) {
+func ParseUserAgent(userAgent string) (map[string]string, map[string]string) {
 	browserInfo := make(map[string]string)
 	osInfo := make(map[string]string)
 	if strings.Contains(userAgent, "Firefox") {
