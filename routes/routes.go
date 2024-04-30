@@ -3,6 +3,7 @@ package routes
 import (
 	googleOauthHandler "github.com/fossyy/filekeeper/handler/auth/google"
 	googleOauthCallbackHandler "github.com/fossyy/filekeeper/handler/auth/google/callback"
+	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
@@ -58,15 +59,16 @@ func SetupRoutes() *http.ServeMux {
 		}
 	})
 
-	//TODO make a setup route for unregistered google oauth user
-	//authRouter.HandleFunc("/google/setup", func(w http.ResponseWriter, r *http.Request) {
-	//	switch r.Method {
-	//	case http.MethodGet:
-	//		middleware.Guest(googleOauthSetupHandler.GET, w, r)
-	//	default:
-	//		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	//	}
-	//})
+	authRouter.HandleFunc("/google/setup/{code}", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Guest(googleOauthSetupHandler.GET, w, r)
+		case http.MethodPost:
+			middleware.Guest(googleOauthSetupHandler.POST, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
 	handler.HandleFunc("/signin", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

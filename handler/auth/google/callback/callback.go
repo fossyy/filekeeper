@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/db"
+	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
@@ -70,7 +71,7 @@ func init() {
 
 			for _, data := range CsrfTokens {
 				data.mu.Lock()
-				if currentTime.Sub(data.CreateTime) > time.Minute-10 {
+				if currentTime.Sub(data.CreateTime) > time.Minute*10 {
 					delete(CsrfTokens, data.Token)
 					cacheClean++
 				}
@@ -133,7 +134,13 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !db.DB.IsUserRegistered(oauthUser.Email, "ll") {
-		http.Redirect(w, r, "/signup", http.StatusSeeOther)
+		code := utils.GenerateRandomString(64)
+		googleOauthSetupHandler.SetupUser[code] = &googleOauthSetupHandler.UnregisteredUser{
+			Code:       code,
+			Email:      oauthUser.Email,
+			CreateTime: time.Now(),
+		}
+		http.Redirect(w, r, fmt.Sprintf("/auth/google/setup/%s", code), http.StatusSeeOther)
 		return
 	}
 
