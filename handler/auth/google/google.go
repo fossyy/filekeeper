@@ -15,6 +15,6 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("https://accounts.google.com/o/oauth2/auth?scope=email profile&response_type=code&access_type=offline&state=%s&redirect_uri=%s/auth/google/callback&client_id=%s", token, "http://localhost:8000", "324904877864-vrbqof7nea1l89316d26sk0s76105hc4.apps.googleusercontent.com"), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("https://accounts.google.com/o/oauth2/auth?scope=email profile&response_type=code&access_type=offline&state=%s&redirect_uri=%s&client_id=%s", token, utils.Getenv("GOOGLE_CALLBACK"), utils.Getenv("GOOGLE_CLIENT_ID")), http.StatusFound)
 	return
 }
