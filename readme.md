@@ -92,3 +92,5 @@ https://filekeeper.fossy.my.id
 
 - [@Bagas Aulia Rezki (fossyy)](https://github.com/fossyy)
 
+## License
+[Creative Commons Attribution–NonCommercial 4.0 CC BY-NC](https://creativecommons.org/licenses/by-nc-nd/4.0)
