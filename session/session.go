@@ -72,6 +72,7 @@ func (s *Session) Save(w http.ResponseWriter) {
 		Name:   utils.Getenv("SESSION_NAME"),
 		Value:  s.ID,
 		MaxAge: maxAge,
+		Path:   "/",
 	})
 }
 

@@ -1,8 +1,11 @@
 package utils
 
 import (
+	cryptoRand "crypto/rand"
+	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
-	"math/rand"
+	mathRand "math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -22,6 +25,10 @@ type Env struct {
 
 var env *Env
 var log *logger.AggregatedLogger
+
+const (
+	csrfTokenLength = 32 // Length of the CSRF token in bytes
+)
 
 func init() {
 	env = &Env{value: map[string]string{}}
@@ -124,13 +131,28 @@ func Getenv(key string) string {
 
 func GenerateRandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano() + int64(rand.Intn(9999))))
+	seededRand := mathRand.New(mathRand.NewSource(time.Now().UnixNano() + int64(mathRand.Intn(9999))))
 	var result strings.Builder
 	for i := 0; i < length; i++ {
 		randomIndex := seededRand.Intn(len(charset))
 		result.WriteString(string(charset[randomIndex]))
 	}
 	return result.String()
+}
+
+func GenerateCSRFToken() (string, error) {
+	tokenBytes := make([]byte, 32)
+	_, err := cryptoRand.Read(tokenBytes)
+	if err != nil {
+		return "", err
+	}
+	hash := sha1.New()
+	hash.Write(tokenBytes)
+	hashedToken := hash.Sum(nil)
+
+	csrfToken := base64.URLEncoding.EncodeToString(hashedToken)
+
+	return csrfToken, nil
 }
 
 func SanitizeFilename(filename string) string {
