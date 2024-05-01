@@ -1,6 +1,8 @@
 package session
 
 import (
+	"errors"
+	"github.com/fossyy/filekeeper/types"
 	"net/http"
 	"strconv"
 	"sync"
@@ -29,6 +31,14 @@ type SessionInfo struct {
 	Location  string
 	AccessAt  string
 }
+
+type UserStatus string
+
+const (
+	Authorized     UserStatus = "authorized"
+	Unauthorized   UserStatus = "unauthorized"
+	InvalidSession UserStatus = "invalid_session"
+)
 
 type SessionInfoList map[string][]*SessionInfo
 
@@ -124,4 +134,28 @@ func (sessionInfo *SessionInfo) UpdateAccessTime() {
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("01-02-2006")
 	sessionInfo.AccessAt = formattedTime
+}
+
+func GetSession(r *http.Request) (UserStatus, types.User) {
+	cookie, err := r.Cookie("Session")
+	if err != nil {
+		return Unauthorized, types.User{}
+	}
+
+	storeSession, err := GlobalSessionStore.Get(cookie.Value)
+	if err != nil {
+		if errors.Is(err, &SessionNotFoundError{}) {
+			return InvalidSession, types.User{}
+		}
+		return Unauthorized, types.User{}
+	}
+
+	val := storeSession.Values["user"]
+	var userSession = types.User{}
+	userSession, ok := val.(types.User)
+	if !ok {
+		return Unauthorized, types.User{}
+	}
+
+	return Authorized, userSession
 }

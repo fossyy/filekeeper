@@ -3,6 +3,7 @@ package uploadHandler
 import (
 	"errors"
 	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/types"
 	"io"
 	"net/http"
 	"os"
@@ -11,8 +12,6 @@ import (
 	"sync"
 
 	"github.com/fossyy/filekeeper/logger"
-	"github.com/fossyy/filekeeper/middleware"
-	"github.com/fossyy/filekeeper/session"
 	filesView "github.com/fossyy/filekeeper/view/upload"
 )
 
@@ -38,22 +37,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("Session")
-	if err != nil {
-		handleCookieError(w, r, err)
-		return
-	}
-
-	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
-	if err != nil {
-		if errors.Is(err, &session.SessionNotFoundError{}) {
-			storeSession.Destroy(w)
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	userSession := middleware.GetUser(storeSession)
+	userSession := r.Context().Value("user").(types.User)
 
 	if r.FormValue("done") == "true" {
 		db.DB.FinalizeFileUpload(fileID)
