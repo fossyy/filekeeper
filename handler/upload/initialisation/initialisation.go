@@ -10,8 +10,6 @@ import (
 
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/logger"
-	"github.com/fossyy/filekeeper/middleware"
-	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/google/uuid"
@@ -25,21 +23,7 @@ func init() {
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("Session")
-	if err != nil {
-		handleError(w, err, http.StatusInternalServerError)
-		return
-	}
-
-	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
-	if err != nil {
-		if errors.Is(err, &session.SessionNotFoundError{}) {
-			storeSession.Destroy(w)
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	userSession := middleware.GetUser(storeSession)
+	userSession := r.Context().Value("user").(types.User)
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

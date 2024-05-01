@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -9,7 +9,6 @@ import (
 	errorHandler "github.com/fossyy/filekeeper/handler/error"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
-	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 )
 
@@ -60,90 +59,56 @@ func Handler(next http.Handler) http.Handler {
 }
 
 func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("Session")
-	if err != nil {
-		if errors.Is(err, http.ErrNoCookie) {
-			http.SetCookie(w, &http.Cookie{
-				Name:  "redirect",
-				Value: r.RequestURI,
-				Path:  "/",
-			})
-			http.Redirect(w, r, "/signin", http.StatusSeeOther)
-			return
-		}
-		log.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
+	status, user := session.GetSession(r)
 
-	if err != nil {
-		if errors.Is(err, &session.SessionNotFoundError{}) {
-			storeSession.Destroy(w)
-			http.Redirect(w, r, "/signin", http.StatusSeeOther)
-			return
-		}
-		log.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	switch status {
+	case session.Authorized:
+		ctx := context.WithValue(r.Context(), "user", user)
+		req := r.WithContext(ctx)
+		r.Context().Value("user")
+		next.ServeHTTP(w, req)
+		return
+	case session.Unauthorized:
+		http.SetCookie(w, &http.Cookie{
+			Name:  "redirect",
+			Value: r.RequestURI,
+			Path:  "/",
+		})
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	case session.InvalidSession:
+		http.SetCookie(w, &http.Cookie{
+			Name:   "Session",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	default:
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	userSession := GetUser(storeSession)
-	if userSession.Authenticated {
-		session.GetSessionInfo(storeSession.Values["user"].(types.User).Email, cookie.Value).UpdateAccessTime()
-		next.ServeHTTP(w, r)
-		return
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:  "redirect",
-		Value: r.RequestURI,
-		Path:  "/",
-	})
-	http.Redirect(w, r, "/signin", http.StatusSeeOther)
-	return
 }
 
 func Guest(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("Session")
-	if err != nil {
-		if errors.Is(err, http.ErrNoCookie) {
-			next.ServeHTTP(w, r)
-			return
-		}
-		log.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	status, _ := session.GetSession(r)
+
+	switch status {
+	case session.Authorized:
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
-	}
-	storeSession, err := session.GlobalSessionStore.Get(cookie.Value)
-	if err != nil {
-		if errors.Is(err, &session.SessionNotFoundError{}) {
-			http.SetCookie(w, &http.Cookie{
-				Name:   "Session",
-				Value:  "",
-				MaxAge: -1,
-			})
-			next.ServeHTTP(w, r)
-			return
-		} else {
-			log.Error(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-	userSession := GetUser(storeSession)
-	if !userSession.Authenticated {
+	case session.Unauthorized:
+		next.ServeHTTP(w, r)
+		return
+	case session.InvalidSession:
+		http.SetCookie(w, &http.Cookie{
+			Name:   "Session",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
 		next.ServeHTTP(w, r)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-	return
-}
-
-func GetUser(s *session.Session) types.User {
-	val := s.Values["user"]
-	var userSession = types.User{}
-	userSession, ok := val.(types.User)
-	if !ok {
-		return types.User{Authenticated: false}
-	}
-	return userSession
 }

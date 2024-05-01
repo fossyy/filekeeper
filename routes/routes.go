@@ -10,7 +10,6 @@ import (
 	forgotPasswordVerifyHandler "github.com/fossyy/filekeeper/handler/forgotPassword/verify"
 	indexHandler "github.com/fossyy/filekeeper/handler/index"
 	logoutHandler "github.com/fossyy/filekeeper/handler/logout"
-	miscHandler "github.com/fossyy/filekeeper/handler/misc"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	signupVerifyHandler "github.com/fossyy/filekeeper/handler/signup/verify"
@@ -187,11 +186,11 @@ func SetupRoutes() *http.ServeMux {
 	})
 
 	handler.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
-		miscHandler.Robot(w, r)
+		http.ServeFile(w, r, "public/robots.txt")
 	})
 
 	handler.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/public/favicon.ico", http.StatusSeeOther)
+		http.ServeFile(w, r, "public/favicon.ico")
 	})
 
 	fileServer := http.FileServer(http.Dir("./public"))
