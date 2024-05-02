@@ -7,9 +7,11 @@ COPY /view /src/view
 
 RUN npm install -g tailwindcss
 RUN npm install -g javascript-obfuscator
-RUN npx tailwindcss -i ./public/input.css -o ./public/output.css
+RUN npm install -g clean-css-cli
+RUN npx tailwindcss -i ./public/input.css -o ./tmp/output.css
 RUN javascript-obfuscator ./public/upload.js --compact true --self-defending true --output ./public/upload_obfuscated.js
 RUN javascript-obfuscator ./public/validatePassword.js --compact true --self-defending true --output ./public/validatePassword_obfuscated.js
+RUN cleancss -o ./public/output.css ./tmp/output.css
 
 FROM golang:1.22.2-alpine3.19 AS go_builder
 
