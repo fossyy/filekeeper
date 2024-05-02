@@ -126,6 +126,22 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	userInfoResp, err := client.Do(req)
 	defer userInfoResp.Body.Close()
 
+	jsonData := map[string]string{
+		"token": oauthData.AccessToken,
+	}
+
+	requestBody, err := json.Marshal(jsonData)
+
+	response, err := http.Post("https://oauth2.googleapis.com/revoke", "application/json", bytes.NewBuffer(requestBody))
+	if err != nil {
+		log.Error("Error revoking access token: ", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		log.Error("Error revoking access token: ", response.StatusCode)
+	}
+
 	var oauthUser OauthUser
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&oauthUser); err != nil {
 		log.Error("Error reading user info response body:", err)
