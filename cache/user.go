@@ -16,21 +16,17 @@ type UserWithExpired struct {
 	Email    string
 	Password string
 	AccessAt time.Time
-}
-
-type UserCache struct {
-	users map[string]*UserWithExpired
-	mu    sync.Mutex
+	mu       sync.Mutex
 }
 
 var log *logger.AggregatedLogger
-var userCache *UserCache
+var userCache map[string]*UserWithExpired
 
 func init() {
 	log = logger.Logger()
 
-	userCache = &UserCache{users: make(map[string]*UserWithExpired)}
-	ticker := time.NewTicker(time.Hour * 8)
+	userCache = make(map[string]*UserWithExpired)
+	ticker := time.NewTicker(time.Hour)
 
 	go func() {
 		for {
@@ -40,14 +36,14 @@ func init() {
 			cleanID := utils.GenerateRandomString(10)
 			log.Info(fmt.Sprintf("Cache cleanup [user] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
-			userCache.mu.Lock()
-			for _, user := range userCache.users {
+			for _, user := range userCache {
+				user.mu.Lock()
 				if currentTime.Sub(user.AccessAt) > time.Hour*8 {
-					DeleteUser(user.Email)
+					delete(userCache, user.Email)
 					cacheClean++
 				}
+				user.mu.Unlock()
 			}
-			userCache.mu.Unlock()
 
 			log.Info(fmt.Sprintf("Cache cleanup [user] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
@@ -55,10 +51,7 @@ func init() {
 }
 
 func GetUser(email string) (*UserWithExpired, error) {
-	userCache.mu.Lock()
-	defer userCache.mu.Unlock()
-
-	if user, ok := userCache.users[email]; ok {
+	if user, ok := userCache[email]; ok {
 		return user, nil
 	}
 
@@ -67,7 +60,7 @@ func GetUser(email string) (*UserWithExpired, error) {
 		return nil, err
 	}
 
-	userCache.users[email] = &UserWithExpired{
+	userCache[email] = &UserWithExpired{
 		UserID:   userData.UserID,
 		Username: userData.Username,
 		Email:    userData.Email,
@@ -75,12 +68,12 @@ func GetUser(email string) (*UserWithExpired, error) {
 		AccessAt: time.Now(),
 	}
 
-	return userCache.users[email], nil
+	return userCache[email], nil
 }
 
 func DeleteUser(email string) {
-	userCache.mu.Lock()
-	defer userCache.mu.Unlock()
+	userCache[email].mu.Lock()
+	defer userCache[email].mu.Unlock()
 
-	delete(userCache.users, email)
+	delete(userCache, email)
 }
