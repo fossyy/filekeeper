@@ -35,7 +35,11 @@ func init() {
 }
 
 func ClientIP(request *http.Request) string {
-	ip := request.Header.Get("X-Real-IP")
+	ip := request.Header.Get("Cf-Connecting-IP")
+	if ip != "" {
+		return ip
+	}
+	ip = request.Header.Get("X-Real-IP")
 	if ip == "" {
 		ip = request.Header.Get("X-Forwarded-For")
 		if ip == "" {
