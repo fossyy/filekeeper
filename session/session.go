@@ -40,10 +40,8 @@ const (
 	InvalidSession UserStatus = "invalid_session"
 )
 
-type SessionInfoList map[string][]*SessionInfo
-
 var GlobalSessionStore = SessionStore{Sessions: make(map[string]*Session)}
-var UserSessionInfoList = make(SessionInfoList)
+var UserSessionInfoList = make(map[string]map[string]*SessionInfo)
 
 type SessionNotFoundError struct{}
 
@@ -95,22 +93,22 @@ func (s *Session) Destroy(w http.ResponseWriter) {
 }
 
 func AddSessionInfo(email string, sessionInfo *SessionInfo) {
-	UserSessionInfoList[email] = append(UserSessionInfoList[email], sessionInfo)
+	if _, ok := UserSessionInfoList[email]; !ok {
+		UserSessionInfoList[email] = make(map[string]*SessionInfo)
+	}
+
+	UserSessionInfoList[email][sessionInfo.SessionID] = sessionInfo
 }
 
 func RemoveSessionInfo(email string, id string) {
-	sessionInfos := UserSessionInfoList[email]
-	var updatedSessionInfos []*SessionInfo
-	for _, sessionInfo := range sessionInfos {
-		if sessionInfo.SessionID != id {
-			updatedSessionInfos = append(updatedSessionInfos, sessionInfo)
+	if userSessions, ok := UserSessionInfoList[email]; ok {
+		if _, ok := userSessions[id]; ok {
+			delete(userSessions, id)
+			if len(userSessions) == 0 {
+				delete(UserSessionInfoList, email)
+			}
 		}
 	}
-	if len(updatedSessionInfos) > 0 {
-		UserSessionInfoList[email] = updatedSessionInfos
-		return
-	}
-	delete(UserSessionInfoList, email)
 }
 
 func RemoveAllSessions(email string) {
@@ -122,8 +120,8 @@ func RemoveAllSessions(email string) {
 }
 
 func GetSessionInfo(email string, id string) *SessionInfo {
-	for _, sessionInfo := range UserSessionInfoList[email] {
-		if sessionInfo.SessionID == id {
+	if userSession, ok := UserSessionInfoList[email]; ok {
+		if sessionInfo, ok := userSession[id]; ok {
 			return sessionInfo
 		}
 	}
@@ -136,26 +134,37 @@ func (sessionInfo *SessionInfo) UpdateAccessTime() {
 	sessionInfo.AccessAt = formattedTime
 }
 
-func GetSession(r *http.Request) (UserStatus, types.User) {
+func GetSession(r *http.Request) (UserStatus, types.User, string) {
 	cookie, err := r.Cookie("Session")
 	if err != nil {
-		return Unauthorized, types.User{}
+		return Unauthorized, types.User{}, ""
 	}
 
 	storeSession, err := GlobalSessionStore.Get(cookie.Value)
 	if err != nil {
 		if errors.Is(err, &SessionNotFoundError{}) {
-			return InvalidSession, types.User{}
+			return InvalidSession, types.User{}, ""
 		}
-		return Unauthorized, types.User{}
+		return Unauthorized, types.User{}, ""
 	}
 
 	val := storeSession.Values["user"]
 	var userSession = types.User{}
 	userSession, ok := val.(types.User)
 	if !ok {
-		return Unauthorized, types.User{}
+		return Unauthorized, types.User{}, ""
 	}
 
-	return Authorized, userSession
+	return Authorized, userSession, cookie.Value
+}
+
+func GetSessions(email string) []*SessionInfo {
+	if sessions, ok := UserSessionInfoList[email]; ok {
+		result := make([]*SessionInfo, 0, len(sessions))
+		for _, sessionInfo := range sessions {
+			result = append(result, sessionInfo)
+		}
+		return result
+	}
+	return nil
 }
