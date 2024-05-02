@@ -69,11 +69,13 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, req)
 		return
 	case session.Unauthorized:
-		http.SetCookie(w, &http.Cookie{
-			Name:  "redirect",
-			Value: r.RequestURI,
-			Path:  "/",
-		})
+		if r.RequestURI != "/logout" {
+			http.SetCookie(w, &http.Cookie{
+				Name:  "redirect",
+				Value: r.RequestURI,
+				Path:  "/",
+			})
+		}
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 		return
 	case session.InvalidSession:
