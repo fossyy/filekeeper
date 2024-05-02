@@ -26,10 +26,6 @@ type Env struct {
 var env *Env
 var log *logger.AggregatedLogger
 
-const (
-	csrfTokenLength = 32 // Length of the CSRF token in bytes
-)
-
 func init() {
 	env = &Env{value: map[string]string{}}
 }
