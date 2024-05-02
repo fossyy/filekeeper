@@ -19,7 +19,7 @@ COPY --from=node_builder /src/public /src/public
 COPY --from=node_builder /src/public/upload_obfuscated.js /src/public/upload.js
 COPY --from=node_builder /src/public/validatePassword_obfuscated.js /src/public/validatePassword.js
 
-RUN apk update && apk upgrade && apk add --no-cache ca-certificates
+RUN apk update && apk upgrade && apk add --no-cache ca-certificates tzdata
 RUN update-ca-certificates
 RUN go install github.com/a-h/templ/cmd/templ@$(go list -m -f '{{ .Version }}' github.com/a-h/templ)
 RUN templ generate
@@ -30,9 +30,12 @@ FROM scratch
 
 WORKDIR /src
 
+COPY --from=go_builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=go_builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=go_builder /src/schema.sql /src
 COPY --from=go_builder /src/public /src/public
 COPY --from=go_builder /src/tmp/main /src
+
+ENV TZ Asia/Jakarta
 
 ENTRYPOINT ["./main"]
