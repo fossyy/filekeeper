@@ -218,16 +218,12 @@ templ content(email string, username string, title string, ListSession []*sessio
                             </div>
                             <a
                                 class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                                type="button" id="radix-:rq:" aria-haspopup="menu"
-                                aria-expanded="false" data-state="closed"
-                                href="/upload">
+                                type="button" href="/upload">
                                 Upload
                             </a>
                             <a
                                 class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                                type="button" id="radix-:rq:" aria-haspopup="menu"
-                                aria-expanded="false" data-state="closed"
-                                href="/download">
+                                type="button" href="/download">
                                 Download
                             </a>
                         </div>
@@ -241,18 +237,20 @@ templ content(email string, username string, title string, ListSession []*sessio
                             <div class="grid gap-2">
                                 <h3 class="text-lg font-semibold">Pro Plan</h3>
                                 <p class="text-gray-500">50GB of storage for $9.99/month</p>
-                                <button
-                                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                <a
+                                    class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                                    type="button" href="#">
                                     Upgrade
-                                </button>
+                                </a>
                             </div>
                             <div class="grid gap-2">
                                 <h3 class="text-lg font-semibold">Enterprise Plan</h3>
                                 <p class="text-gray-500">1TB of storage for $49.99/month</p>
-                                <button
-                                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                <a
+                                    class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                                    type="button" href="#">
                                     Upgrade
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>

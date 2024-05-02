@@ -1,6 +1,7 @@
 package indexHandler
 
 import (
+	"github.com/fossyy/filekeeper/session"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/logger"
@@ -14,7 +15,8 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	component := indexView.Main("main page")
+	_, userSession, _ := session.GetSession(r)
+	component := indexView.Main("main page", userSession)
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
