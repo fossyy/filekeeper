@@ -17,7 +17,7 @@ func init() {
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
-	component := userView.Main("User Page", userSession.Email, userSession.Username, session.GetSessions(userSession.Email))
+	component := userView.Main("User Page", userSession, session.GetSessions(userSession.Email))
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
