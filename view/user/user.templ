@@ -1,12 +1,14 @@
 package userView
 
 import (
+    "github.com/fossyy/filekeeper/types"
     "github.com/fossyy/filekeeper/view/layout"
     "github.com/fossyy/filekeeper/session"
 )
 
-templ content(email string, username string, title string, ListSession []*session.SessionInfo) {
+templ content(title string, user types.User, ListSession []*session.SessionInfo) {
     @layout.Base(title){
+        @layout.Navbar(user)
         <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
             <div class="grid gap-10 lg:grid-cols-[1fr_300px]">
                 <div class="space-y-8">
@@ -21,7 +23,7 @@ templ content(email string, username string, title string, ListSession []*sessio
                                 </label>
                                 <input
                                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    id="name" placeholder="Enter your name" value={username} disabled />
+                                    id="name" placeholder="Enter your name" value={user.Username} disabled />
                             </div>
                             <div class="grid gap-2">
                                 <label
@@ -31,7 +33,7 @@ templ content(email string, username string, title string, ListSession []*sessio
                                 </label>
                                 <input
                                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    type="email" id="email" placeholder="Enter your email" value={email} disabled />
+                                    type="email" id="email" placeholder="Enter your email" value={user.Email} disabled />
                             </div>
                             <div class="grid gap-2">
                                 <label
@@ -177,7 +179,8 @@ templ content(email string, username string, title string, ListSession []*sessio
                     </section>
                     <div class="grid gap-1">
                         <div class="flex items-center justify-between">
-                            <button
+                            <a
+                                href="/logout"
                                 class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -187,7 +190,7 @@ templ content(email string, username string, title string, ListSession []*sessio
                                     <line x1="21" x2="9" y1="12" y2="12"></line>
                                 </svg>
                                 Log Out
-                            </button>
+                            </a>
                         </div>
                         <p class="text-sm text-gray-500">
                             Click to log out or terminate the current session.
@@ -257,9 +260,10 @@ templ content(email string, username string, title string, ListSession []*sessio
                 </div>
             </div>
         </main>
+        @layout.Footer()
     }
 }
 
-templ Main(title string, email string, username string, ListSession []*session.SessionInfo) {
-	@content(email, username, title, ListSession)
+templ Main(title string, user types.User, ListSession []*session.SessionInfo) {
+	@content(title, user, ListSession)
 }
