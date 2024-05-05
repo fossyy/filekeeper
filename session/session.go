@@ -84,8 +84,9 @@ func Get(id string) (*Session, error) {
 func Create() *Session {
 	id := utils.GenerateRandomString(128)
 	session := &Session{
-		ID:     id,
-		Values: make(map[string]interface{}),
+		ID:         id,
+		CreateTime: time.Now(),
+		Values:     make(map[string]interface{}),
 	}
 	GlobalSessionStore[id] = session
 	return session
