@@ -1,6 +1,8 @@
 package session
 
 import (
+	"fmt"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	"net/http"
 	"strconv"
@@ -11,9 +13,10 @@ import (
 )
 
 type Session struct {
-	ID     string
-	Values map[string]interface{}
-	mu     sync.Mutex
+	ID         string
+	Values     map[string]interface{}
+	CreateTime time.Time
+	mu         sync.Mutex
 }
 
 type SessionInfo struct {
@@ -28,6 +31,7 @@ type SessionInfo struct {
 }
 
 type UserStatus string
+type SessionNotFoundError struct{}
 
 const (
 	Authorized     UserStatus = "authorized"
@@ -37,8 +41,34 @@ const (
 
 var GlobalSessionStore = make(map[string]*Session)
 var UserSessionInfoList = make(map[string]map[string]*SessionInfo)
+var log *logger.AggregatedLogger
 
-type SessionNotFoundError struct{}
+func init() {
+	log = logger.Logger()
+
+	ticker := time.NewTicker(time.Minute)
+	go func() {
+		for {
+			<-ticker.C
+			currentTime := time.Now()
+			cacheClean := 0
+			cleanID := utils.GenerateRandomString(10)
+			log.Info(fmt.Sprintf("Cache cleanup [Session] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+
+			for _, data := range GlobalSessionStore {
+				data.mu.Lock()
+				if currentTime.Sub(data.CreateTime) > time.Hour*24*7 {
+					RemoveSessionInfo(data.Values["user"].(types.User).Email, data.ID)
+					delete(GlobalSessionStore, data.ID)
+					cacheClean++
+				}
+				data.mu.Unlock()
+			}
+
+			log.Info(fmt.Sprintf("Cache cleanup [Session] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+		}
+	}()
+}
 
 func (e *SessionNotFoundError) Error() string {
 	return "session not found"
