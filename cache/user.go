@@ -26,7 +26,7 @@ func init() {
 	log = logger.Logger()
 
 	userCache = make(map[string]*UserWithExpired)
-	ticker := time.NewTicker(time.Hour)
+	ticker := time.NewTicker(time.Minute)
 
 	go func() {
 		for {

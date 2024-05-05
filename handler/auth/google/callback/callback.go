@@ -167,7 +167,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 		return
 	}
-	storeSession := session.GlobalSessionStore.Create()
+	storeSession := session.Create()
 	storeSession.Values["user"] = types.User{
 		UserID:        user.UserID,
 		Email:         oauthUser.Email,

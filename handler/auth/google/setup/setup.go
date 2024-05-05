@@ -130,7 +130,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	delete(SetupUser, code)
 
-	storeSession := session.GlobalSessionStore.Create()
+	storeSession := session.Create()
 	storeSession.Values["user"] = types.User{
 		UserID:        userID,
 		Email:         unregisteredUser.Email,

@@ -50,7 +50,7 @@ func init() {
 
 			for _, data := range VerifyUser {
 				data.mu.Lock()
-				if currentTime.Sub(data.CreateTime) > time.Minute*1 {
+				if currentTime.Sub(data.CreateTime) > time.Minute*10 {
 					delete(VerifyUser, data.Code)
 					delete(VerifyEmail, data.User.Email)
 					cacheClean++

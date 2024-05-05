@@ -1,7 +1,8 @@
 package session
 
 import (
-	"errors"
+	"fmt"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	"net/http"
 	"strconv"
@@ -12,13 +13,10 @@ import (
 )
 
 type Session struct {
-	ID     string
-	Values map[string]interface{}
-}
-
-type SessionStore struct {
-	Sessions map[string]*Session
-	mu       sync.Mutex
+	ID         string
+	Values     map[string]interface{}
+	CreateTime time.Time
+	mu         sync.Mutex
 }
 
 type SessionInfo struct {
@@ -33,6 +31,7 @@ type SessionInfo struct {
 }
 
 type UserStatus string
+type SessionNotFoundError struct{}
 
 const (
 	Authorized     UserStatus = "authorized"
@@ -40,38 +39,62 @@ const (
 	InvalidSession UserStatus = "invalid_session"
 )
 
-var GlobalSessionStore = SessionStore{Sessions: make(map[string]*Session)}
+var GlobalSessionStore = make(map[string]*Session)
 var UserSessionInfoList = make(map[string]map[string]*SessionInfo)
+var log *logger.AggregatedLogger
 
-type SessionNotFoundError struct{}
+func init() {
+	log = logger.Logger()
+
+	ticker := time.NewTicker(time.Minute)
+	go func() {
+		for {
+			<-ticker.C
+			currentTime := time.Now()
+			cacheClean := 0
+			cleanID := utils.GenerateRandomString(10)
+			log.Info(fmt.Sprintf("Cache cleanup [Session] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+
+			for _, data := range GlobalSessionStore {
+				data.mu.Lock()
+				if currentTime.Sub(data.CreateTime) > time.Hour*24*7 {
+					RemoveSessionInfo(data.Values["user"].(types.User).Email, data.ID)
+					delete(GlobalSessionStore, data.ID)
+					cacheClean++
+				}
+				data.mu.Unlock()
+			}
+
+			log.Info(fmt.Sprintf("Cache cleanup [Session] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+		}
+	}()
+}
 
 func (e *SessionNotFoundError) Error() string {
 	return "session not found"
 }
 
-func (s *SessionStore) Get(id string) (*Session, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if session, ok := s.Sessions[id]; ok {
+func Get(id string) (*Session, error) {
+	if session, ok := GlobalSessionStore[id]; ok {
 		return session, nil
 	}
 	return nil, &SessionNotFoundError{}
 }
 
-func (s *SessionStore) Create() *Session {
+func Create() *Session {
 	id := utils.GenerateRandomString(128)
 	session := &Session{
 		ID:     id,
 		Values: make(map[string]interface{}),
 	}
-	s.Sessions[id] = session
+	GlobalSessionStore[id] = session
 	return session
 }
 
-func (s *SessionStore) Delete(id string) {
+func (s *Session) Delete() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	delete(s.Sessions, id)
+	delete(GlobalSessionStore, s.ID)
 }
 
 func (s *Session) Save(w http.ResponseWriter) {
@@ -114,7 +137,7 @@ func RemoveSessionInfo(email string, id string) {
 func RemoveAllSessions(email string) {
 	sessionInfos := UserSessionInfoList[email]
 	for _, sessionInfo := range sessionInfos {
-		delete(GlobalSessionStore.Sessions, sessionInfo.SessionID)
+		delete(GlobalSessionStore, sessionInfo.SessionID)
 	}
 	delete(UserSessionInfoList, email)
 }
@@ -140,17 +163,14 @@ func GetSession(r *http.Request) (UserStatus, types.User, string) {
 		return Unauthorized, types.User{}, ""
 	}
 
-	storeSession, err := GlobalSessionStore.Get(cookie.Value)
-	if err != nil {
-		if errors.Is(err, &SessionNotFoundError{}) {
-			return InvalidSession, types.User{}, ""
-		}
-		return Unauthorized, types.User{}, ""
+	storeSession, ok := GlobalSessionStore[cookie.Value]
+	if !ok {
+		return InvalidSession, types.User{}, ""
 	}
 
 	val := storeSession.Values["user"]
 	var userSession = types.User{}
-	userSession, ok := val.(types.User)
+	userSession, ok = val.(types.User)
 	if !ok {
 		return Unauthorized, types.User{}, ""
 	}
