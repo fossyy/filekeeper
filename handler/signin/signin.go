@@ -58,7 +58,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
-		storeSession := session.GlobalSessionStore.Create()
+		storeSession := session.Create()
 		storeSession.Values["user"] = types.User{
 			UserID:        userData.UserID,
 			Email:         email,
