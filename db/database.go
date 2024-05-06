@@ -41,9 +41,7 @@ type Database interface {
 	GetUserFile(name string, ownerID string) (*models.File, error)
 	GetFiles(ownerID string) ([]*models.File, error)
 
-	CreateUploadInfo(info models.FilesUploaded) error
-	GetUploadInfo(uploadID string) (*models.FilesUploaded, error)
-	UpdateUpdateIndex(index int, fileID string)
+	UpdateIndex(index int, fileID string)
 	FinalizeFileUpload(fileID string)
 }
 
@@ -185,7 +183,9 @@ func (db *mySQLdb) CreateFile(file *models.File) error {
 
 func (db *mySQLdb) GetFile(fileID string) (*models.File, error) {
 	var file models.File
+
 	err := db.DB.Table("files").Where("id = ?", fileID).First(&file).Error
+
 	if err != nil {
 		return nil, err
 	}
@@ -210,32 +210,14 @@ func (db *mySQLdb) GetFiles(ownerID string) ([]*models.File, error) {
 	return files, err
 }
 
-// CreateUploadInfo It's not optimal, but it's okay for now. Consider implementing caching instead of pushing all updates to the database for better performance in the future.
-func (db *mySQLdb) CreateUploadInfo(info models.FilesUploaded) error {
-	err := db.DB.Create(info).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (db *mySQLdb) GetUploadInfo(fileID string) (*models.FilesUploaded, error) {
-	var info models.FilesUploaded
-	err := db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).First(&info).Error
-	if err != nil {
-		return nil, err
-	}
-	return &info, nil
-}
-
-func (db *mySQLdb) UpdateUpdateIndex(index int, fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
+func (db *mySQLdb) UpdateIndex(index int, fileID string) {
+	db.DB.Table("files").Where("file_id = ?", fileID).Updates(map[string]interface{}{
 		"Uploaded": index,
 	})
 }
 
 func (db *mySQLdb) FinalizeFileUpload(fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
+	db.DB.Table("files").Where("file_id = ?", fileID).Updates(map[string]interface{}{
 		"Done": true,
 	})
 }
@@ -313,32 +295,14 @@ func (db *postgresDB) GetFiles(ownerID string) ([]*models.File, error) {
 	return files, err
 }
 
-// CreateUploadInfo It's not optimal, but it's okay for now. Consider implementing caching instead of pushing all updates to the database for better performance in the future.
-func (db *postgresDB) CreateUploadInfo(info models.FilesUploaded) error {
-	err := db.DB.Create(info).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (db *postgresDB) GetUploadInfo(fileID string) (*models.FilesUploaded, error) {
-	var info models.FilesUploaded
-	err := db.DB.Table("files_uploadeds").Where("file_id = $1", fileID).First(&info).Error
-	if err != nil {
-		return nil, err
-	}
-	return &info, nil
-}
-
-func (db *postgresDB) UpdateUpdateIndex(index int, fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = $1", fileID).Updates(map[string]interface{}{
+func (db *postgresDB) UpdateIndex(index int, fileID string) {
+	db.DB.Table("files").Where("file_id = $1", fileID).Updates(map[string]interface{}{
 		"Uploaded": index,
 	})
 }
 
 func (db *postgresDB) FinalizeFileUpload(fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = $1", fileID).Updates(map[string]interface{}{
+	db.DB.Table("files").Where("file_id = $1", fileID).Updates(map[string]interface{}{
 		"Done": true,
 	})
 }

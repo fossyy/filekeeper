@@ -143,12 +143,7 @@ func SetupRoutes() *http.ServeMux {
 	})
 
 	uploadRouter.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			middleware.Auth(uploadHandler.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+		uploadHandler.WEBSOCKET(w, r)
 	})
 
 	uploadRouter.HandleFunc("/init", func(w http.ResponseWriter, r *http.Request) {

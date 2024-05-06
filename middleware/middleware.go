@@ -1,8 +1,10 @@
 package middleware
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
@@ -36,25 +38,43 @@ func (w *wrapper) WriteHeader(code int) {
 }
 
 func Handler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Upgrade") == "websocket" {
+			hijacker, ok := w.(http.Hijacker)
+			if !ok {
+				http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
+				return
+			}
+			hijackConn, _, err := hijacker.Hijack()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer hijackConn.Close()
+			rw := NewResponseWriter(hijackConn)
+			next.ServeHTTP(rw, r)
+			log.Info(fmt.Sprintf("%s %s %s \n", utils.ClientIP(r), "WEBSOCKET", r.RequestURI))
+			return
+		}
+
 		address := strings.Split(utils.Getenv("CORS_LIST"), ",")
 
 		for _, addr := range address {
-			if request.Host == addr {
-				writer.Header().Set("Access-Control-Allow-Origin", fmt.Sprintf("%s://%s", utils.Getenv("CORS_PROTO"), addr))
+			if r.Host == addr {
+				w.Header().Set("Access-Control-Allow-Origin", fmt.Sprintf("%s://%s", utils.Getenv("CORS_PROTO"), addr))
 			}
 		}
 
 		wrappedWriter := &wrapper{
-			ResponseWriter: writer,
-			request:        request,
+			ResponseWriter: w,
+			request:        r,
 			statusCode:     http.StatusOK,
 		}
 
-		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
-		writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		next.ServeHTTP(wrappedWriter, request)
-		log.Info(fmt.Sprintf("%s %s %s %v \n", utils.ClientIP(request), request.Method, request.RequestURI, wrappedWriter.statusCode))
+		w.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		next.ServeHTTP(wrappedWriter, r)
+		log.Info(fmt.Sprintf("%s %s %s %v \n", utils.ClientIP(r), r.Method, r.RequestURI, wrappedWriter.statusCode))
 	})
 }
 
@@ -116,4 +136,29 @@ func Guest(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
 		return
 	}
+}
+
+func NewResponseWriter(conn net.Conn) http.ResponseWriter {
+	return &responseWriter{
+		conn: conn,
+	}
+}
+
+type responseWriter struct {
+	conn net.Conn
+}
+
+func (rw *responseWriter) Header() http.Header {
+	return http.Header{}
+}
+
+func (rw *responseWriter) WriteHeader(statusCode int) {
+}
+
+func (rw *responseWriter) Write(data []byte) (int, error) {
+	return rw.conn.Write(data)
+}
+
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return rw.conn, bufio.NewReadWriter(bufio.NewReader(rw.conn), bufio.NewWriter(rw.conn)), nil
 }

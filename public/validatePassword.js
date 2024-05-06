@@ -29,7 +29,6 @@ function validatePasswords() {
         matchGoodPath.style.display = 'inline';
         matchBadPath.style.display = 'none';
         matchStatusText.textContent = "Passwords match";
-        console.log("anjay")
         isMatch = true
     } else {
         matchSvgContainer.classList.remove('bg-green-200');

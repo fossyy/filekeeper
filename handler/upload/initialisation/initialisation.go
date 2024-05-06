@@ -52,27 +52,21 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := db.DB.GetUploadInfo(fileData.ID.String())
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-
-	if info.Done {
+	if fileData.Done {
 		respondJSON(w, map[string]bool{"Done": true})
 		return
 	}
-	respondJSON(w, info)
+	respondJSON(w, fileData)
 }
 
-func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded, error) {
+func handleNewUpload(user types.User, file types.FileInfo) (models.File, error) {
 	uploadDir := "uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
 		log.Error(err.Error())
 		err := os.Mkdir(uploadDir, os.ModePerm)
 		if err != nil {
 			log.Error(err.Error())
-			return models.FilesUploaded{}, err
+			return models.File{}, err
 		}
 	}
 
@@ -83,13 +77,13 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded
 	basePath := filepath.Join(currentDir, uploadDir)
 	saveFolder := filepath.Join(basePath, ownerID.String(), fileID.String())
 	if filepath.Dir(saveFolder) != filepath.Join(basePath, ownerID.String()) {
-		return models.FilesUploaded{}, errors.New("invalid path")
+		return models.File{}, errors.New("invalid path")
 	}
 
 	err := os.MkdirAll(saveFolder, os.ModePerm)
 	if err != nil {
 		log.Error(err.Error())
-		return models.FilesUploaded{}, err
+		return models.File{}, err
 	}
 
 	newFile := models.File{
@@ -98,30 +92,17 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded
 		Name:       file.Name,
 		Size:       file.Size,
 		Downloaded: 0,
+		Uploaded:   -1,
+		Done:       false,
 	}
 
 	err = db.DB.CreateFile(&newFile)
 	if err != nil {
 		log.Error(err.Error())
-		return models.FilesUploaded{}, err
+		return models.File{}, err
 	}
 
-	filesUploaded := models.FilesUploaded{
-		UploadID: uuid.New(),
-		FileID:   fileID,
-		OwnerID:  ownerID,
-		Name:     file.Name,
-		Size:     file.Size,
-		Uploaded: -1,
-		Done:     false,
-	}
-
-	err = db.DB.CreateUploadInfo(filesUploaded)
-	if err != nil {
-		log.Error(err.Error())
-		return models.FilesUploaded{}, err
-	}
-	return filesUploaded, nil
+	return newFile, nil
 }
 
 func respondJSON(w http.ResponseWriter, data interface{}) {

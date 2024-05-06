@@ -179,6 +179,22 @@ func GetSession(r *http.Request) (UserStatus, types.User, string) {
 	return Authorized, userSession, cookie.Value
 }
 
+func GetSessionWithID(id string) (UserStatus, types.User, string) {
+	storeSession, ok := GlobalSessionStore[id]
+	if !ok {
+		return InvalidSession, types.User{}, ""
+	}
+
+	val := storeSession.Values["user"]
+	var userSession = types.User{}
+	userSession, ok = val.(types.User)
+	if !ok {
+		return Unauthorized, types.User{}, ""
+	}
+
+	return Authorized, userSession, id
+}
+
 func GetSessions(email string) []*SessionInfo {
 	if sessions, ok := UserSessionInfoList[email]; ok {
 		result := make([]*SessionInfo, 0, len(sessions))

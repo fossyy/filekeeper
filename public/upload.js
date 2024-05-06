@@ -32,7 +32,7 @@ async function handleFile(file){
         if (responseData.Done === false) {
             addNewUploadElement(file)
             const fileChunks = await splitFile(file, chunkSize);
-            await uploadChunks(file.name,file.size, fileChunks, responseData.Uploaded, responseData.FileID);
+            await uploadChunks(file.name,file.size, fileChunks, responseData.Uploaded, responseData.ID);
         } else {
             alert("file already uploaded")
         }
@@ -123,51 +123,97 @@ async function splitFile(file, chunkSize) {
     return fileChunks;
 }
 
-async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
-    let byteUploaded = 0
-    var progress1 = document.getElementById(`progress-${name}-1`);
-    var progress2 = document.getElementById(`progress-${name}-2`);
-    var progress3 = document.getElementById(`progress-${name}-3`);
-    var progress4 = document.getElementById(`progress-${name}-4`);
-    for (let index = 0; index < chunks.length; index++) {
+function getSessionCookie() {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith('Session=')) {
+            return cookie.substring('Session='.length, cookie.length);
+        }
+    }
+    return null;
+}
+
+async function sendMessage(socket, message) {
+    return new Promise((resolve, reject) => {
+        socket.send(message, (error) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+async function uploadChunks(name, size, chunks, uploadedChunk= 10, FileID) {
+    const sessionCookie = getSessionCookie();
+    console.log(sessionCookie)
+    let socket = new WebSocket(`ws://${location.host}/upload/${FileID}`);
+    socket.onopen = function(event) {
+        socket.send(JSON.stringify({"type": "auth", "token": sessionCookie}));
+    };
+    socket.onmessage = async function(event) {
+        if (event.data === "Authorized") {
+            await sendData(name, size, chunks, uploadedChunk, socket, sessionCookie)
+        } else {
+            console.log('Message from server:', event.data);
+        }
+    };
+}
+
+async function sendData(name, size, chunks, uploadedChunk, socket, sessionCookie) {
+    let byteUploaded = 0;
+    let progress1 = document.getElementById(`progress-${name}-1`);
+    let progress2 = document.getElementById(`progress-${name}-2`);
+    let progress3 = document.getElementById(`progress-${name}-3`);
+    let progress4 = document.getElementById(`progress-${name}-4`);
+
+    const waitForConnection = function (callback, interval) {
+        if (socket.readyState === WebSocket.OPEN) {
+            callback();
+        } else {
+            setTimeout(function () {
+                waitForConnection(callback, interval);
+            }, interval);
+        }
+    };
+
+    for (let index = 0; index < chunks.length + 1; index++) {
         const percentComplete = Math.round((index + 1) / chunks.length * 100);
         const chunk = chunks[index];
-        if (!(index <= uploadedChunk)) {
-            const formData = new FormData();
-            formData.append('name', name);
-            formData.append('chunk', chunk);
-            formData.append('index', index);
-            formData.append('done', false);
 
+        if (!(index <= uploadedChunk)) {
             progress1.setAttribute("aria-valuenow", percentComplete);
             progress2.style.width = `${percentComplete}%`;
 
             const startTime = performance.now();
-            await fetch(`/upload/${FileID}`, {
-                method: 'POST',
-                body: formData
-            });
+            const arrayBuffer = await chunk.arrayBuffer();
+            const jsonPayload = {
+                size: size,
+                token: sessionCookie,
+                index: index // Blob data
+            };
 
+            waitForConnection(function () {
+                socket.send(JSON.stringify(jsonPayload));
+                socket.send(arrayBuffer);
+            }, 1000);
             const endTime = performance.now();
             const totalTime = (endTime - startTime) / 1000;
             const uploadSpeed = chunk.size / totalTime / 1024 / 1024;
-            byteUploaded += chunk.size
+            byteUploaded += chunk.size;
             progress3.innerText = `${uploadSpeed.toFixed(2)} MB/s`;
-            progress4.innerText = `Uploading ${percentComplete}% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
+            progress4.innerText = `Uploading ${percentComplete}% - ${convertFileSize(byteUploaded)} of ${convertFileSize(size)}`;
         } else {
             progress1.setAttribute("aria-valuenow", percentComplete);
             progress2.style.width = `${percentComplete}%`;
-            byteUploaded += chunk.size
+            progress4.innerText = `Upload Done`;
+            console.log("done nih")
+            byteUploaded += chunk.size;
         }
     }
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('done', true);
-    return fetch(`/upload/${FileID}`, {
-        method: 'POST',
-        body: formData
-    });
 }
+
 
 

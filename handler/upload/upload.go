@@ -1,18 +1,19 @@
 package uploadHandler
 
 import (
-	"errors"
-	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/types"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"github.com/fossyy/filekeeper/cache"
+	"github.com/fossyy/filekeeper/logger"
+	"github.com/fossyy/filekeeper/session"
+	filesView "github.com/fossyy/filekeeper/view/upload"
+	"github.com/gorilla/websocket"
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strconv"
 	"sync"
-
-	"github.com/fossyy/filekeeper/logger"
-	filesView "github.com/fossyy/filekeeper/view/upload"
+	"time"
 )
 
 var log *logger.AggregatedLogger
@@ -22,93 +23,110 @@ func init() {
 	log = logger.Logger()
 }
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+type WSAuth struct {
+	Type  string `json:"type"`
+	Token string `json:"token"`
+}
+
+type WSData struct {
+	Type  string `json:"type"`
+	Token string `json:"token"`
+	Index int    `json:"index"`
+	Chunk string `json:"chunk"`
+}
+
 func GET(w http.ResponseWriter, r *http.Request) {
 	component := filesView.Main("upload page")
 	if err := component.Render(r.Context(), w); err != nil {
-		handleError(w, err, http.StatusInternalServerError)
-		return
-	}
-}
-
-func POST(w http.ResponseWriter, r *http.Request) {
-	fileID := r.PathValue("id")
-	if err := r.ParseMultipartForm(32 << 20); err != nil {
-		handleError(w, err, http.StatusInternalServerError)
-		return
-	}
-
-	userSession := r.Context().Value("user").(types.User)
-
-	if r.FormValue("done") == "true" {
-		db.DB.FinalizeFileUpload(fileID)
-		return
-	}
-
-	uploadDir := "uploads"
-	if err := createUploadDirectory(uploadDir); err != nil {
-		handleError(w, err, http.StatusInternalServerError)
-		return
-	}
-
-	file, err := db.DB.GetUploadInfo(fileID)
-	if err != nil {
-		log.Error("error getting upload info: " + err.Error())
-		return
-	}
-
-	currentDir, _ := os.Getwd()
-	basePath := filepath.Join(currentDir, uploadDir)
-	saveFolder := filepath.Join(basePath, userSession.UserID.String(), file.FileID.String())
-
-	if filepath.Dir(saveFolder) != filepath.Join(basePath, userSession.UserID.String()) {
-		log.Error("invalid path")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
 
-	fileByte, _, err := r.FormFile("chunk")
+func WEBSOCKET(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		handleError(w, err, http.StatusInternalServerError)
+		fmt.Println("Error upgrading to WebSocket:", err)
 		return
 	}
-	defer fileByte.Close()
+	defer conn.Close()
 
-	dst, err := os.OpenFile(filepath.Join(saveFolder, file.Name), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	messageType, p, err := conn.ReadMessage()
 	if err != nil {
-		handleError(w, err, http.StatusInternalServerError)
+		fmt.Println("Error reading from websocket:", err)
+		return
+	}
+	fmt.Println(string(p))
+
+	var Auth WSAuth
+	err = json.Unmarshal(p, &Auth)
+	if err != nil {
+		fmt.Println("Error unmarshalling json:", err)
+		return
+	}
+	switch Auth.Type {
+	case "auth":
+		status, _, _ := session.GetSessionWithID(Auth.Token)
+		switch status {
+		case session.Authorized:
+			conn.WriteMessage(messageType, []byte("Authorized"))
+			HandleConnection(conn, r)
+		case session.Unauthorized:
+			conn.WriteMessage(messageType, []byte("Unauthorized"))
+			return
+		default:
+
+		}
+	default:
+		return
+	}
+
+	return
+}
+
+func HandleConnection(conn *websocket.Conn, r *http.Request) {
+	total := 0
+	id := r.PathValue("id")
+	info, err := cache.GetFile(id)
+	if err != nil {
+		fmt.Println("Error geting the file ", err)
+		return
+	}
+
+	defer conn.Close()
+	dst, err := os.OpenFile("./"+info.Name, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	if err != nil {
+		fmt.Println("error opening the file :", err)
 		return
 	}
 	defer dst.Close()
-	if _, err := io.Copy(dst, fileByte); err != nil {
-		handleError(w, err, http.StatusInternalServerError)
-		return
-	}
-	rawIndex := r.FormValue("index")
-	index, err := strconv.Atoi(rawIndex)
-	if err != nil {
-		return
-	}
-	db.DB.UpdateUpdateIndex(index, fileID)
-}
 
-func createUploadDirectory(uploadDir string) error {
-	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-		if err := os.Mkdir(uploadDir, os.ModePerm); err != nil {
-			return err
+	for {
+		_, infoUpload, _ := conn.ReadMessage()
+		fmt.Println(string(infoUpload))
+		_, p, err := conn.ReadMessage()
+		if err != nil {
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+				fmt.Println("Connection closed by user:", err)
+				return
+			}
+			fmt.Println("Error reading message:", err)
+			return
+		}
+		total += len(p)
+		io.Copy(dst, bytes.NewReader(p))
+		fmt.Println(total)
+		if total >= info.Size {
+			return
+		}
+		if err := conn.WriteMessage(1, []byte(time.Now().String())); err != nil {
+			fmt.Println("Error writing message:", err)
+			return
 		}
 	}
-	return nil
-}
-
-func handleCookieError(w http.ResponseWriter, r *http.Request, err error) {
-	if errors.Is(err, http.ErrNoCookie) {
-		http.Redirect(w, r, "/signin", http.StatusSeeOther)
-		return
-	}
-	handleError(w, err, http.StatusInternalServerError)
-}
-
-func handleError(w http.ResponseWriter, err error, status int) {
-	http.Error(w, err.Error(), status)
-	log.Error(err.Error())
 }
