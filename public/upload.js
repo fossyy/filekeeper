@@ -32,7 +32,7 @@ async function handleFile(file){
         if (responseData.Done === false) {
             addNewUploadElement(file)
             const fileChunks = await splitFile(file, chunkSize);
-            await uploadChunks(file.name,file.size, fileChunks, responseData.Uploaded, responseData.FileID);
+            await uploadChunks(file.name,file.size, fileChunks, responseData.UploadedChunk, responseData.ID);
         } else {
             alert("file already uploaded")
         }
@@ -125,10 +125,10 @@ async function splitFile(file, chunkSize) {
 
 async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
     let byteUploaded = 0
-    var progress1 = document.getElementById(`progress-${name}-1`);
-    var progress2 = document.getElementById(`progress-${name}-2`);
-    var progress3 = document.getElementById(`progress-${name}-3`);
-    var progress4 = document.getElementById(`progress-${name}-4`);
+    let progress1 = document.getElementById(`progress-${name}-1`);
+    let progress2 = document.getElementById(`progress-${name}-2`);
+    let progress3 = document.getElementById(`progress-${name}-3`);
+    let progress4 = document.getElementById(`progress-${name}-4`);
     for (let index = 0; index < chunks.length; index++) {
         const percentComplete = Math.round((index + 1) / chunks.length * 100);
         const chunk = chunks[index];
@@ -152,6 +152,7 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
             const totalTime = (endTime - startTime) / 1000;
             const uploadSpeed = chunk.size / totalTime / 1024 / 1024;
             byteUploaded += chunk.size
+            console.log(byteUploaded)
             progress3.innerText = `${uploadSpeed.toFixed(2)} MB/s`;
             progress4.innerText = `Uploading ${percentComplete}% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
         } else {
@@ -160,14 +161,4 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
             byteUploaded += chunk.size
         }
     }
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('done', true);
-    return fetch(`/upload/${FileID}`, {
-        method: 'POST',
-        body: formData
-    });
 }
-
-
