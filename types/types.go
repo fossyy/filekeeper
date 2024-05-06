@@ -18,20 +18,13 @@ type User struct {
 
 type FileInfo struct {
 	Name  string `json:"name"`
-	Size  int    `json:"size"`
-	Chunk int    `json:"chunk"`
-}
-
-type FileInfoUploaded struct {
-	Name          string `json:"name"`
-	Size          int    `json:"size"`
-	Chunk         int    `json:"chunk"`
-	UploadedChunk int    `json:"uploaded_chunk"`
+	Size  int64  `json:"size"`
+	Chunk int64  `json:"chunk"`
 }
 
 type FileData struct {
 	ID         string
 	Name       string
 	Size       string
-	Downloaded int
+	Downloaded int64
 }

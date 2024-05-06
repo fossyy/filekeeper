@@ -3,6 +3,8 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/fossyy/filekeeper/cache"
 	"io"
 	"net/http"
 	"os"
@@ -37,7 +39,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileData, err := db.DB.GetUserFile(fileInfo.Name, userSession.UserID.String())
+	fileData, err := cache.GetUserFile(fileInfo.Name, userSession.UserID.String())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			upload, err := handleNewUpload(userSession, fileInfo)
@@ -52,27 +54,22 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := db.DB.GetUploadInfo(fileData.ID.String())
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-
-	if info.Done {
+	if fileData.Done {
 		respondJSON(w, map[string]bool{"Done": true})
 		return
 	}
-	respondJSON(w, info)
+	fmt.Println("nih2 : ", fileData)
+	respondJSON(w, fileData)
 }
 
-func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded, error) {
+func handleNewUpload(user types.User, file types.FileInfo) (models.File, error) {
 	uploadDir := "uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
 		log.Error(err.Error())
 		err := os.Mkdir(uploadDir, os.ModePerm)
 		if err != nil {
 			log.Error(err.Error())
-			return models.FilesUploaded{}, err
+			return models.File{}, err
 		}
 	}
 
@@ -83,45 +80,33 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.FilesUploaded
 	basePath := filepath.Join(currentDir, uploadDir)
 	saveFolder := filepath.Join(basePath, ownerID.String(), fileID.String())
 	if filepath.Dir(saveFolder) != filepath.Join(basePath, ownerID.String()) {
-		return models.FilesUploaded{}, errors.New("invalid path")
+		return models.File{}, errors.New("invalid path")
 	}
 
 	err := os.MkdirAll(saveFolder, os.ModePerm)
 	if err != nil {
 		log.Error(err.Error())
-		return models.FilesUploaded{}, err
+		return models.File{}, err
 	}
 
 	newFile := models.File{
-		ID:         fileID,
-		OwnerID:    ownerID,
-		Name:       file.Name,
-		Size:       file.Size,
-		Downloaded: 0,
+		ID:            fileID,
+		OwnerID:       ownerID,
+		Name:          file.Name,
+		Size:          file.Size,
+		Downloaded:    0,
+		UploadedByte:  0,
+		UploadedChunk: -1,
+		Done:          false,
 	}
 
 	err = db.DB.CreateFile(&newFile)
 	if err != nil {
 		log.Error(err.Error())
-		return models.FilesUploaded{}, err
+		return models.File{}, err
 	}
 
-	filesUploaded := models.FilesUploaded{
-		UploadID: uuid.New(),
-		FileID:   fileID,
-		OwnerID:  ownerID,
-		Name:     file.Name,
-		Size:     file.Size,
-		Uploaded: -1,
-		Done:     false,
-	}
-
-	err = db.DB.CreateUploadInfo(filesUploaded)
-	if err != nil {
-		log.Error(err.Error())
-		return models.FilesUploaded{}, err
-	}
-	return filesUploaded, nil
+	return newFile, nil
 }
 
 func respondJSON(w http.ResponseWriter, data interface{}) {

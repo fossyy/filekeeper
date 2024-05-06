@@ -41,9 +41,8 @@ type Database interface {
 	GetUserFile(name string, ownerID string) (*models.File, error)
 	GetFiles(ownerID string) ([]*models.File, error)
 
-	CreateUploadInfo(info models.FilesUploaded) error
-	GetUploadInfo(uploadID string) (*models.FilesUploaded, error)
-	UpdateUpdateIndex(index int, fileID string)
+	UpdateUploadedByte(index int64, fileID string)
+	UpdateUploadedChunk(index int64, fileID string)
 	FinalizeFileUpload(fileID string)
 }
 
@@ -185,6 +184,7 @@ func (db *mySQLdb) CreateFile(file *models.File) error {
 
 func (db *mySQLdb) GetFile(fileID string) (*models.File, error) {
 	var file models.File
+	fmt.Println(fileID)
 	err := db.DB.Table("files").Where("id = ?", fileID).First(&file).Error
 	if err != nil {
 		return nil, err
@@ -210,32 +210,19 @@ func (db *mySQLdb) GetFiles(ownerID string) ([]*models.File, error) {
 	return files, err
 }
 
-// CreateUploadInfo It's not optimal, but it's okay for now. Consider implementing caching instead of pushing all updates to the database for better performance in the future.
-func (db *mySQLdb) CreateUploadInfo(info models.FilesUploaded) error {
-	err := db.DB.Create(info).Error
-	if err != nil {
-		return err
-	}
-	return nil
+func (db *mySQLdb) UpdateUploadedByte(byte int64, fileID string) {
+	db.DB.Table("files").Where("id = ?", fileID).Updates(map[string]interface{}{
+		"Uploaded_byte": byte,
+	})
 }
-
-func (db *mySQLdb) GetUploadInfo(fileID string) (*models.FilesUploaded, error) {
-	var info models.FilesUploaded
-	err := db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).First(&info).Error
-	if err != nil {
-		return nil, err
-	}
-	return &info, nil
-}
-
-func (db *mySQLdb) UpdateUpdateIndex(index int, fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
-		"Uploaded": index,
+func (db *mySQLdb) UpdateUploadedChunk(index int64, fileID string) {
+	db.DB.Table("files").Where("id = ?", fileID).Updates(map[string]interface{}{
+		"Uploaded_chunk": index,
 	})
 }
 
 func (db *mySQLdb) FinalizeFileUpload(fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = ?", fileID).Updates(map[string]interface{}{
+	db.DB.Table("files").Where("id = ?", fileID).Updates(map[string]interface{}{
 		"Done": true,
 	})
 }
@@ -313,32 +300,19 @@ func (db *postgresDB) GetFiles(ownerID string) ([]*models.File, error) {
 	return files, err
 }
 
-// CreateUploadInfo It's not optimal, but it's okay for now. Consider implementing caching instead of pushing all updates to the database for better performance in the future.
-func (db *postgresDB) CreateUploadInfo(info models.FilesUploaded) error {
-	err := db.DB.Create(info).Error
-	if err != nil {
-		return err
-	}
-	return nil
+func (db *postgresDB) UpdateUploadedByte(byte int64, fileID string) {
+	db.DB.Table("files").Where("id = $1", fileID).Updates(map[string]interface{}{
+		"Uploaded_byte": byte,
+	})
 }
-
-func (db *postgresDB) GetUploadInfo(fileID string) (*models.FilesUploaded, error) {
-	var info models.FilesUploaded
-	err := db.DB.Table("files_uploadeds").Where("file_id = $1", fileID).First(&info).Error
-	if err != nil {
-		return nil, err
-	}
-	return &info, nil
-}
-
-func (db *postgresDB) UpdateUpdateIndex(index int, fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = $1", fileID).Updates(map[string]interface{}{
-		"Uploaded": index,
+func (db *postgresDB) UpdateUploadedChunk(index int64, fileID string) {
+	db.DB.Table("files").Where("id = $1", fileID).Updates(map[string]interface{}{
+		"Uploaded_chunk": index,
 	})
 }
 
 func (db *postgresDB) FinalizeFileUpload(fileID string) {
-	db.DB.Table("files_uploadeds").Where("file_id = $1", fileID).Updates(map[string]interface{}{
+	db.DB.Table("files").Where("id = $1", fileID).Updates(map[string]interface{}{
 		"Done": true,
 	})
 }
