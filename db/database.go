@@ -31,6 +31,7 @@ const (
 
 type Database interface {
 	IsUserRegistered(email string, username string) bool
+	IsEmailRegistered(email string) bool
 
 	CreateUser(user *models.User) error
 	GetUser(email string) (*models.User, error)
@@ -149,6 +150,18 @@ func (db *mySQLdb) IsUserRegistered(email string, username string) bool {
 	return true
 }
 
+func (db *mySQLdb) IsEmailRegistered(email string) bool {
+	var data models.User
+	err := db.DB.Table("users").Where("email = ? ", email).First(&data).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false
+		}
+		return true
+	}
+	return true
+}
+
 func (db *mySQLdb) CreateUser(user *models.User) error {
 	err := db.DB.Create(user).Error
 	if err != nil {
@@ -231,6 +244,18 @@ func (db *mySQLdb) FinalizeFileUpload(fileID string) {
 func (db *postgresDB) IsUserRegistered(email string, username string) bool {
 	var data models.User
 	err := db.DB.Table("users").Where("email = $1 OR username = $2", email, username).First(&data).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false
+		}
+		return true
+	}
+	return true
+}
+
+func (db *postgresDB) IsEmailRegistered(email string) bool {
+	var data models.User
+	err := db.DB.Table("users").Where("email = $1 ", email).First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false

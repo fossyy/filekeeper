@@ -2,6 +2,7 @@ package signinHandler
 
 import (
 	"errors"
+	"github.com/a-h/templ"
 	"github.com/fossyy/filekeeper/cache"
 	"net/http"
 	"strings"
@@ -14,16 +15,49 @@ import (
 )
 
 var log *logger.AggregatedLogger
+var errorMessages = make(map[string]string)
 
 func init() {
+	errorMessages = map[string]string{
+		"redirect_uri_mismatch":      "The redirect URI provided does not match the one registered with our service. Please contact the administrator for assistance.",
+		"invalid_request":            "The request is missing required parameters or has invalid values. Please try again or contact support for assistance.",
+		"access_denied":              "Access was denied. You may have declined the request for permission. Please try again if you wish to grant access.",
+		"unauthorized_client":        "You are not authorized to make this request. Please contact support for further assistance.",
+		"unsupported_response_type":  "The requested response type is not supported. Please try again with a supported response type.",
+		"invalid_scope":              "The requested scope is invalid or unknown. Please try again or contact support for assistance.",
+		"server_error":               "Our server encountered an unexpected error. Please try again later or contact support for assistance.",
+		"temporarily_unavailable":    "Our server is currently undergoing maintenance. Please try again later.",
+		"invalid_grant":              "The authorization code or refresh token provided is invalid. Please try again or contact support for assistance.",
+		"invalid_client":             "The client identifier provided is invalid. Please check your credentials and try again.",
+		"invalid_token":              "The access token provided is invalid. Please try again or contact support for assistance.",
+		"insufficient_scope":         "You do not have sufficient privileges to perform this action. Please contact support for assistance.",
+		"interaction_required":       "Interaction with the authorization server is required. Please try again.",
+		"login_required":             "You need to log in again to proceed. Please try logging in again.",
+		"account_selection_required": "Please select an account to proceed with the request.",
+		"consent_required":           "Consent is required to proceed. Please provide consent to continue.",
+	}
 	log = logger.Logger()
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	component := signinView.Main("Sign in Page", types.Message{
-		Code:    3,
-		Message: "",
-	})
+	var component templ.Component
+	if err := r.URL.Query().Get("error"); err != "" {
+		message, ok := errorMessages[err]
+		if !ok {
+			message = "Unknown error occurred. Please contact support at bagas@fossy.my.id for assistance."
+		}
+
+		component = signinView.Main("Sign in Page", types.Message{
+			Code:    0,
+			Message: message,
+		})
+	} else {
+		component = signinView.Main("Sign in Page", types.Message{
+			Code:    3,
+			Message: "",
+		})
+	}
+
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
