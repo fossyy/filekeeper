@@ -91,6 +91,11 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	delete(CsrfTokens, r.URL.Query().Get("state"))
 
+	if err := r.URL.Query().Get("error"); err != "" {
+		http.Redirect(w, r, fmt.Sprintf("/signin?error=%s", err), http.StatusFound)
+		return
+	}
+
 	formData := url.Values{
 		"grant_type":    {"authorization_code"},
 		"code":          {r.URL.Query().Get("code")},
@@ -98,6 +103,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		"client_secret": {utils.Getenv("GOOGLE_CLIENT_SECRET")},
 		"redirect_uri":  {utils.Getenv("GOOGLE_CALLBACK")},
 	}
+
 	resp, err := http.Post("https://oauth2.googleapis.com/token", "application/x-www-form-urlencoded", bytes.NewBufferString(formData.Encode()))
 	if err != nil {
 		log.Error("Error:", err)
@@ -135,11 +141,15 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	response, err := http.Post("https://oauth2.googleapis.com/revoke", "application/json", bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Error("Error revoking access token: ", err)
+		http.Error(w, "Failed to revoke access token", http.StatusInternalServerError)
+		return
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		log.Error("Error revoking access token: ", response.StatusCode)
+		http.Error(w, "Failed to revoke access token", http.StatusInternalServerError)
+		return
 	}
 
 	var oauthUser OauthUser
@@ -149,7 +159,13 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !db.DB.IsUserRegistered(oauthUser.Email, "ll") {
+	if oauthUser.Email == "" {
+		log.Error("Error reading user info response body: email not found")
+		http.Error(w, "Invalid email is given", http.StatusInternalServerError)
+		return
+	}
+
+	if !db.DB.IsEmailRegistered(oauthUser.Email) {
 		code := utils.GenerateRandomString(64)
 		googleOauthSetupHandler.SetupUser[code] = &googleOauthSetupHandler.UnregisteredUser{
 			Code:       code,
@@ -167,6 +183,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 		return
 	}
+
 	storeSession := session.Create()
 	storeSession.Values["user"] = types.User{
 		UserID:        user.UserID,
