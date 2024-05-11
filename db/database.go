@@ -107,7 +107,23 @@ func NewMYSQLdb(username, password, host, port, dbName string) Database {
 
 func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) Database {
 	var err error
-	connection := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Jakarta", host, username, password, dbName, port, mode)
+	var count int64
+
+	connection := fmt.Sprintf("host=%s user=%s password=%s port=%s sslmode=%s TimeZone=Asia/Jakarta", host, username, password, port, mode)
+	initDB, err := gorm.Open(postgres.New(postgres.Config{
+		DSN: connection,
+	}), &gorm.Config{
+		Logger: gormLogger.Default.LogMode(gormLogger.Silent),
+	})
+
+	initDB.Raw("SELECT count(*) FROM pg_database WHERE datname = ?", dbName).Scan(&count)
+	if count <= 0 {
+		if err := initDB.Exec("CREATE DATABASE " + dbName).Error; err != nil {
+			panic("Error creating database: " + err.Error())
+		}
+	}
+
+	connection = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Jakarta", host, username, password, dbName, port, mode)
 	DB, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: connection,
 	}), &gorm.Config{
@@ -180,10 +196,13 @@ func (db *mySQLdb) GetUser(email string) (*models.User, error) {
 }
 
 func (db *mySQLdb) UpdateUserPassword(email string, password string) error {
-	err := db.DB.Table("users").Where("email = ?", email).Update("password", password).Error
+	var user models.User
+	err := db.DB.Table("users").Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return err
 	}
+	user.Password = password
+	db.Save(&user)
 	return nil
 }
 
@@ -197,7 +216,6 @@ func (db *mySQLdb) CreateFile(file *models.File) error {
 
 func (db *mySQLdb) GetFile(fileID string) (*models.File, error) {
 	var file models.File
-	fmt.Println(fileID)
 	err := db.DB.Table("files").Where("id = ?", fileID).First(&file).Error
 	if err != nil {
 		return nil, err
@@ -224,20 +242,24 @@ func (db *mySQLdb) GetFiles(ownerID string) ([]*models.File, error) {
 }
 
 func (db *mySQLdb) UpdateUploadedByte(byte int64, fileID string) {
-	db.DB.Table("files").Where("id = ?", fileID).Updates(map[string]interface{}{
-		"Uploaded_byte": byte,
-	})
+	var file models.File
+	db.DB.Table("files").Where("id = ?", fileID).First(&file)
+	file.UploadedByte = byte
+	db.Save(&file)
 }
+
 func (db *mySQLdb) UpdateUploadedChunk(index int64, fileID string) {
-	db.DB.Table("files").Where("id = ?", fileID).Updates(map[string]interface{}{
-		"Uploaded_chunk": index,
-	})
+	var file models.File
+	db.DB.Table("files").Where("id = ?", fileID).First(&file)
+	file.UploadedChunk = index
+	db.Save(&file)
 }
 
 func (db *mySQLdb) FinalizeFileUpload(fileID string) {
-	db.DB.Table("files").Where("id = ?", fileID).Updates(map[string]interface{}{
-		"Done": true,
-	})
+	var file models.File
+	db.DB.Table("files").Where("id = ?", fileID).First(&file)
+	file.Done = true
+	db.Save(&file)
 }
 
 // POSTGRES FUNCTION
@@ -283,10 +305,13 @@ func (db *postgresDB) GetUser(email string) (*models.User, error) {
 }
 
 func (db *postgresDB) UpdateUserPassword(email string, password string) error {
-	err := db.DB.Table("users").Where("email = $1", email).Update("password", password).Error
+	var user models.User
+	err := db.DB.Table("users").Where("email = $1", email).First(&user).Error
 	if err != nil {
 		return err
 	}
+	user.Password = password
+	db.Save(&user)
 	return nil
 }
 
@@ -326,18 +351,21 @@ func (db *postgresDB) GetFiles(ownerID string) ([]*models.File, error) {
 }
 
 func (db *postgresDB) UpdateUploadedByte(byte int64, fileID string) {
-	db.DB.Table("files").Where("id = $1", fileID).Updates(map[string]interface{}{
-		"Uploaded_byte": byte,
-	})
+	var file models.File
+	db.DB.Table("files").Where("id = $1", fileID).First(&file)
+	file.UploadedByte = byte
+	db.Save(&file)
 }
 func (db *postgresDB) UpdateUploadedChunk(index int64, fileID string) {
-	db.DB.Table("files").Where("id = $1", fileID).Updates(map[string]interface{}{
-		"Uploaded_chunk": index,
-	})
+	var file models.File
+	db.DB.Table("files").Where("id = $1", fileID).First(&file)
+	file.UploadedChunk = index
+	db.Save(&file)
 }
 
 func (db *postgresDB) FinalizeFileUpload(fileID string) {
-	db.DB.Table("files").Where("id = $1", fileID).Updates(map[string]interface{}{
-		"Done": true,
-	})
+	var file models.File
+	db.DB.Table("files").Where("id = $1", fileID).First(&file)
+	file.Done = true
+	db.Save(&file)
 }

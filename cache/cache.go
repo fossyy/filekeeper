@@ -74,7 +74,7 @@ func init() {
 
 			for _, file := range fileCache {
 				file.mu.Lock()
-				if currentTime.Sub(file.AccessAt) > time.Minute*10 {
+				if currentTime.Sub(file.AccessAt) > time.Minute*1 {
 					db.DB.UpdateUploadedByte(file.UploadedByte, file.ID.String())
 					db.DB.UpdateUploadedChunk(file.UploadedChunk, file.ID.String())
 					delete(fileCache, file.ID.String())
@@ -126,7 +126,7 @@ func GetFile(id string) (*FileWithExpired, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("nih : ", uploadData)
+
 	fileCache[id] = &FileWithExpired{
 		ID:            uploadData.ID,
 		OwnerID:       uploadData.OwnerID,

@@ -35,7 +35,7 @@ func Start() {
 	dbPort := utils.Getenv("DB_PORT")
 	dbName := utils.Getenv("DB_NAME")
 
-	database := db.NewMYSQLdb(dbUser, dbPass, dbHost, dbPort, dbName)
+	database := db.NewPostgresDB(dbUser, dbPass, dbHost, dbPort, dbName, db.DisableSSL)
 	db.DB = database
 
 	Server = NewServer(serverAddr, middleware.Handler(routes.SetupRoutes()), database)
