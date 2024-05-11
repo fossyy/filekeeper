@@ -3,7 +3,6 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/fossyy/filekeeper/cache"
 	"io"
 	"net/http"
@@ -58,7 +57,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, map[string]bool{"Done": true})
 		return
 	}
-	fmt.Println("nih2 : ", fileData)
+
 	respondJSON(w, fileData)
 }
 
