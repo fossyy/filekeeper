@@ -85,7 +85,7 @@ http://localhost:8080
 
 ## Demo
 
-https://filekeeper.fossy.my.id
+https://filekeeper.my.id
 
 
 ## Authors
