@@ -7,8 +7,11 @@ templ Base(title string){
     <html lang="en">
     <head>
         <meta charset="UTF-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <link href="/public/output.css" rel="stylesheet"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Store, share, and access your files securely with our file hosting service. Upload, organize, and share documents, images, videos, and more with ease. Sign up now for secure and reliable file hosting." />
+        <meta name="keywords" content="file hosting, file sharing, cloud storage, data storage, secure file hosting" />
+        <meta name="author" content="Filekeeper" />
+        <link href="/public/output.css" rel="stylesheet"/>
         <title>{ title }</title>
     </head>
     <body>
@@ -21,7 +24,7 @@ templ Navbar(user types.User) {
     <header class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
         <div class="flex items-center gap-4">
             <a class="flex items-center gap-2" href="#">
-                <image src="public/brand.svg" width="48" height="48" />
+                <image src="public/brand.svg" width="48" height="48" alt="brand image" />
                 <span class="text-lg font-semibold">Filekeeper</span>
             </a>
         </div>
@@ -82,7 +85,7 @@ templ Footer() {
     <footer class="bg-white p-6 md:p-8 w-full relative bottom-0 border-t border-gray-200 w-full py-8">
       <div class="container mx-auto flex flex-col items-center justify-between gap-6 md:flex-row">
         <div class="flex items-center gap-2">
-          <image src="public/brand.svg" width="48" height="48"/>
+          <image src="public/brand.svg" width="48" height="48" alt="brand image" />
           <span class="text-lg font-semibold">Filekeeper</span>
         </div>
         <nav class="flex flex-wrap items-center justify-center gap-4 text-sm font-medium">
