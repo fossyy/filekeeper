@@ -1,6 +1,7 @@
 package errorHandler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/logger"
@@ -13,11 +14,21 @@ func init() {
 	log = logger.Logger()
 }
 
-func ALL(w http.ResponseWriter, r *http.Request) {
-	component := errorView.Main("Not Found")
+func NotFound(w http.ResponseWriter, r *http.Request) {
+	component := errorView.NotFound("Not Found")
 	err := component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Fprint(w, err.Error())
+		log.Error(err.Error())
+		return
+	}
+}
+
+func InternalServerError(w http.ResponseWriter, r *http.Request) {
+	component := errorView.InternalServerError("Internal Server Error")
+	err := component.Render(r.Context(), w)
+	if err != nil {
+		fmt.Fprint(w, err.Error())
 		log.Error(err.Error())
 		return
 	}

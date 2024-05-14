@@ -28,13 +28,13 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		handleError(w, err, http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	var fileInfo types.FileInfo
 	if err := json.Unmarshal(body, &fileInfo); err != nil {
-		handleError(w, err, http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -43,7 +43,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			upload, err := handleNewUpload(userSession, fileInfo)
 			if err != nil {
-				handleError(w, err, http.StatusInternalServerError)
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 			respondJSON(w, upload)

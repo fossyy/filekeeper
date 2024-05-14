@@ -85,7 +85,8 @@ func init() {
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	if _, ok := CsrfTokens[r.URL.Query().Get("state")]; !ok {
-		http.Error(w, "csrf token mismatch", http.StatusInternalServerError)
+		//csrf token mismatch error
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -106,16 +107,16 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := http.Post("https://oauth2.googleapis.com/token", "application/x-www-form-urlencoded", bytes.NewBufferString(formData.Encode()))
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error("Error:", err)
-		http.Error(w, "Failed to get token", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
 	var oauthData OauthToken
 	if err := json.NewDecoder(resp.Body).Decode(&oauthData); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error("Error reading token response body:", err)
-		http.Error(w, "Failed to read token response body", http.StatusInternalServerError)
 		return
 	}
 
@@ -124,8 +125,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v1/userinfo?alt=json", nil)
 	req.Header.Set("Authorization", "Bearer "+oauthData.AccessToken)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error("Error creating user info request:", err)
-		http.Error(w, "Failed to create user info request", http.StatusInternalServerError)
 		return
 	}
 
@@ -134,14 +135,14 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	var oauthUser OauthUser
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&oauthUser); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error("Error reading user info response body:", err)
-		http.Error(w, "Failed to read user info response body", http.StatusInternalServerError)
 		return
 	}
 
 	if oauthUser.Email == "" {
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error("Error reading user info response body: email not found")
-		http.Error(w, "Invalid email is given", http.StatusInternalServerError)
 		return
 	}
 
@@ -159,7 +160,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	user, err := cache.GetUser(oauthUser.Email)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}

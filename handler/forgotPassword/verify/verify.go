@@ -39,7 +39,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	})
 	err := component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -58,7 +58,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -72,7 +72,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		})
 		err := component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Error(err.Error())
 			return
 		}
@@ -81,14 +81,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := utils.HashPassword(password)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
 
 	err = db.DB.UpdateUserPassword(data.User.Email, hashedPassword)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -103,7 +103,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	component := forgotPasswordView.ChangeSuccess("Forgot Password Page")
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}

@@ -20,7 +20,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	component := userView.Main("User Page", userSession, session.GetSessions(userSession.Email))
 	err := component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}

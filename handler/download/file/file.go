@@ -19,7 +19,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("id")
 	file, err := db.DB.GetFile(fileID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -32,13 +32,13 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	if filepath.Dir(saveFolder) != filepath.Join(basePath, file.OwnerID.String()) {
 		log.Error("invalid path")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	openFile, err := os.OpenFile(filepath.Join(saveFolder, file.Name), os.O_RDONLY, 0)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -46,7 +46,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	stat, err := openFile.Stat()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
