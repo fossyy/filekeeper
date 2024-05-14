@@ -21,7 +21,7 @@ func init() {
 func GET(w http.ResponseWriter, r *http.Request) {
 	component := filesView.Main("upload page")
 	if err := component.Render(r.Context(), w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
@@ -29,7 +29,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 func POST(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("id")
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -39,7 +39,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
 		if err := os.Mkdir(uploadDir, os.ModePerm); err != nil {
 			log.Error("error getting upload info: " + err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	}
@@ -47,7 +47,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	file, err := cache.GetFile(fileID)
 	if err != nil {
 		log.Error("error getting upload info: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -57,14 +57,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	if filepath.Dir(saveFolder) != filepath.Join(basePath, userSession.UserID.String()) {
 		log.Error("invalid path")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	fileByte, fileHeader, err := r.FormFile("chunk")
 	if err != nil {
 		log.Error("error getting upload info: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer fileByte.Close()
@@ -80,14 +80,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	dst, err := os.OpenFile(filepath.Join(saveFolder, file.Name), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
 		log.Error("error making upload folder: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	defer dst.Close()
 	if _, err := io.Copy(dst, fileByte); err != nil {
 		log.Error("error copying byte to file dst: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

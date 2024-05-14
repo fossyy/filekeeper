@@ -20,7 +20,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, &session.SessionNotFoundError{}) {
 			storeSession.Destroy(w)
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

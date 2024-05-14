@@ -36,7 +36,7 @@ templ NotFound(title string){
 
 templ InternalServerError(title string){
     @layout.Base(title){
-    <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
+    <main class="container mx-auto px-4 md:px-6">
         <div class="flex h-screen w-full flex-col items-center justify-center bg-white">
         <image class="w-32 md:w-64 lg:w-128" src="/public/InternalServerErrorIcon.svg" alt="brand image" />
           <div class="mx-auto max-w-md space-y-4 text-center">

@@ -70,7 +70,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	})
 	err := component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -79,7 +79,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 func POST(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -94,7 +94,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		})
 		err := component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Error(err.Error())
 			return
 		}
@@ -116,7 +116,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		})
 		err = component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Error(err.Error())
 			return
 		}
@@ -125,7 +125,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	err = verifyEmail(&newUser)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -133,7 +133,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	component := signupView.EmailSend("Sign up Page")
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}

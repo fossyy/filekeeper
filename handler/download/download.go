@@ -20,7 +20,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
 	files, err := db.DB.GetFiles(userSession.UserID.String())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -37,7 +37,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	component := downloadView.Main("Download Page", filesData)
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}

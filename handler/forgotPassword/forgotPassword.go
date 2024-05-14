@@ -71,7 +71,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	})
 	err := component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -95,7 +95,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		})
 		err := component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Error(err.Error())
 			return
 		}
@@ -111,7 +111,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	err = verifyForgot(userData)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}
@@ -119,7 +119,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	component := forgotPasswordView.EmailSend("Forgot Password Page")
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		log.Error(err.Error())
 		return
 	}

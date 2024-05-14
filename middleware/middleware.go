@@ -25,20 +25,24 @@ type wrapper struct {
 }
 
 func (w *wrapper) WriteHeader(code int) {
-	switch code {
-	case http.StatusNotFound:
+	w.statusCode = code
+
+	if code == http.StatusNotFound {
 		w.Header().Set("Content-Type", "text/html")
+		w.ResponseWriter.WriteHeader(code)
 		errorHandler.NotFound(w.ResponseWriter, w.request)
 		return
-	case http.StatusInternalServerError:
+	}
+
+	if code == http.StatusInternalServerError {
 		w.Header().Set("Content-Type", "text/html")
+		w.ResponseWriter.WriteHeader(code)
 		errorHandler.InternalServerError(w.ResponseWriter, w.request)
 		return
-	default:
-		w.ResponseWriter.WriteHeader(code)
-		w.statusCode = code
-		return
 	}
+	w.ResponseWriter.WriteHeader(code)
+
+	return
 }
 
 func Handler(next http.Handler) http.Handler {
