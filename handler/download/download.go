@@ -34,7 +34,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	component := downloadView.Main("Download Page", filesData)
+	component := downloadView.Main("Filekeeper - Download Page", filesData)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -64,7 +64,7 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	component := signupView.Main("Sign up Page", types.Message{
+	component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 		Code:    3,
 		Message: "",
 	})
@@ -88,7 +88,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	isValid := utils.ValidatePassword(password)
 	if !isValid {
-		component := signupView.Main("Sign up Page", types.Message{
+		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
 			Message: "Password is invalid",
 		})
@@ -110,7 +110,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if registered := db.DB.IsUserRegistered(userEmail, username); registered {
-		component := signupView.Main("Sign up Page", types.Message{
+		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
 			Message: "Email or Username has been registered",
 		})
@@ -130,7 +130,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	component := signupView.EmailSend("Sign up Page")
+	component := signupView.EmailSend("Filekeeper - Sign up Page")
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

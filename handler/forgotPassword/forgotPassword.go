@@ -65,7 +65,7 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	component := forgotPasswordView.Main("Forgot Password Page", types.Message{
+	component := forgotPasswordView.Main("Filekeeper - Forgot Password Page", types.Message{
 		Code:    3,
 		Message: "",
 	})
@@ -89,9 +89,9 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	user, err := cache.GetUser(emailForm)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		component := forgotPasswordView.Main(fmt.Sprintf("Account with this email address %s is not found", emailForm), types.Message{
+		component := forgotPasswordView.Main("Filekeeper - Forgot Password Page", types.Message{
 			Code:    0,
-			Message: "",
+			Message: "Unexpected error has occurred",
 		})
 		err := component.Render(r.Context(), w)
 		if err != nil {
@@ -116,7 +116,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	component := forgotPasswordView.EmailSend("Forgot Password Page")
+	component := forgotPasswordView.EmailSend("Filekeeper - Forgot Password Page")
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -16,7 +16,7 @@ func init() {
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	_, userSession, _ := session.GetSession(r)
-	component := indexView.Main("main page", userSession)
+	component := indexView.Main("Secure File Hosting - Filekeeper", userSession)
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

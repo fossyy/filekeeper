@@ -27,7 +27,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	err := db.DB.CreateUser(data.User)
 	if err != nil {
-		component := signupView.Main("Sign up Page", types.Message{
+		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
 			Message: "Email or Username has been registered",
 		})
@@ -43,7 +43,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	delete(signupHandler.VerifyUser, code)
 	delete(signupHandler.VerifyEmail, data.User.Email)
 
-	component := signupView.VerifySuccess("Verify page")
+	component := signupView.VerifySuccess("Filekeeper - Verify Page")
 
 	err = component.Render(r.Context(), w)
 	if err != nil {

@@ -61,7 +61,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/signup", http.StatusSeeOther)
 		return
 	}
-	component := authView.GoogleSetup("Setup page", types.Message{
+	component := authView.GoogleSetup("Filekeeper - Setup Page", types.Message{
 		Code:    3,
 		Message: "",
 	})
@@ -91,7 +91,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	isValid := utils.ValidatePassword(password)
 	if !isValid {
-		component := authView.GoogleSetup("Setup page", types.Message{
+		component := authView.GoogleSetup("Filekeeper - Setup Page", types.Message{
 			Code:    0,
 			Message: "Password is invalid",
 		})
@@ -115,7 +115,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	err = db.DB.CreateUser(&newUser)
 	if err != nil {
-		component := signupView.Main("Sign up Page", types.Message{
+		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
 			Message: "Email or Username has been registered",
 		})
