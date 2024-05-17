@@ -33,7 +33,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	component := forgotPasswordView.NewPasswordForm("Forgot Password Page", types.Message{
+	component := forgotPasswordView.NewPasswordForm("Filekeeper - Forgot Password Page", types.Message{
 		Code:    3,
 		Message: "",
 	})
@@ -66,7 +66,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	isValid := utils.ValidatePassword(password)
 	if !isValid {
-		component := signupView.Main("Sign up Page", types.Message{
+		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
 			Message: "Password is invalid",
 		})
@@ -100,7 +100,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	cache.DeleteUser(data.User.Email)
 
-	component := forgotPasswordView.ChangeSuccess("Forgot Password Page")
+	component := forgotPasswordView.ChangeSuccess("Filekeeper - Forgot Password Page")
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

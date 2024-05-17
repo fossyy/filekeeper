@@ -52,7 +52,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 			Message: message,
 		})
 	} else {
-		component = signinView.Main("Sign in Page", types.Message{
+		component = signinView.Main("Filekeeper - Sign in Page", types.Message{
 			Code:    3,
 			Message: "",
 		})
@@ -77,7 +77,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	userData, err := cache.GetUser(email)
 	if err != nil {
-		component := signinView.Main("Sign in Page", types.Message{
+		component := signinView.Main("Filekeeper - Sign in Page", types.Message{
 			Code:    0,
 			Message: "Incorrect Username or Password",
 		})
@@ -128,7 +128,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 		return
 	}
-	component := signinView.Main("Sign in Page", types.Message{
+	component := signinView.Main("Filekeeper - Sign in Page", types.Message{
 		Code:    0,
 		Message: "Incorrect Username or Password",
 	})

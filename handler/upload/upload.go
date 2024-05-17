@@ -19,7 +19,7 @@ func init() {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	component := filesView.Main("upload page")
+	component := filesView.Main("Filekeeper - Upload")
 	if err := component.Render(r.Context(), w); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
