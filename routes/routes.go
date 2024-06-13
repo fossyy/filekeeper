@@ -193,11 +193,6 @@ func SetupRoutes() *http.ServeMux {
 		http.ServeFile(w, r, "public/favicon.ico")
 	})
 
-	//TODO add error message catching to the middleware so we can show the error message at the error page
-	handler.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "anjay", http.StatusInternalServerError)
-	})
-
 	fileServer := http.FileServer(http.Dir("./public"))
 	handler.Handle("/public/", http.StripPrefix("/public", fileServer))
 
