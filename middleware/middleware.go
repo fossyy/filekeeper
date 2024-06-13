@@ -64,7 +64,7 @@ func Handler(next http.Handler) http.Handler {
 		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
 		writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		next.ServeHTTP(wrappedWriter, request)
-		log.Info(fmt.Sprintf("%s %s %s %v \n", utils.ClientIP(request), request.Method, request.RequestURI, wrappedWriter.statusCode))
+		log.Info(fmt.Sprintf("%s %s %s %v", utils.ClientIP(request), request.Method, request.RequestURI, wrappedWriter.statusCode))
 	})
 }
 

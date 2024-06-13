@@ -75,7 +75,7 @@ templ form(err types.Message, title string) {
             </form>
             <div class="text-center text-sm text-white">
               Already have an account?
-              <a class="underline" href="/signin" rel="ugc">
+              <a class="underline" href="/signin" rel="ugc" hx-get="/signin" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
                 Sign in
               </a>
             </div>
