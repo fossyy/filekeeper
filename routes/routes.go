@@ -16,6 +16,7 @@ import (
 	uploadHandler "github.com/fossyy/filekeeper/handler/upload"
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
+	userHandlerTotpSetup "github.com/fossyy/filekeeper/handler/user/totp"
 	"github.com/fossyy/filekeeper/middleware"
 	"net/http"
 )
@@ -124,6 +125,17 @@ func SetupRoutes() *http.ServeMux {
 		switch r.Method {
 		case http.MethodGet:
 			middleware.Auth(userHandler.GET, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	handler.HandleFunc("/user/totp/setup", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Auth(userHandlerTotpSetup.GET, w, r)
+		case http.MethodPost:
+			middleware.Auth(userHandlerTotpSetup.POST, w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}

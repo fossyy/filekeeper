@@ -1,0 +1,56 @@
+package userTotpSetupView
+
+import (
+    "github.com/fossyy/filekeeper/view/layout"
+)
+
+templ content(title string, qrcode string, code string) {
+    @layout.Base(title){
+        <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
+            <div class="mx-auto max-w-md space-y-6 py-12">
+              <div class="space-y-2 text-center">
+                <h1 class="text-3xl font-bold">Set up Two-Factor Authentication</h1>
+                <p class="text-muted-foreground">Secure your account with time-based one-time passwords (TOTP).</p>
+              </div>
+              <div class="rounded-lg border bg-card text-card-foreground shadow-sm" data-v0-t="card">
+                <div class="p-6 space-y-6">
+                  <div class="flex items-center justify-center">
+                    <img
+                      src={"data:image/png;base64," + qrcode}
+                      width="200"
+                      height="200"
+                      alt="QR Code"
+                      class="rounded-lg"
+                      style="aspect-ratio: 200 / 200; object-fit: cover;"
+                    />
+                    <p>{code}</p>
+                  </div>
+                  <form method="post" action="/user/totp/setup">
+                    <div class="grid gap-2">
+                        <label
+                            class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            for="totp">
+                            Totp Code
+                        </label>
+                        <input id="secret" name="secret" value={code} />
+                        <input
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            id="totp" name="totp" placeholder="Code from authenticator app" />
+                        <div class="flex items-center p-6">
+                          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">
+                            Enable TOTP
+                          </button>
+                        </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+        </main>
+        @layout.Footer()
+    }
+}
+
+templ Main(title string, qrcode string, code string) {
+	@content(title, qrcode, code)
+}

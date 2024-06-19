@@ -45,6 +45,8 @@ type Database interface {
 	UpdateUploadedByte(index int64, fileID string)
 	UpdateUploadedChunk(index int64, fileID string)
 	FinalizeFileUpload(fileID string)
+
+	InitializeTotp(email string, secret string) error
 }
 
 func NewMYSQLdb(username, password, host, port, dbName string) Database {
@@ -262,6 +264,20 @@ func (db *mySQLdb) FinalizeFileUpload(fileID string) {
 	db.Save(&file)
 }
 
+func (db *mySQLdb) InitializeTotp(email string, secret string) error {
+	var user models.User
+	err := db.DB.Table("users").Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return err
+	}
+	user.Totp = secret
+	err = db.Save(&user).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // POSTGRES FUNCTION
 func (db *postgresDB) IsUserRegistered(email string, username string) bool {
 	var data models.User
@@ -368,4 +384,18 @@ func (db *postgresDB) FinalizeFileUpload(fileID string) {
 	db.DB.Table("files").Where("id = $1", fileID).First(&file)
 	file.Done = true
 	db.Save(&file)
+}
+
+func (db *postgresDB) InitializeTotp(email string, secret string) error {
+	var user models.User
+	err := db.DB.Table("users").Where("email = $1", email).First(&user).Error
+	if err != nil {
+		return err
+	}
+	user.Totp = secret
+	err = db.Save(&user).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
