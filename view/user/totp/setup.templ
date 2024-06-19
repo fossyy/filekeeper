@@ -2,17 +2,51 @@ package userTotpSetupView
 
 import (
     "github.com/fossyy/filekeeper/view/layout"
+    "github.com/fossyy/filekeeper/types"
 )
 
-templ content(title string, qrcode string, code string) {
+templ content(title string, qrcode string, code string, user types.User) {
     @layout.Base(title){
+        @layout.Navbar(user)
         <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
-            <div class="mx-auto max-w-md space-y-6 py-12">
-              <div class="space-y-2 text-center">
-                <h1 class="text-3xl font-bold">Set up Two-Factor Authentication</h1>
+            <div class="mx-auto max-w-md px-4 py-12 sm:px-6 lg:px-8">
+              <div class="space-y-6 text-center">
+                <div class="flex items-center">
+                    <a
+                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-200 hover:text-accent-foreground h-10 w-10 mr-4"
+                        href="/user" hx-get="/user" hx-swap="outerHTML" hx-push-url="true" hx-target="#content"
+                        >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="h-5 w-5"
+                        >
+                          <path d="m12 19-7-7 7-7"></path>
+                          <path d="M19 12H5"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-3xl font-bold">Set up Two-Factor Authentication</h1>
+                </div>
                 <p class="text-muted-foreground">Secure your account with time-based one-time passwords (TOTP).</p>
+                <div class="mt-4 text-left text-muted-foreground">
+                    <p>Here's how to set up the Google Authenticator app:</p>
+                    <ol class="list-decimal pl-6">
+                      <li>Download the Google Authenticator app on your mobile device.</li>
+                      <li>Open the app and tap "Begin Setup".</li>
+                      <li>Select "Scan a barcode" and point your camera at the QR code below.</li>
+                      <li>The app will automatically add your account and display a 6-digit code.</li>
+                      <li>Enter this code on the website to complete the setup.</li>
+                    </ol>
+                </div>
               </div>
-              <div class="rounded-lg border bg-card text-card-foreground shadow-sm" data-v0-t="card">
+              <div class="rounded-lg border rounded-lg bg-muted p-6bg-card text-card-foreground shadow-sm mt-5" data-v0-t="card">
                 <div class="p-6 space-y-6">
                   <div class="flex items-center justify-center">
                     <img
@@ -23,7 +57,14 @@ templ content(title string, qrcode string, code string) {
                       class="rounded-lg"
                       style="aspect-ratio: 200 / 200; object-fit: cover;"
                     />
-                    <p>{code}</p>
+                  </div>
+                  <div class="mt-6 space-y-2">
+                    <p class="font-medium">Backup Code:</p>
+                    <div class="rounded-md bg-background px-4 py-2 text-sm font-mono text-muted-foreground">12345-67890</div>
+                    <p class="font-medium">TOTP Secret:</p>
+                    <div class="rounded-md bg-background px-4 py-2 text-sm font-mono text-muted-foreground">
+                      {code}
+                    </div>
                   </div>
                   <form method="post" action="/user/totp/setup">
                     <div class="grid gap-2">
@@ -32,12 +73,12 @@ templ content(title string, qrcode string, code string) {
                             for="totp">
                             Totp Code
                         </label>
-                        <input id="secret" name="secret" value={code} />
+                        <input id="secret" name="secret" value={code} type='hidden' />
                         <input
                             class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             id="totp" name="totp" placeholder="Code from authenticator app" />
                         <div class="flex items-center p-6">
-                          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">
+                          <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full" type="submit">
                             Enable TOTP
                           </button>
                         </div>
@@ -51,6 +92,6 @@ templ content(title string, qrcode string, code string) {
     }
 }
 
-templ Main(title string, qrcode string, code string) {
-	@content(title, qrcode, code)
+templ Main(title string, qrcode string, code string, user types.User) {
+	@content(title, qrcode, code, user)
 }

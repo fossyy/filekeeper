@@ -75,7 +75,7 @@ templ content(title string, user types.User, ListSession []*session.SessionInfo)
                                         class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
                                         type="button" id="radix-:rq:" aria-haspopup="menu"
                                         aria-expanded="false" data-state="closed"
-                                        href="/user/totp/setup">
+                                        href="/user/totp/setup" hx-get="/user/totp/setup" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
                                         Setup
                                     </a>
                                 </div>
