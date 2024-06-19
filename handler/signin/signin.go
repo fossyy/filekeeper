@@ -3,9 +3,11 @@ package signinHandler
 import (
 	"errors"
 	"github.com/a-h/templ"
-	"github.com/fossyy/filekeeper/cache"
+	"github.com/fossyy/filekeeper/db"
+	totpHandler "github.com/fossyy/filekeeper/handler/auth/totp"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
@@ -79,7 +81,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
-	userData, err := cache.GetUser(email)
+	userData, err := db.DB.GetUser(email)
 	if err != nil {
 		component := signinView.Main("Filekeeper - Sign in Page", types.Message{
 			Code:    0,
@@ -97,16 +99,16 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
 		if userData.Totp != "" {
-			storeSession := session.Create()
-			storeSession.Values["user"] = types.User{
-				UserID:        userData.UserID,
-				Email:         email,
-				Username:      userData.Username,
-				Totp:          userData.Totp,
-				Authenticated: false,
+			id := utils.GenerateRandomString(32)
+			totpHandler.TotpInfoList[id] = &totpHandler.TotpInfo{
+				ID:         id,
+				UserID:     userData.UserID,
+				Secret:     userData.Totp,
+				Email:      userData.Email,
+				Username:   userData.Username,
+				CreateTime: time.Now(),
 			}
-			storeSession.Save(w)
-			http.Redirect(w, r, "/auth/totp", http.StatusSeeOther)
+			http.Redirect(w, r, "/auth/totp/"+id, http.StatusSeeOther)
 			return
 		}
 

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/db"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
@@ -157,7 +156,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := cache.GetUser(oauthUser.Email)
+	user, err := db.DB.GetUser(oauthUser.Email)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

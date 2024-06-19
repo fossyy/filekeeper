@@ -50,7 +50,7 @@ func SetupRoutes() *http.ServeMux {
 		}
 	})
 
-	authRouter.HandleFunc("/totp", func(w http.ResponseWriter, r *http.Request) {
+	authRouter.HandleFunc("/totp/{id}", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			middleware.Guest(totpHandler.GET, w, r)
