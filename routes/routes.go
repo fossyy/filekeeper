@@ -4,6 +4,7 @@ import (
 	googleOauthHandler "github.com/fossyy/filekeeper/handler/auth/google"
 	googleOauthCallbackHandler "github.com/fossyy/filekeeper/handler/auth/google/callback"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
+	totpHandler "github.com/fossyy/filekeeper/handler/auth/totp"
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
@@ -47,7 +48,17 @@ func SetupRoutes() *http.ServeMux {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
+	})
 
+	authRouter.HandleFunc("/totp", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Guest(totpHandler.GET, w, r)
+		case http.MethodPost:
+			middleware.Guest(totpHandler.POST, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
 	})
 
 	authRouter.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) {

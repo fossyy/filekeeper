@@ -18,6 +18,10 @@ var log *logger.AggregatedLogger
 var errorMessages = make(map[string]string)
 
 func init() {
+
+}
+
+func init() {
 	errorMessages = map[string]string{
 		"redirect_uri_mismatch":      "The redirect URI provided does not match the one registered with our service. Please contact the administrator for assistance.",
 		"invalid_request":            "The request is missing required parameters or has invalid values. Please try again or contact support for assistance.",
@@ -92,6 +96,20 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
+		if userData.Totp != "" {
+			storeSession := session.Create()
+			storeSession.Values["user"] = types.User{
+				UserID:        userData.UserID,
+				Email:         email,
+				Username:      userData.Username,
+				Totp:          userData.Totp,
+				Authenticated: false,
+			}
+			storeSession.Save(w)
+			http.Redirect(w, r, "/auth/totp", http.StatusSeeOther)
+			return
+		}
+
 		storeSession := session.Create()
 		storeSession.Values["user"] = types.User{
 			UserID:        userData.UserID,

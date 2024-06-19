@@ -13,6 +13,7 @@ type User struct {
 	UserID        uuid.UUID
 	Email         string
 	Username      string
+	Totp          string
 	Authenticated bool
 }
 

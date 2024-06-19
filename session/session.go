@@ -176,6 +176,14 @@ func GetSession(r *http.Request) (UserStatus, types.User, string) {
 		return Unauthorized, types.User{}, ""
 	}
 
+	if !userSession.Authenticated && userSession.Totp != "" {
+		return Unauthorized, userSession, cookie.Value
+	}
+
+	if !userSession.Authenticated {
+		return Unauthorized, types.User{}, ""
+	}
+
 	return Authorized, userSession, cookie.Value
 }
 
