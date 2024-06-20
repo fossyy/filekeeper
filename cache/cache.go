@@ -15,6 +15,7 @@ type UserWithExpired struct {
 	Username string
 	Email    string
 	Password string
+	Totp     string
 	AccessAt time.Time
 	mu       sync.Mutex
 }
@@ -103,6 +104,7 @@ func GetUser(email string) (*UserWithExpired, error) {
 		Username: userData.Username,
 		Email:    userData.Email,
 		Password: userData.Password,
+		Totp:     userData.Totp,
 		AccessAt: time.Now(),
 	}
 

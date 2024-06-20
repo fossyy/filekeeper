@@ -7,6 +7,7 @@ type User struct {
 	Username string    `gorm:"unique;not null"`
 	Email    string    `gorm:"unique;not null"`
 	Password string    `gorm:"not null"`
+	Totp     string    `gorm:"not null"`
 }
 
 type File struct {

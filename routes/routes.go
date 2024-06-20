@@ -4,6 +4,7 @@ import (
 	googleOauthHandler "github.com/fossyy/filekeeper/handler/auth/google"
 	googleOauthCallbackHandler "github.com/fossyy/filekeeper/handler/auth/google/callback"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
+	totpHandler "github.com/fossyy/filekeeper/handler/auth/totp"
 	downloadHandler "github.com/fossyy/filekeeper/handler/download"
 	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
@@ -16,6 +17,7 @@ import (
 	uploadHandler "github.com/fossyy/filekeeper/handler/upload"
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
+	userHandlerTotpSetup "github.com/fossyy/filekeeper/handler/user/totp"
 	"github.com/fossyy/filekeeper/middleware"
 	"net/http"
 )
@@ -46,7 +48,17 @@ func SetupRoutes() *http.ServeMux {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
+	})
 
+	authRouter.HandleFunc("/totp", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Guest(totpHandler.GET, w, r)
+		case http.MethodPost:
+			middleware.Guest(totpHandler.POST, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
 	})
 
 	authRouter.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) {
@@ -124,6 +136,17 @@ func SetupRoutes() *http.ServeMux {
 		switch r.Method {
 		case http.MethodGet:
 			middleware.Auth(userHandler.GET, w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	handler.HandleFunc("/user/totp/setup", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.Auth(userHandlerTotpSetup.GET, w, r)
+		case http.MethodPost:
+			middleware.Auth(userHandlerTotpSetup.POST, w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
