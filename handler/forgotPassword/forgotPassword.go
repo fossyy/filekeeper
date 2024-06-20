@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/fossyy/filekeeper/db"
+	"github.com/fossyy/filekeeper/cache"
 	"github.com/google/uuid"
 	"net/http"
 	"strconv"
@@ -87,7 +87,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	emailForm := r.Form.Get("email")
 
-	user, err := db.DB.GetUser(emailForm)
+	user, err := cache.GetUser(emailForm)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		component := forgotPasswordView.Main("Filekeeper - Forgot Password Page", types.Message{
 			Code:    0,

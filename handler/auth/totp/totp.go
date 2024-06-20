@@ -3,61 +3,19 @@ package totpHandler
 import (
 	"errors"
 	"fmt"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 	totpView "github.com/fossyy/filekeeper/view/totp"
-	"github.com/google/uuid"
 	"github.com/xlzd/gotp"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 )
 
-type TotpInfo struct {
-	ID         string
-	UserID     uuid.UUID
-	Secret     string
-	Email      string
-	Username   string
-	CreateTime time.Time
-	mu         sync.Mutex
-}
-
-var TotpInfoList = make(map[string]*TotpInfo)
-var log *logger.AggregatedLogger
-
-func init() {
-	log = logger.Logger()
-
-	ticker := time.NewTicker(time.Minute)
-	go func() {
-		for {
-			<-ticker.C
-			currentTime := time.Now()
-			cacheClean := 0
-			cleanID := utils.GenerateRandomString(10)
-			log.Info(fmt.Sprintf("Cache cleanup [TOTP] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
-
-			for _, data := range TotpInfoList {
-				data.mu.Lock()
-				if currentTime.Sub(data.CreateTime) > time.Minute*10 {
-					delete(TotpInfoList, data.ID)
-					cacheClean++
-				}
-				data.mu.Unlock()
-			}
-
-			log.Info(fmt.Sprintf("Cache cleanup [TOTP] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
-		}
-	}()
-}
-
 func GET(w http.ResponseWriter, r *http.Request) {
-	_, ok := TotpInfoList[r.PathValue("id")]
-	if !ok {
+	_, user, _ := session.GetSession(r)
+	if user.Authenticated || user.Totp == "" {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -73,20 +31,18 @@ func GET(w http.ResponseWriter, r *http.Request) {
 func POST(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	code := r.Form.Get("code")
-	data, ok := TotpInfoList[r.PathValue("id")]
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	fmt.Println(data)
-	totp := gotp.NewDefaultTOTP(data.Secret)
+	_, user, key := session.GetSession(r)
+	totp := gotp.NewDefaultTOTP(user.Totp)
+
 	if totp.Verify(code, time.Now().Unix()) {
-		storeSession := session.Create()
+		storeSession, err := session.Get(key)
+		if err != nil {
+			return
+		}
 		storeSession.Values["user"] = types.User{
-			UserID:        data.UserID,
-			Email:         data.Email,
-			Username:      data.Username,
-			Totp:          "",
+			UserID:        user.UserID,
+			Email:         user.Email,
+			Username:      user.Username,
 			Authenticated: true,
 		}
 		userAgent := r.Header.Get("User-Agent")
@@ -103,7 +59,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 		storeSession.Save(w)
-		session.AddSessionInfo(data.Email, &sessionInfo)
+		session.AddSessionInfo(user.Email, &sessionInfo)
 
 		cookie, err := r.Cookie("redirect")
 		if errors.Is(err, http.ErrNoCookie) {

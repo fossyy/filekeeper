@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/fossyy/filekeeper/cache"
 	userTotpSetupView "github.com/fossyy/filekeeper/view/user/totp"
 	"image/png"
 	"net/http"
@@ -63,7 +64,9 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		cache.DeleteUser(userSession.Email)
 		fmt.Fprint(w, "Authentication successful! Access granted.")
+		return
 	} else {
 		uri := totp.ProvisioningUri(userSession.Email, "filekeeper")
 

@@ -1,6 +1,7 @@
 package forgotPasswordVerifyHandler
 
 import (
+	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/db"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
 	"github.com/fossyy/filekeeper/logger"
@@ -96,6 +97,8 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	delete(forgotPasswordHandler.UserForgotPassword, data.Code)
 
 	session.RemoveAllSessions(data.User.Email)
+
+	cache.DeleteUser(data.User.Email)
 
 	component := forgotPasswordView.ChangeSuccess("Filekeeper - Forgot Password Page")
 	err = component.Render(r.Context(), w)

@@ -50,6 +50,27 @@ func init() {
 			currentTime := time.Now()
 			cacheClean := 0
 			cleanID := utils.GenerateRandomString(10)
+			log.Info(fmt.Sprintf("Cache cleanup [user] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+
+			for _, user := range userCache {
+				user.mu.Lock()
+				if currentTime.Sub(user.AccessAt) > time.Hour*8 {
+					delete(userCache, user.Email)
+					cacheClean++
+				}
+				user.mu.Unlock()
+			}
+
+			log.Info(fmt.Sprintf("Cache cleanup [user] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+		}
+	}()
+
+	go func() {
+		for {
+			<-ticker.C
+			currentTime := time.Now()
+			cacheClean := 0
+			cleanID := utils.GenerateRandomString(10)
 			log.Info(fmt.Sprintf("Cache cleanup [files] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, file := range fileCache {
@@ -66,6 +87,35 @@ func init() {
 			log.Info(fmt.Sprintf("Cache cleanup [files] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
+}
+
+func GetUser(email string) (*UserWithExpired, error) {
+	if user, ok := userCache[email]; ok {
+		return user, nil
+	}
+
+	userData, err := db.DB.GetUser(email)
+	if err != nil {
+		return nil, err
+	}
+
+	userCache[email] = &UserWithExpired{
+		UserID:   userData.UserID,
+		Username: userData.Username,
+		Email:    userData.Email,
+		Password: userData.Password,
+		Totp:     userData.Totp,
+		AccessAt: time.Now(),
+	}
+
+	return userCache[email], nil
+}
+
+func DeleteUser(email string) {
+	userCache[email].mu.Lock()
+	defer userCache[email].mu.Unlock()
+
+	delete(userCache, email)
 }
 
 func GetFile(id string) (*FileWithExpired, error) {
