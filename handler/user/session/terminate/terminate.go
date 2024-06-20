@@ -11,10 +11,14 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 
 	_, mySession, _ := session.GetSession(r)
 	otherSession, _ := session.Get(id)
+	if session.GetSessionInfo(mySession.Email, otherSession.ID) == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	otherSession.Delete()
 	session.RemoveSessionInfo(mySession.Email, otherSession.ID)
-
 	component := userView.SessionTable(session.GetSessions(mySession.Email))
+
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
