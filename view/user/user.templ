@@ -109,7 +109,7 @@ templ content(title string, user types.User, ListSession []*session.SessionInfo)
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="[&amp;_tr:last-child]:border-0">
+                                            <tbody class="[&amp;_tr:last-child]:border-0" id="session-tables">
                                                 for _, ses := range ListSession {
                                                 <tr
                                                     class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
@@ -122,13 +122,13 @@ templ content(title string, user types.User, ListSession []*session.SessionInfo)
                                                     <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.AccessAt}
                                                     </td>
                                                     <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
-                                                        <a
+                                                        <button
                                                             class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
                                                             type="button" id="radix-:rq:" aria-haspopup="menu"
                                                             aria-expanded="false" data-state="closed"
-                                                            href="/">
+                                                            hx-delete={"/user/session/terminate/"+ses.SessionID} hx-target="#session-tables" hx-swap="outerHTML">
                                                             Terminate
-                                                        </a>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                                 }
@@ -260,6 +260,33 @@ templ content(title string, user types.User, ListSession []*session.SessionInfo)
         </main>
         @layout.Footer()
     }
+}
+
+templ SessionTable(ListSession []*session.SessionInfo){
+    <tbody class="[&amp;_tr:last-child]:border-0" id="session-tables">
+    for _, ses := range ListSession {
+        <tr
+            class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.IP}
+            </td>
+            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.Browser + ses.Version}
+            </td>
+            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.OS + ses.OSVersion}
+            </td>
+            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.AccessAt}
+            </td>
+            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
+                <button
+                    class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                    type="button" id="radix-:rq:" aria-haspopup="menu"
+                    aria-expanded="false" data-state="closed"
+                    hx-delete={"/user/session/terminate/"+ses.SessionID} hx-target="#session-tables" hx-swap="outerHTML">
+                    Terminate
+                </button>
+            </td>
+        </tr>
+    }
+    </tbody>
 }
 
 templ Main(title string, user types.User, ListSession []*session.SessionInfo) {
