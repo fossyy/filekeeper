@@ -25,194 +25,110 @@ import (
 func SetupRoutes() *http.ServeMux {
 	handler := http.NewServeMux()
 
-	handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.RequestURI {
-		case "/":
-			switch r.Method {
-			case http.MethodGet:
-				indexHandler.GET(w, r)
-			default:
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			}
-		default:
-			w.WriteHeader(http.StatusNotFound)
-		}
+	handler.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		indexHandler.GET(w, r)
 	})
 
-	authRouter := http.NewServeMux()
-	handler.Handle("/auth/", http.StripPrefix("/auth", authRouter))
-	authRouter.HandleFunc("/google", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Guest(googleOauthHandler.GET, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /auth/google", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(googleOauthHandler.GET, w, r)
 	})
 
-	authRouter.HandleFunc("/totp", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Guest(totpHandler.GET, w, r)
-		case http.MethodPost:
-			middleware.Guest(totpHandler.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /auth/totp", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(totpHandler.GET, w, r)
 	})
 
-	authRouter.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Guest(googleOauthCallbackHandler.GET, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("POST /auth/totp", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(totpHandler.POST, w, r)
 	})
 
-	authRouter.HandleFunc("/google/setup/{code}", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Guest(googleOauthSetupHandler.GET, w, r)
-		case http.MethodPost:
-			middleware.Guest(googleOauthSetupHandler.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /auth/google/callback", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(googleOauthCallbackHandler.GET, w, r)
 	})
 
-	handler.HandleFunc("/signin", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Guest(signinHandler.GET, w, r)
-		case http.MethodPost:
-			middleware.Guest(signinHandler.POST, w, r)
-		}
+	handler.HandleFunc("GET /auth/google/setup/{code}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(googleOauthSetupHandler.GET, w, r)
+	})
+	handler.HandleFunc("POST /auth/google/setup/{code}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(googleOauthSetupHandler.POST, w, r)
 	})
 
-	signupRouter := http.NewServeMux()
-	handler.Handle("/signup/", http.StripPrefix("/signup", signupRouter))
-
-	signupRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Guest(signupHandler.GET, w, r)
-		case http.MethodPost:
-			middleware.Guest(signupHandler.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /signin", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(signinHandler.GET, w, r)
 	})
 
-	signupRouter.HandleFunc("/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
+	handler.HandleFunc("POST /signin", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(signinHandler.POST, w, r)
+	})
+
+	handler.HandleFunc("GET /signup", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(signupHandler.GET, w, r)
+	})
+
+	handler.HandleFunc("POST /signup", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(signupHandler.POST, w, r)
+	})
+
+	handler.HandleFunc("GET /signup/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Guest(signupVerifyHandler.GET, w, r)
 	})
 
-	forgotPasswordRouter := http.NewServeMux()
-	handler.Handle("/forgot-password/", http.StripPrefix("/forgot-password", forgotPasswordRouter))
-	forgotPasswordRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Guest(forgotPasswordHandler.GET, w, r)
-		case http.MethodPost:
-			middleware.Guest(forgotPasswordHandler.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /forgot-password", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(forgotPasswordHandler.GET, w, r)
 	})
 
-	forgotPasswordRouter.HandleFunc("/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Guest(forgotPasswordVerifyHandler.GET, w, r)
-		case http.MethodPost:
-			middleware.Guest(forgotPasswordVerifyHandler.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("POST /forgot-password", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(forgotPasswordHandler.POST, w, r)
 	})
 
-	handler.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Auth(userHandler.GET, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /forgot-password/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(forgotPasswordVerifyHandler.GET, w, r)
 	})
 
-	handler.HandleFunc("/user/totp/setup", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Auth(userHandlerTotpSetup.GET, w, r)
-		case http.MethodPost:
-			middleware.Auth(userHandlerTotpSetup.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("POST /forgot-password/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Guest(forgotPasswordVerifyHandler.POST, w, r)
 	})
 
-	// Upload router
-	uploadRouter := http.NewServeMux()
-	handler.Handle("/upload/", http.StripPrefix("/upload", uploadRouter))
-
-	uploadRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Auth(uploadHandler.GET, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /user", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(userHandler.GET, w, r)
 	})
 
-	uploadRouter.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			middleware.Auth(uploadHandler.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /user/totp/setup", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(userHandlerTotpSetup.GET, w, r)
 	})
 
-	uploadRouter.HandleFunc("/init", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			middleware.Auth(initialisation.POST, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("POST /user/totp/setup", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(userHandlerTotpSetup.POST, w, r)
 	})
 
-	// Download router
-	downloadRouter := http.NewServeMux()
-	handler.Handle("/download/", http.StripPrefix("/download", downloadRouter))
-	downloadRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			middleware.Auth(downloadHandler.GET, w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("GET /upload", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(uploadHandler.GET, w, r)
 	})
 
-	downloadRouter.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			downloadFileHandler.GET(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
+	handler.HandleFunc("POST /upload/{id}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(uploadHandler.POST, w, r)
 	})
 
-	handler.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+	handler.HandleFunc("POST /upload/init", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(initialisation.POST, w, r)
+	})
+
+	handler.HandleFunc("GET /download", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(downloadHandler.GET, w, r)
+	})
+
+	handler.HandleFunc("GET /download/{id}", func(w http.ResponseWriter, r *http.Request) {
+		downloadFileHandler.GET(w, r)
+	})
+
+	handler.HandleFunc("GET /logout", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Auth(logoutHandler.GET, w, r)
 	})
 
-	handler.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+	handler.HandleFunc("GET /robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/robots.txt")
 	})
 
-	handler.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+	handler.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/favicon.ico")
 	})
 
