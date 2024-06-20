@@ -5,33 +5,35 @@ import (
     "github.com/fossyy/filekeeper/types"
 )
 
-templ content(title string, qrcode string, code string, user types.User) {
+templ content(title string, qrcode string, code string, user types.User, msg types.Message) {
     @layout.Base(title){
         @layout.Navbar(user)
         <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
+            <a
+              class="inline-flex items-center space-x-2 rounded-md bg-muted px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              href="/user" hx-get="/user" hx-swap="outerHTML" hx-push-url="true" hx-target="#content"
+              rel="ugc"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-4 w-4"
+              >
+                <path d="m12 19-7-7 7-7"></path>
+                <path d="M19 12H5"></path>
+              </svg>
+              <span>Back</span>
+            </a>
             <div class="mx-auto max-w-md px-4 py-12 sm:px-6 lg:px-8">
               <div class="space-y-6 text-center">
                 <div class="flex items-center">
-                    <a
-                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-200 hover:text-accent-foreground h-10 w-10 mr-4"
-                        href="/user" hx-get="/user" hx-swap="outerHTML" hx-push-url="true" hx-target="#content"
-                        >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          class="h-5 w-5"
-                        >
-                          <path d="m12 19-7-7 7-7"></path>
-                          <path d="M19 12H5"></path>
-                        </svg>
-                    </a>
                     <h1 class="text-3xl font-bold">Set up Two-Factor Authentication</h1>
                 </div>
                 <p class="text-muted-foreground">Secure your account with time-based one-time passwords (TOTP).</p>
@@ -48,6 +50,28 @@ templ content(title string, qrcode string, code string, user types.User) {
               </div>
               <div class="rounded-lg border rounded-lg bg-muted p-6bg-card text-card-foreground shadow-sm mt-5" data-v0-t="card">
                 <div class="p-6 space-y-6">
+                switch msg.Code {
+                    case 0:
+                        <div class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                          <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                          </svg>
+                          <span class="sr-only">Info</span>
+                          <div>
+                            <span class="font-medium">Error!</span> {msg.Message}
+                          </div>
+                        </div>
+                    case 1:
+                        <div class="flex items-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
+                          <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                          </svg>
+                          <span class="sr-only">Info</span>
+                          <div>
+                            <span class="font-medium">Success!</span> {msg.Message}
+                          </div>
+                        </div>
+                }
                   <div class="flex items-center justify-center">
                     <img
                       src={"data:image/png;base64," + qrcode}
@@ -60,7 +84,7 @@ templ content(title string, qrcode string, code string, user types.User) {
                   </div>
                   <div class="mt-6 space-y-2">
                     <p class="font-medium">Backup Code:</p>
-                    <div class="rounded-md bg-background px-4 py-2 text-sm font-mono text-muted-foreground">12345-67890</div>
+                    <div class="rounded-md bg-background px-4 py-2 text-sm font-mono text-muted-foreground">----|----</div>
                     <p class="font-medium">TOTP Secret:</p>
                     <div class="rounded-md bg-background px-4 py-2 text-sm font-mono text-muted-foreground">
                       {code}
@@ -92,6 +116,6 @@ templ content(title string, qrcode string, code string, user types.User) {
     }
 }
 
-templ Main(title string, qrcode string, code string, user types.User) {
-	@content(title, qrcode, code, user)
+templ Main(title string, qrcode string, code string, user types.User, msg types.Message) {
+	@content(title, qrcode, code, user, msg)
 }

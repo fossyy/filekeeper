@@ -2,7 +2,6 @@ package totpHandler
 
 import (
 	"errors"
-	"fmt"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -19,7 +18,10 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	component := totpView.Main("Filekeeper - 2FA Page")
+	component := totpView.Main("Filekeeper - 2FA Page", types.Message{
+		Code:    1,
+		Message: "",
+	})
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -73,7 +75,16 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 		return
 	} else {
-		fmt.Fprint(w, "wrong")
+		component := totpView.Main("Filekeeper - 2FA Page", types.Message{
+			Code:    0,
+			Message: "Incorrect code. Please try again with the latest code from your authentication app.",
+		})
+		err := component.Render(r.Context(), w)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 	}
 }
 
