@@ -42,7 +42,10 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession)
+	component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
+		Code:    3,
+		Message: "",
+	})
 	if err := component.Render(r.Context(), w); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -59,25 +62,34 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	secret := r.Form.Get("secret")
 	totp := gotp.NewDefaultTOTP(secret)
 	userSession := r.Context().Value("user").(types.User)
+	uri := totp.ProvisioningUri(userSession.Email, "filekeeper")
+
+	base64Str, err := generateQRCode(uri)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	if totp.Verify(code, time.Now().Unix()) {
 		if err := db.DB.InitializeTotp(userSession.Email, secret); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		cache.DeleteUser(userSession.Email)
-		fmt.Fprint(w, "Authentication successful! Access granted.")
-		return
-	} else {
-		uri := totp.ProvisioningUri(userSession.Email, "filekeeper")
-
-		base64Str, err := generateQRCode(uri)
-		if err != nil {
-			fmt.Printf("%v\n", err)
+		component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
+			Code:    1,
+			Message: "Your TOTP setup is complete! Your account is now more secure.",
+		})
+		if err := component.Render(r.Context(), w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession)
+		return
+	} else {
+		component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
+			Code:    0,
+			Message: "The code you entered is incorrect. Please double-check the code and try again.",
+		})
 		if err := component.Render(r.Context(), w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
