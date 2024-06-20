@@ -9,29 +9,31 @@ templ content(title string, qrcode string, code string, user types.User) {
     @layout.Base(title){
         @layout.Navbar(user)
         <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
+            <a
+              class="inline-flex items-center space-x-2 rounded-md bg-muted px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              href="/user" hx-get="/user" hx-swap="outerHTML" hx-push-url="true" hx-target="#content"
+              rel="ugc"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="h-4 w-4"
+              >
+                <path d="m12 19-7-7 7-7"></path>
+                <path d="M19 12H5"></path>
+              </svg>
+              <span>Back</span>
+            </a>
             <div class="mx-auto max-w-md px-4 py-12 sm:px-6 lg:px-8">
               <div class="space-y-6 text-center">
                 <div class="flex items-center">
-                    <a
-                        class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-slate-200 hover:text-accent-foreground h-10 w-10 mr-4"
-                        href="/user" hx-get="/user" hx-swap="outerHTML" hx-push-url="true" hx-target="#content"
-                        >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          class="h-5 w-5"
-                        >
-                          <path d="m12 19-7-7 7-7"></path>
-                          <path d="M19 12H5"></path>
-                        </svg>
-                    </a>
                     <h1 class="text-3xl font-bold">Set up Two-Factor Authentication</h1>
                 </div>
                 <p class="text-muted-foreground">Secure your account with time-based one-time passwords (TOTP).</p>
