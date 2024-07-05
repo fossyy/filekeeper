@@ -133,6 +133,10 @@ func SetupRoutes() *http.ServeMux {
 		http.ServeFile(w, r, "public/robots.txt")
 	})
 
+	handler.HandleFunc("GET /sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/sitemap.xml")
+	})
+
 	handler.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/favicon.ico")
 	})
