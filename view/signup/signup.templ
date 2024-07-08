@@ -64,15 +64,6 @@ templ form(err types.Message, title string) {
                             </div>
                             <span id="lengthStatusText" class="font-medium text-sm ml-3 text-red-700"> Password length must be at least 8 characters</span>
                         </li>
-                        <li class="flex items-center py-1">
-                            <div id="requirementsSvgContainer" class="rounded-full p-1 fill-current bg-red-200 text-green-700">
-                                <svg id="requirementsSvgIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path id="requirementsGoodPath" style="display: none;" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    <path id="requirementsBadPath" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </div>
-                            <span id="requirementsStatusText" class="font-medium text-sm ml-3 text-red-700">The password must contain at least one symbol (!@#$%^&*), one uppercase letter, and three numbers</span>
-                        </li>
                     </ul>
                 </div>
               <button class="bg-slate-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full" type="submit" id="submit" name="submit" disabled>

@@ -6,7 +6,7 @@ import (
     "github.com/fossyy/filekeeper/session"
 )
 
-templ content(title string, user types.User, ListSession []*session.SessionInfo) {
+templ content(message types.Message, title string, user types.User, ListSession []*session.SessionInfo) {
     @layout.Base(title){
         @layout.Navbar(user)
         <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
@@ -141,39 +141,69 @@ templ content(title string, user types.User, ListSession []*session.SessionInfo)
                     </section>
                     <section>
                         <h2 class="text-2xl font-bold tracking-tight">Reset Password</h2>
-                        <div class="mt-6 grid gap-6">
-                            <div class="grid gap-2">
-                                <label
-                                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    for="name">
-                                    Current password
-                                </label>
-                                <input
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    type="password" id="name" placeholder="Current password" />
+                        switch message.Code {
+                            case 0:
+                                <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 text-center" role="alert">
+                                    {message.Message}
+                                </div>
+                        }
+                        <form method="POST" action="/user/reset-password">
+                            <div class="mt-6 grid gap-6">
+                                <div class="grid gap-2">
+                                    <label
+                                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        for="currentPassword">
+                                        Current password
+                                    </label>
+                                    <input
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        type="password" id="currentPassword" name="currentPassword" placeholder="Current password" />
+                                </div>
+                                <div class="grid gap-2">
+                                    <label
+                                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        for="password">
+                                        New password
+                                    </label>
+                                    <input
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        type="password" id="password" name="password" placeholder="New password" />
+                                </div>
+                                <div class="grid gap-2">
+                                    <label
+                                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        for="confirmPassword">
+                                        New password confirmation
+                                    </label>
+                                    <input
+                                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        type="password" id="confirmPassword" placeholder="New password confirmation" />
+                                </div>
+                                <div id="validationBox" class="justify-start mt-3 ml-4 p-1 hidden">
+                                    <ul>
+                                        <li class="flex items-center py-1">
+                                            <div id="matchSvgContainer" class="rounded-full p-1 fill-current bg-red-200 text-green-700">
+                                                <svg id="matchSvgIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path id="matchGoodPath" style="display: none;" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    <path id="matchBadPath" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </div>
+                                            <span id="matchStatusText" class="font-medium text-sm ml-3 text-red-700"> New Passwords do not match</span>
+                                        </li>
+                                        <li class="flex items-center py-1">
+                                            <div id="lengthSvgContainer" class="rounded-full p-1 fill-current bg-red-200 text-green-700">
+                                                <svg id="lengthSvgIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path id="lengthGoodPath" style="display: none;" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    <path id="lengthBadPath" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </div>
+                                            <span id="lengthStatusText" class="font-medium text-sm ml-3 text-red-700"> New Password length must be at least 8 characters</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <button type="submit" id="submit" class="focus:outline-none disabled:bg-red-100 text-white bg-red-500 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2" disabled>Update password</button>
                             </div>
-                            <div class="grid gap-2">
-                                <label
-                                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    for="name">
-                                    New password
-                                </label>
-                                <input
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    type="password" id="name" placeholder="New password" />
-                            </div>
-                            <div class="grid gap-2">
-                                <label
-                                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    for="name">
-                                    New password confirmation
-                                </label>
-                                <input
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    type="password" id="name" placeholder="New password confirmation" />
-                            </div>
-                            <button type="button" class="focus:outline-none text-white bg-red-500 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2">Update password</button>
-                        </div>
+                        </form>
                     </section>
                     <div class="grid gap-1">
                         <div class="flex items-center justify-between">
@@ -258,6 +288,17 @@ templ content(title string, user types.User, ListSession []*session.SessionInfo)
                 </div>
             </div>
         </main>
+        <script type="text/javascript">
+            document.getElementById('currentPassword').addEventListener('input', function() {
+                var validationBox = document.getElementById('validationBox');
+                if (this.value.length > 0) {
+                    validationBox.classList.remove('hidden');
+                } else {
+                    validationBox.classList.add('hidden');
+                }
+            });
+          </script>
+        <script src="/public/validatePassword.js" />
         @layout.Footer()
     }
 }
@@ -289,6 +330,6 @@ templ SessionTable(ListSession []*session.SessionInfo){
     </tbody>
 }
 
-templ Main(title string, user types.User, ListSession []*session.SessionInfo) {
-	@content(title, user, ListSession)
+templ Main(title string, user types.User, ListSession []*session.SessionInfo, message types.Message) {
+	@content(message, title, user, ListSession)
 }

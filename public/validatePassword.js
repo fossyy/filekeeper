@@ -1,6 +1,5 @@
 var isMatch = false
 var isValid = false
-var isSecure = false
 function validatePasswords() {
     var password = document.getElementById('password').value;
     var confirmPassword = document.getElementById('confirmPassword').value;
@@ -8,18 +7,10 @@ function validatePasswords() {
     var matchBadPath = document.getElementById('matchBadPath');
     var lengthGoodPath = document.getElementById('lengthGoodPath');
     var lengthBadPath = document.getElementById('lengthBadPath');
-    var requirementsGoodPath = document.getElementById('requirementsGoodPath');
-    var requirementsBadPath = document.getElementById('requirementsBadPath');
     var matchSvgContainer = document.getElementById('matchSvgContainer');
     var lengthSvgContainer = document.getElementById('lengthSvgContainer');
-    var requirementsSvgContainer = document.getElementById('requirementsSvgContainer');
     var matchStatusText = document.getElementById('matchStatusText');
     var lengthStatusText = document.getElementById('lengthStatusText');
-    var requirementsStatusText = document.getElementById('requirementsStatusText');
-    var symbolRegex = /[!@#$%^&*]/;
-    var uppercaseRegex = /[A-Z]/;
-    var numberRegex = /\d/g;
-
 
     if (password === confirmPassword && password.length > 0 && confirmPassword.length > 0 && password.length === confirmPassword.length) {
         matchSvgContainer.classList.remove('bg-red-200');
@@ -29,7 +20,6 @@ function validatePasswords() {
         matchGoodPath.style.display = 'inline';
         matchBadPath.style.display = 'none';
         matchStatusText.textContent = "Passwords match";
-        console.log("anjay")
         isMatch = true
     } else {
         matchSvgContainer.classList.remove('bg-green-200');
@@ -62,31 +52,7 @@ function validatePasswords() {
         isValid = false
     }
 
-    var symbolCheck = symbolRegex.test(password);
-    var uppercaseCheck = uppercaseRegex.test(password);
-    var numberCount = (password.match(numberRegex) || []).length;
-
-    if (symbolCheck && uppercaseCheck && numberCount >= 3) {
-        requirementsSvgContainer.classList.remove('bg-red-200');
-        requirementsSvgContainer.classList.add('bg-green-200');
-        requirementsStatusText.classList.remove('text-red-700');
-        requirementsStatusText.classList.add('text-green-700');
-        requirementsGoodPath.style.display = 'inline';
-        requirementsBadPath.style.display = 'none';
-        requirementsStatusText.textContent = "Password meets additional requirements";
-        isSecure = true
-    } else {
-        requirementsSvgContainer.classList.remove('bg-green-200');
-        requirementsSvgContainer.classList.add('bg-red-200');
-        requirementsStatusText.classList.remove('text-green-700');
-        requirementsStatusText.classList.add('text-red-700');
-        requirementsGoodPath.style.display = 'none';
-        requirementsBadPath.style.display = 'inline';
-        requirementsStatusText.textContent = "The password must contain at least one symbol (!@#$%^&*), one uppercase letter, and three numbers";
-        isSecure = false
-    }
-
-    if (isSecure && isValid && isSecure && password === confirmPassword) {
+    if ( isValid && isMatch) {
         document.getElementById("submit").disabled = false;
     } else {
         document.getElementById("submit").disabled = true;

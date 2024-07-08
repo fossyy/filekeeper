@@ -72,18 +72,9 @@ func ValidatePassword(password string) bool {
 	}
 
 	var (
-		hasSymbol    bool
 		hasNumber    int
 		hasUppercase bool
 	)
-
-	symbols := []string{"!", "@", "#", "$", "%", "^", "&", "*"}
-
-	for _, symbol := range symbols {
-		if strings.Contains(password, symbol) {
-			hasSymbol = true
-		}
-	}
 
 	for _, char := range password {
 		switch {
@@ -94,7 +85,7 @@ func ValidatePassword(password string) bool {
 		}
 	}
 
-	return hasSymbol && hasNumber >= 3 && hasUppercase
+	return hasNumber >= 3 && hasUppercase
 }
 
 func ConvertFileSize(byte int64) string {
