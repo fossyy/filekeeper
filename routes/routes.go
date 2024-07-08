@@ -17,6 +17,7 @@ import (
 	uploadHandler "github.com/fossyy/filekeeper/handler/upload"
 	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
+	userHandlerResetPassword "github.com/fossyy/filekeeper/handler/user/ResetPassword"
 	userSessionTerminateHandler "github.com/fossyy/filekeeper/handler/user/session/terminate"
 	userHandlerTotpSetup "github.com/fossyy/filekeeper/handler/user/totp"
 	"github.com/fossyy/filekeeper/middleware"
@@ -91,6 +92,10 @@ func SetupRoutes() *http.ServeMux {
 
 	handler.HandleFunc("GET /user", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Auth(userHandler.GET, w, r)
+	})
+
+	handler.HandleFunc("POST /user/reset-password", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(userHandlerResetPassword.POST, w, r)
 	})
 
 	handler.HandleFunc("DELETE /user/session/terminate/{id}", func(w http.ResponseWriter, r *http.Request) {
