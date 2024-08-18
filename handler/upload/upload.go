@@ -4,7 +4,7 @@ import (
 	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
-	filesView "github.com/fossyy/filekeeper/view/upload"
+	filesView "github.com/fossyy/filekeeper/view/client/upload"
 	"io"
 	"net/http"
 	"os"

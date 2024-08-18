@@ -2,10 +2,10 @@ package errorHandler
 
 import (
 	"fmt"
+	"github.com/fossyy/filekeeper/view/client/error"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/logger"
-	errorView "github.com/fossyy/filekeeper/view/error"
 )
 
 var log *logger.AggregatedLogger

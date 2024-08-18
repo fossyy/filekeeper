@@ -8,9 +8,8 @@ import (
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
-	forgotPasswordView "github.com/fossyy/filekeeper/view/forgotPassword"
-	signupView "github.com/fossyy/filekeeper/view/signup"
-
+	"github.com/fossyy/filekeeper/view/client/forgotPassword"
+	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"net/http"
 )
 

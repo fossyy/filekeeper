@@ -1,13 +1,13 @@
 package signupVerifyHandler
 
 import (
+	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/db"
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
-	signupView "github.com/fossyy/filekeeper/view/signup"
 )
 
 var log *logger.AggregatedLogger

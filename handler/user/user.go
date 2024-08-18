@@ -3,11 +3,11 @@ package userHandler
 import (
 	"github.com/a-h/templ"
 	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/view/client/user"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
-	userView "github.com/fossyy/filekeeper/view/user"
 )
 
 var log *logger.AggregatedLogger

@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/cache"
+	"github.com/fossyy/filekeeper/view/client/email"
+	"github.com/fossyy/filekeeper/view/client/forgotPassword"
 	"github.com/google/uuid"
 	"net/http"
 	"strconv"
@@ -17,8 +19,6 @@ import (
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
-	emailView "github.com/fossyy/filekeeper/view/email"
-	forgotPasswordView "github.com/fossyy/filekeeper/view/forgotPassword"
 	"gorm.io/gorm"
 )
 

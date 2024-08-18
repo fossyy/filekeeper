@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/fossyy/filekeeper/view/client/email"
+	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"net/http"
 	"strconv"
 	"sync"
@@ -15,8 +17,6 @@ import (
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
-	emailView "github.com/fossyy/filekeeper/view/email"
-	signupView "github.com/fossyy/filekeeper/view/signup"
 	"github.com/google/uuid"
 )
 
