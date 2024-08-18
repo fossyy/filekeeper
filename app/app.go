@@ -8,6 +8,7 @@ import (
 )
 
 var Server App
+var Admin App
 
 type App struct {
 	http.Server
@@ -16,7 +17,7 @@ type App struct {
 	Mail   *email.SmtpServer
 }
 
-func NewServer(addr string, handler http.Handler, logger logger.AggregatedLogger, database db.Database, mail email.SmtpServer) App {
+func NewClientServer(addr string, handler http.Handler, logger logger.AggregatedLogger, database db.Database, mail email.SmtpServer) App {
 	return App{
 		Server: http.Server{
 			Addr:    addr,
@@ -25,5 +26,18 @@ func NewServer(addr string, handler http.Handler, logger logger.AggregatedLogger
 		Logger: &logger,
 		DB:     &database,
 		Mail:   &mail,
+	}
+}
+
+func NewAdminServer(addr string, handler http.Handler, database db.Database) App {
+	return App{
+		Server: http.Server{
+			Addr:    addr,
+			Handler: handler,
+		},
+		// TODO: Remove the dummy struct
+		Logger: &logger.AggregatedLogger{},
+		DB:     &database,
+		Mail:   &email.SmtpServer{},
 	}
 }
