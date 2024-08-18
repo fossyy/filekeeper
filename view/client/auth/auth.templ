@@ -50,6 +50,15 @@ templ form(err types.Message, title string) {
                             <span id="matchStatusText" class="font-medium text-sm ml-3 text-red-700"> Passwords do not match</span>
                         </li>
                         <li class="flex items-center py-1">
+                            <div id="uppercaseSvgContainer" class="rounded-full p-1 fill-current bg-red-200 text-green-700">
+                                <svg id="uppercaseSvgIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path id="uppercaseGoodPath" style="display: none;" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    <path id="uppercaseBadPath" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </div>
+                            <span id="uppercaseStatusText" class="font-medium text-sm ml-3 text-red-700"> Password must contain at least one uppercase letter</span>
+                        </li>
+                        <li class="flex items-center py-1">
                             <div id="lengthSvgContainer" class="rounded-full p-1 fill-current bg-red-200 text-green-700">
                                 <svg id="lengthSvgIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path id="lengthGoodPath" style="display: none;" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
