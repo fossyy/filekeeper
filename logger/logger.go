@@ -29,11 +29,11 @@ func Logger() *AggregatedLogger {
 		return &AggregatedLogger{}
 	}
 	flag := log.Ldate | log.Ltime
-	writer := io.MultiWriter(os.Stdout, file)
-	infoLogger := log.New(writer, "INFO: ", flag)
-	warnLogger := log.New(writer, "WARN: ", flag)
-	errorLogger := log.New(writer, "ERROR: ", flag)
-	panicLogger := log.New(writer, "PANIC: ", flag)
+	multiLogger := io.MultiWriter(os.Stdout, file)
+	infoLogger := log.New(file, "INFO: ", flag)
+	warnLogger := log.New(multiLogger, "WARN: ", flag)
+	errorLogger := log.New(multiLogger, "ERROR: ", flag)
+	panicLogger := log.New(multiLogger, "PANIC: ", flag)
 
 	return &AggregatedLogger{
 		infoLogger:  infoLogger,

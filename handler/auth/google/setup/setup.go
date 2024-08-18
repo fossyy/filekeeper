@@ -2,15 +2,15 @@ package googleOauthSetupHandler
 
 import (
 	"fmt"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/db"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
-	authView "github.com/fossyy/filekeeper/view/auth"
-	signupView "github.com/fossyy/filekeeper/view/signup"
+	"github.com/fossyy/filekeeper/view/client/auth"
+	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"github.com/google/uuid"
 	"net/http"
 	"sync"
@@ -24,11 +24,10 @@ type UnregisteredUser struct {
 	mu         sync.Mutex
 }
 
-var log *logger.AggregatedLogger
 var SetupUser map[string]*UnregisteredUser
 
 func init() {
-	log = logger.Logger()
+
 	SetupUser = make(map[string]*UnregisteredUser)
 
 	ticker := time.NewTicker(time.Minute)
@@ -38,7 +37,7 @@ func init() {
 			currentTime := time.Now()
 			cacheClean := 0
 			cleanID := utils.GenerateRandomString(10)
-			log.Info(fmt.Sprintf("Cache cleanup [GoogleSetup] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [GoogleSetup] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, data := range SetupUser {
 				data.mu.Lock()
@@ -50,7 +49,7 @@ func init() {
 				data.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup [GoogleSetup] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [GoogleSetup] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 }
@@ -68,7 +67,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }
@@ -83,7 +82,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	username := r.Form.Get("username")
@@ -98,7 +97,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		err := component.Render(r.Context(), w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Error(err.Error())
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return
@@ -122,7 +121,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		err := component.Render(r.Context(), w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Error(err.Error())
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return

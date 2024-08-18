@@ -5,20 +5,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
+	"github.com/fossyy/filekeeper/view/client/email"
+	"github.com/fossyy/filekeeper/view/client/forgotPassword"
 	"github.com/google/uuid"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
-	"github.com/fossyy/filekeeper/email"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
-	emailView "github.com/fossyy/filekeeper/view/email"
-	forgotPasswordView "github.com/fossyy/filekeeper/view/forgotPassword"
 	"gorm.io/gorm"
 )
 
@@ -29,25 +27,19 @@ type ForgotPassword struct {
 	CreateTime time.Time
 }
 
-var log *logger.AggregatedLogger
-var mailServer *email.SmtpServer
 var ListForgotPassword map[string]*ForgotPassword
 var UserForgotPassword = make(map[string]string)
 
 func init() {
-	log = logger.Logger()
 	ListForgotPassword = make(map[string]*ForgotPassword)
-	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
-	mailServer = email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 	ticker := time.NewTicker(time.Minute)
-	//TESTING
 	go func() {
 		for {
 			<-ticker.C
 			currentTime := time.Now()
 			cacheClean := 0
 			cleanID := utils.GenerateRandomString(10)
-			log.Info(fmt.Sprintf("Cache cleanup [Forgot Password] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [Forgot Password] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, data := range ListForgotPassword {
 				data.mu.Lock()
@@ -59,7 +51,7 @@ func init() {
 				data.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup [Forgot Password] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [Forgot Password] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 }
@@ -72,7 +64,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }
@@ -81,7 +73,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusBadRequest)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -96,7 +88,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		err := component.Render(r.Context(), w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Error(err.Error())
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return
@@ -112,7 +104,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err = verifyForgot(userData)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -120,7 +112,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	return
@@ -152,7 +144,7 @@ func verifyForgot(user *models.User) error {
 	UserForgotPassword[code] = user.Email
 	ListForgotPassword[user.Email] = userData
 
-	err = mailServer.Send(user.Email, "Password Change Request", buffer.String())
+	err = app.Server.Mail.Send(user.Email, "Password Change Request", buffer.String())
 	if err != nil {
 		return err
 	}

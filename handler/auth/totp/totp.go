@@ -5,7 +5,7 @@ import (
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
-	totpView "github.com/fossyy/filekeeper/view/totp"
+	"github.com/fossyy/filekeeper/view/client/totp"
 	"github.com/xlzd/gotp"
 	"net/http"
 	"strings"

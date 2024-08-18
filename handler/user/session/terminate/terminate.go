@@ -2,7 +2,7 @@ package userSessionTerminateHandler
 
 import (
 	"github.com/fossyy/filekeeper/session"
-	userView "github.com/fossyy/filekeeper/view/user"
+	"github.com/fossyy/filekeeper/view/client/user"
 	"net/http"
 )
 

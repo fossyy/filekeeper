@@ -2,7 +2,7 @@ package session
 
 import (
 	"fmt"
-	"github.com/fossyy/filekeeper/logger"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	"net/http"
 	"strconv"
@@ -41,10 +41,8 @@ const (
 
 var GlobalSessionStore = make(map[string]*Session)
 var UserSessionInfoList = make(map[string]map[string]*SessionInfo)
-var log *logger.AggregatedLogger
 
 func init() {
-	log = logger.Logger()
 
 	ticker := time.NewTicker(time.Minute)
 	go func() {
@@ -53,7 +51,7 @@ func init() {
 			currentTime := time.Now()
 			cacheClean := 0
 			cleanID := utils.GenerateRandomString(10)
-			log.Info(fmt.Sprintf("Cache cleanup [Session] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [Session] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, data := range GlobalSessionStore {
 				data.mu.Lock()
@@ -65,7 +63,7 @@ func init() {
 				data.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup [Session] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [Session] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 }

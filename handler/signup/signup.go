@@ -4,19 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/fossyy/filekeeper/app"
+	"github.com/fossyy/filekeeper/view/client/email"
+	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/email"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
-	emailView "github.com/fossyy/filekeeper/view/email"
-	signupView "github.com/fossyy/filekeeper/view/signup"
 	"github.com/google/uuid"
 )
 
@@ -27,15 +25,10 @@ type UnverifiedUser struct {
 	CreateTime time.Time
 }
 
-var log *logger.AggregatedLogger
-var mailServer *email.SmtpServer
 var VerifyUser map[string]*UnverifiedUser
 var VerifyEmail map[string]string
 
 func init() {
-	log = logger.Logger()
-	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
-	mailServer = email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 	VerifyUser = make(map[string]*UnverifiedUser)
 	VerifyEmail = make(map[string]string)
 
@@ -46,7 +39,7 @@ func init() {
 			currentTime := time.Now()
 			cacheClean := 0
 			cleanID := utils.GenerateRandomString(10)
-			log.Info(fmt.Sprintf("Cache cleanup [signup] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [signup] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, data := range VerifyUser {
 				data.mu.Lock()
@@ -58,7 +51,7 @@ func init() {
 				data.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup [signup] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [signup] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 }
@@ -71,7 +64,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }
@@ -80,7 +73,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	userEmail := r.Form.Get("email")
@@ -95,7 +88,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		err := component.Render(r.Context(), w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Error(err.Error())
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return
@@ -117,7 +110,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		err = component.Render(r.Context(), w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Error(err.Error())
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return
@@ -126,7 +119,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err = verifyEmail(&newUser)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -134,7 +127,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	return
@@ -167,7 +160,7 @@ func verifyEmail(user *models.User) error {
 	VerifyUser[code] = &unverifiedUser
 	VerifyEmail[user.Email] = code
 
-	err = mailServer.Send(user.Email, "Account Registration Verification", buffer.String())
+	err = app.Server.Mail.Send(user.Email, "Account Registration Verification", buffer.String())
 	if err != nil {
 		return err
 	}

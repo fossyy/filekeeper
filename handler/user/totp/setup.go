@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/fossyy/filekeeper/cache"
-	userTotpSetupView "github.com/fossyy/filekeeper/view/user/totp"
+	"github.com/fossyy/filekeeper/view/client/user/totp"
 	"image/png"
 	"net/http"
 	"time"

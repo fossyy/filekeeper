@@ -3,20 +3,14 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"github.com/fossyy/filekeeper/app"
 	"net/http"
 	"strings"
 
 	errorHandler "github.com/fossyy/filekeeper/handler/error"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/utils"
 )
-
-var log *logger.AggregatedLogger
-
-func init() {
-	log = logger.Logger()
-}
 
 type wrapper struct {
 	http.ResponseWriter
@@ -64,7 +58,7 @@ func Handler(next http.Handler) http.Handler {
 		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
 		writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		next.ServeHTTP(wrappedWriter, request)
-		log.Info(fmt.Sprintf("%s %s %s %v", utils.ClientIP(request), request.Method, request.RequestURI, wrappedWriter.statusCode))
+		app.Server.Logger.Info(fmt.Sprintf("%s %s %s %v", utils.ClientIP(request), request.Method, request.RequestURI, wrappedWriter.statusCode))
 	})
 }
 

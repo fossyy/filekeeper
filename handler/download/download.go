@@ -1,20 +1,14 @@
 package downloadHandler
 
 import (
+	"github.com/fossyy/filekeeper/app"
+	"github.com/fossyy/filekeeper/view/client/download"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
-	downloadView "github.com/fossyy/filekeeper/view/download"
 )
-
-var log *logger.AggregatedLogger
-
-func init() {
-	log = logger.Logger()
-}
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
@@ -38,7 +32,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }

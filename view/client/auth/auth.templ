@@ -1,8 +1,8 @@
-package signup
+package authView
 
 import (
     "github.com/fossyy/filekeeper/types"
-    "github.com/fossyy/filekeeper/view/layout"
+    "github.com/fossyy/filekeeper/view/client/layout"
 )
 
 templ form(err types.Message, title string) {
@@ -11,8 +11,8 @@ templ form(err types.Message, title string) {
           <div class="mx-auto w-full max-w-md space-y-8">
             <header class="text-center">
               <div class="space-y-2">
-                <h1 class="text-3xl font-bold text-white">Sign Up</h1>
-                <p class="text-gray-500 dark:text-gray-400">Enter your information to create an account</p>
+                <h1 class="text-3xl font-bold text-white">Set Up Your Account</h1>
+                <p class="text-gray-500 dark:text-gray-400">Enter your information to create a new account</p>
                 switch err.Code {
                     case 0:
                         <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
@@ -27,13 +27,7 @@ templ form(err types.Message, title string) {
             </header>
             <form class="space-y-4" method="post" action="">
               <div class="space-y-2">
-                <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white" for="email">Email</label>
-                <input type="email" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white" id="email" name="email" placeholder="m@example.com" required="" />
-              </div>
-              <div class="space-y-2">
-                <div class="flex items-center">
-                  <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white" for="password">Username</label>
-                </div>
+                <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white" for="username">Username</label>
                 <input type="text" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white" id="username" name="username" required="" />
               </div>
                 <div class="space-y-2">
@@ -54,6 +48,15 @@ templ form(err types.Message, title string) {
                                 </svg>
                             </div>
                             <span id="matchStatusText" class="font-medium text-sm ml-3 text-red-700"> Passwords do not match</span>
+                        </li>
+                        <li class="flex items-center py-1">
+                            <div id="uppercaseSvgContainer" class="rounded-full p-1 fill-current bg-red-200 text-green-700">
+                                <svg id="uppercaseSvgIcon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path id="uppercaseGoodPath" style="display: none;" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    <path id="uppercaseBadPath" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </div>
+                            <span id="uppercaseStatusText" class="font-medium text-sm ml-3 text-red-700"> Password must contain at least one uppercase letter</span>
                         </li>
                         <li class="flex items-center py-1">
                             <div id="lengthSvgContainer" class="rounded-full p-1 fill-current bg-red-200 text-green-700">
@@ -82,69 +85,6 @@ templ form(err types.Message, title string) {
     }
 }
 
-templ Main(title string, err types.Message) {
+templ GoogleSetup(title string, err types.Message) {
 	@form(err, title)
-}
-
-templ EmailSend(title string) {
-    @layout.Base(title){
-        <style>h1, h2, h3, h4, h5, h6 { font-family: 'Arimo', sans-serif; --font-sans: 'Arimo'; }</style>
-        <style>body { font-family: 'Libre Franklin', sans-serif; --font-sans: 'Libre Franklin'; }</style>
-        <div class="flex flex-col items-center justify-center min-h-[80vh] gap-6">
-          <div class="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="h-16 w-16 text-gray-500 dark:text-gray-400"
-            >
-              <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-            </svg>
-          </div>
-          <div class="space-y-2 text-center">
-            <h1 class="text-3xl font-bold">Email Verification Sent</h1>
-            <p class="text-gray-500 dark:text-gray-400">
-              We've sent a verification email to your inbox. Please check your email and follow the instructions to verify your account.
-            </p>
-          </div>
-        </div>
-    }
-}
-
-templ VerifySuccess(title string) {
-    @layout.Base(title){
-        <style>h1, h2, h3, h4, h5, h6 { font-family: 'Arimo', sans-serif; --font-sans: 'Arimo'; }</style>
-        <style>body { font-family: 'Libre Franklin', sans-serif; --font-sans: 'Libre Franklin'; }</style>
-        <div class="flex flex-col items-center justify-center min-h-[80vh] gap-6">
-          <div class="bg-green-500 text-white rounded-full p-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="h-8 w-8"
-            >
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-          <div class="space-y-2 text-center">
-            <h1 class="text-3xl font-bold">Account Verified</h1>
-            <p class="text-gray-500 dark:text-gray-400">
-              Your account has been successfully verified. You can now access all the features of our platform.
-            </p>
-          </div>
-        </div>
-    }
 }

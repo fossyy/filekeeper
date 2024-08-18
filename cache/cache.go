@@ -2,8 +2,8 @@ package cache
 
 import (
 	"fmt"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/google/uuid"
 	"sync"
@@ -33,12 +33,10 @@ type FileWithExpired struct {
 	mu            sync.Mutex
 }
 
-var log *logger.AggregatedLogger
 var userCache map[string]*UserWithExpired
 var fileCache map[string]*FileWithExpired
 
 func init() {
-	log = logger.Logger()
 
 	userCache = make(map[string]*UserWithExpired)
 	fileCache = make(map[string]*FileWithExpired)
@@ -50,7 +48,7 @@ func init() {
 			currentTime := time.Now()
 			cacheClean := 0
 			cleanID := utils.GenerateRandomString(10)
-			log.Info(fmt.Sprintf("Cache cleanup [user] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [user] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, user := range userCache {
 				user.mu.Lock()
@@ -61,7 +59,7 @@ func init() {
 				user.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup [user] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [user] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 
@@ -71,7 +69,7 @@ func init() {
 			currentTime := time.Now()
 			cacheClean := 0
 			cleanID := utils.GenerateRandomString(10)
-			log.Info(fmt.Sprintf("Cache cleanup [files] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [files] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, file := range fileCache {
 				file.mu.Lock()
@@ -84,7 +82,7 @@ func init() {
 				file.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup [files] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [files] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 }
