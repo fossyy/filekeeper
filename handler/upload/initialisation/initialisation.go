@@ -3,6 +3,7 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
 	"io"
 	"net/http"
@@ -10,18 +11,11 @@ import (
 	"path/filepath"
 
 	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
-
-var log *logger.AggregatedLogger
-
-func init() {
-	log = logger.Logger()
-}
 
 func POST(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
@@ -64,10 +58,10 @@ func POST(w http.ResponseWriter, r *http.Request) {
 func handleNewUpload(user types.User, file types.FileInfo) (models.File, error) {
 	uploadDir := "uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		err := os.Mkdir(uploadDir, os.ModePerm)
 		if err != nil {
-			log.Error(err.Error())
+			app.Server.Logger.Error(err.Error())
 			return models.File{}, err
 		}
 	}
@@ -84,7 +78,7 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.File, error) 
 
 	err := os.MkdirAll(saveFolder, os.ModePerm)
 	if err != nil {
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return models.File{}, err
 	}
 
@@ -101,7 +95,7 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.File, error) 
 
 	err = db.DB.CreateFile(&newFile)
 	if err != nil {
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return models.File{}, err
 	}
 
@@ -122,5 +116,5 @@ func respondErrorJSON(w http.ResponseWriter, err error, statusCode int) {
 
 func handleError(w http.ResponseWriter, err error, statusCode int) {
 	http.Error(w, err.Error(), statusCode)
-	log.Error(err.Error())
+	app.Server.Logger.Error(err.Error())
 }

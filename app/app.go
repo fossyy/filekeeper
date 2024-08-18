@@ -1,48 +1,29 @@
 package app
 
 import (
-	"fmt"
 	"github.com/fossyy/filekeeper/db"
-	"github.com/fossyy/filekeeper/middleware"
-	"github.com/fossyy/filekeeper/routes"
-	"github.com/fossyy/filekeeper/utils"
+	"github.com/fossyy/filekeeper/email"
+	"github.com/fossyy/filekeeper/logger"
 	"net/http"
 )
 
-type App struct {
-	http.Server
-	DB db.Database
-}
-
 var Server App
 
-func NewServer(addr string, handler http.Handler, database db.Database) App {
+type App struct {
+	http.Server
+	DB     *db.Database
+	Logger *logger.AggregatedLogger
+	Mail   *email.SmtpServer
+}
+
+func NewServer(addr string, handler http.Handler, logger logger.AggregatedLogger, database db.Database, mail email.SmtpServer) App {
 	return App{
 		Server: http.Server{
 			Addr:    addr,
 			Handler: handler,
 		},
-		DB: database,
-	}
-}
-
-func Start() {
-	serverAddr := fmt.Sprintf("%s:%s", utils.Getenv("SERVER_HOST"), utils.Getenv("SERVER_PORT"))
-
-	dbUser := utils.Getenv("DB_USERNAME")
-	dbPass := utils.Getenv("DB_PASSWORD")
-	dbHost := utils.Getenv("DB_HOST")
-	dbPort := utils.Getenv("DB_PORT")
-	dbName := utils.Getenv("DB_NAME")
-
-	database := db.NewPostgresDB(dbUser, dbPass, dbHost, dbPort, dbName, db.DisableSSL)
-	db.DB = database
-
-	Server = NewServer(serverAddr, middleware.Handler(routes.SetupRoutes()), database)
-	fmt.Printf("Listening on http://%s\n", Server.Addr)
-	err := Server.ListenAndServe()
-	if err != nil {
-		panic(err)
-		return
+		Logger: &logger,
+		DB:     &database,
+		Mail:   &mail,
 	}
 }

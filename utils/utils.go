@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"github.com/fossyy/filekeeper/app"
 	mathRand "math/rand"
 	"net/http"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,7 +24,6 @@ type Env struct {
 }
 
 var env *Env
-var log *logger.AggregatedLogger
 
 func init() {
 	env = &Env{value: map[string]string{}}
@@ -110,7 +109,7 @@ func Getenv(key string) string {
 	if os.Getenv("HOSTNAME") == "" {
 		err := godotenv.Load(".env")
 		if err != nil {
-			log.Error("Error loading .env file: %s", err)
+			app.Server.Logger.Error("Error loading .env file: %s", err)
 		}
 	}
 

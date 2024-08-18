@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/db"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -53,11 +53,10 @@ type CsrfToken struct {
 	mu         sync.Mutex
 }
 
-var log *logger.AggregatedLogger
 var CsrfTokens map[string]*CsrfToken
 
 func init() {
-	log = logger.Logger()
+
 	CsrfTokens = make(map[string]*CsrfToken)
 
 	ticker := time.NewTicker(time.Minute)
@@ -67,7 +66,7 @@ func init() {
 			currentTime := time.Now()
 			cacheClean := 0
 			cleanID := utils.GenerateRandomString(10)
-			log.Info(fmt.Sprintf("Cache cleanup [csrf_token] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [csrf_token] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
 
 			for _, data := range CsrfTokens {
 				data.mu.Lock()
@@ -78,7 +77,7 @@ func init() {
 				data.mu.Unlock()
 			}
 
-			log.Info(fmt.Sprintf("Cache cleanup [csrf_token] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [csrf_token] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
 		}
 	}()
 }
@@ -108,7 +107,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Post("https://oauth2.googleapis.com/token", "application/x-www-form-urlencoded", bytes.NewBufferString(formData.Encode()))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error("Error:", err)
+		app.Server.Logger.Error("Error:", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -116,7 +115,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	var oauthData OauthToken
 	if err := json.NewDecoder(resp.Body).Decode(&oauthData); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error("Error reading token response body:", err)
+		app.Server.Logger.Error("Error reading token response body:", err)
 		return
 	}
 
@@ -126,7 +125,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+oauthData.AccessToken)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error("Error creating user info request:", err)
+		app.Server.Logger.Error("Error creating user info request:", err)
 		return
 	}
 
@@ -136,13 +135,13 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	var oauthUser OauthUser
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&oauthUser); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error("Error reading user info response body:", err)
+		app.Server.Logger.Error("Error reading user info response body:", err)
 		return
 	}
 
 	if oauthUser.Email == "" {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error("Error reading user info response body: email not found")
+		app.Server.Logger.Error("Error reading user info response body: email not found")
 		return
 	}
 
@@ -161,7 +160,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 

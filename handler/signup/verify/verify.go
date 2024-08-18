@@ -1,20 +1,14 @@
 package signupVerifyHandler
 
 import (
+	"github.com/fossyy/filekeeper/app"
 	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/db"
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 )
-
-var log *logger.AggregatedLogger
-
-func init() {
-	log = logger.Logger()
-}
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
@@ -34,7 +28,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		err := component.Render(r.Context(), w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Error(err.Error())
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return
@@ -48,7 +42,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }

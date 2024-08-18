@@ -3,8 +3,8 @@ package signinHandler
 import (
 	"errors"
 	"github.com/a-h/templ"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -13,7 +13,6 @@ import (
 	"strings"
 )
 
-var log *logger.AggregatedLogger
 var errorMessages = make(map[string]string)
 
 func init() {
@@ -39,7 +38,7 @@ func init() {
 		"account_selection_required": "Please select an account to proceed with the request.",
 		"consent_required":           "Consent is required to proceed. Please provide consent to continue.",
 	}
-	log = logger.Logger()
+
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +63,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }
@@ -73,7 +72,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Error parsing form", http.StatusBadRequest)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	email := r.Form.Get("email")
@@ -84,11 +83,11 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			Code:    0,
 			Message: "Incorrect Username or Password",
 		})
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		err = component.Render(r.Context(), w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Error(err.Error())
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return
@@ -152,7 +151,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }

@@ -2,7 +2,6 @@ package logger
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"time"
@@ -29,11 +28,10 @@ func Logger() *AggregatedLogger {
 		return &AggregatedLogger{}
 	}
 	flag := log.Ldate | log.Ltime
-	writer := io.MultiWriter(os.Stdout, file)
-	infoLogger := log.New(writer, "INFO: ", flag)
-	warnLogger := log.New(writer, "WARN: ", flag)
-	errorLogger := log.New(writer, "ERROR: ", flag)
-	panicLogger := log.New(writer, "PANIC: ", flag)
+	infoLogger := log.New(file, "INFO: ", flag)
+	warnLogger := log.New(file, "WARN: ", flag)
+	errorLogger := log.New(file, "ERROR: ", flag)
+	panicLogger := log.New(file, "PANIC: ", flag)
 
 	return &AggregatedLogger{
 		infoLogger:  infoLogger,

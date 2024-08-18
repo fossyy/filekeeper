@@ -15,8 +15,8 @@ type Email interface {
 	Send()
 }
 
-func NewSmtpServer(Host string, Port int, User string, Password string) *SmtpServer {
-	return &SmtpServer{
+func NewSmtpServer(Host string, Port int, User string, Password string) SmtpServer {
+	return SmtpServer{
 		Host:     Host,
 		Port:     Port,
 		User:     User,

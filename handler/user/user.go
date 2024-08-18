@@ -2,19 +2,13 @@ package userHandler
 
 import (
 	"github.com/a-h/templ"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/view/client/user"
 	"net/http"
 
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/session"
 )
-
-var log *logger.AggregatedLogger
-
-func init() {
-	log = logger.Logger()
-}
 
 var errorMessages = map[string]string{
 	"password_not_match": "The passwords provided do not match. Please try again.",
@@ -43,7 +37,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }

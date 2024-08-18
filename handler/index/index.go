@@ -1,18 +1,11 @@
 package indexHandler
 
 import (
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/view/client/index"
 	"net/http"
-
-	"github.com/fossyy/filekeeper/logger"
 )
-
-var log *logger.AggregatedLogger
-
-func init() {
-	log = logger.Logger()
-}
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	_, userSession, _ := session.GetSession(r)
@@ -20,7 +13,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Error(err.Error())
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }

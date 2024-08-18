@@ -1,8 +1,8 @@
 package uploadHandler
 
 import (
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
 	filesView "github.com/fossyy/filekeeper/view/client/upload"
 	"io"
@@ -11,12 +11,6 @@ import (
 	"path/filepath"
 	"strconv"
 )
-
-var log *logger.AggregatedLogger
-
-func init() {
-	log = logger.Logger()
-}
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	component := filesView.Main("Filekeeper - Upload")
@@ -38,7 +32,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	uploadDir := "uploads"
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
 		if err := os.Mkdir(uploadDir, os.ModePerm); err != nil {
-			log.Error("error getting upload info: " + err.Error())
+			app.Server.Logger.Error("error getting upload info: " + err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -46,7 +40,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	file, err := cache.GetFile(fileID)
 	if err != nil {
-		log.Error("error getting upload info: " + err.Error())
+		app.Server.Logger.Error("error getting upload info: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -56,14 +50,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	saveFolder := filepath.Join(basePath, userSession.UserID.String(), file.ID.String())
 
 	if filepath.Dir(saveFolder) != filepath.Join(basePath, userSession.UserID.String()) {
-		log.Error("invalid path")
+		app.Server.Logger.Error("invalid path")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	fileByte, fileHeader, err := r.FormFile("chunk")
 	if err != nil {
-		log.Error("error getting upload info: " + err.Error())
+		app.Server.Logger.Error("error getting upload info: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -79,14 +73,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	dst, err := os.OpenFile(filepath.Join(saveFolder, file.Name), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
-		log.Error("error making upload folder: " + err.Error())
+		app.Server.Logger.Error("error making upload folder: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	defer dst.Close()
 	if _, err := io.Copy(dst, fileByte); err != nil {
-		log.Error("error copying byte to file dst: " + err.Error())
+		app.Server.Logger.Error("error copying byte to file dst: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
