@@ -12,8 +12,6 @@ import (
 	"strings"
 )
 
-var DB Database
-
 type mySQLdb struct {
 	*gorm.DB
 }

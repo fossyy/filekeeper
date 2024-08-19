@@ -1,8 +1,8 @@
 package userHandlerResetPassword
 
 import (
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
-	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -31,7 +31,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.DB.UpdateUserPassword(user.Email, hashPassword)
+	err = app.Server.Database.UpdateUserPassword(user.Email, hashPassword)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

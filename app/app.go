@@ -12,9 +12,9 @@ var Admin App
 
 type App struct {
 	http.Server
-	DB     *db.Database
-	Logger *logger.AggregatedLogger
-	Mail   *email.SmtpServer
+	Database db.Database
+	Logger   *logger.AggregatedLogger
+	Mail     *email.SmtpServer
 }
 
 func NewClientServer(addr string, handler http.Handler, logger logger.AggregatedLogger, database db.Database, mail email.SmtpServer) App {
@@ -23,9 +23,9 @@ func NewClientServer(addr string, handler http.Handler, logger logger.Aggregated
 			Addr:    addr,
 			Handler: handler,
 		},
-		Logger: &logger,
-		DB:     &database,
-		Mail:   &mail,
+		Logger:   &logger,
+		Database: database,
+		Mail:     &mail,
 	}
 }
 
@@ -36,8 +36,8 @@ func NewAdminServer(addr string, handler http.Handler, database db.Database) App
 			Handler: handler,
 		},
 		// TODO: Remove the dummy struct
-		Logger: &logger.AggregatedLogger{},
-		DB:     &database,
-		Mail:   &email.SmtpServer{},
+		Logger:   &logger.AggregatedLogger{},
+		Database: database,
+		Mail:     &email.SmtpServer{},
 	}
 }

@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
@@ -102,7 +101,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		Password: hashedPassword,
 	}
 
-	if registered := db.DB.IsUserRegistered(userEmail, username); registered {
+	if registered := app.Server.Database.IsUserRegistered(userEmail, username); registered {
 		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
 			Message: "Email or Username has been registered",

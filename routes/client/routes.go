@@ -1,4 +1,4 @@
-package routes
+package client
 
 import (
 	googleOauthHandler "github.com/fossyy/filekeeper/handler/auth/google"

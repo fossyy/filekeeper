@@ -3,7 +3,6 @@ package forgotPasswordVerifyHandler
 import (
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
-	"github.com/fossyy/filekeeper/db"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
@@ -83,7 +82,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.DB.UpdateUserPassword(data.User.Email, hashedPassword)
+	err = app.Server.Database.UpdateUserPassword(data.User.Email, hashedPassword)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

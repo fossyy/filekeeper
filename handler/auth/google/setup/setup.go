@@ -3,7 +3,6 @@ package googleOauthSetupHandler
 import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/db"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
@@ -112,7 +111,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		Password: hashedPassword,
 	}
 
-	err = db.DB.CreateUser(&newUser)
+	err = app.Server.Database.CreateUser(&newUser)
 	if err != nil {
 		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,

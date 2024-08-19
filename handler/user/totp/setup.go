@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/view/client/user/totp"
 	"image/png"
 	"net/http"
 	"time"
 
-	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
@@ -71,7 +71,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if totp.Verify(code, time.Now().Unix()) {
-		if err := db.DB.InitializeTotp(userSession.Email, secret); err != nil {
+		if err := app.Server.Database.InitializeTotp(userSession.Email, secret); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

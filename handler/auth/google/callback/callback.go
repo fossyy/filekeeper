@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
-	"github.com/fossyy/filekeeper/db"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	"github.com/fossyy/filekeeper/session"
@@ -145,7 +144,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !db.DB.IsEmailRegistered(oauthUser.Email) {
+	if !app.Server.Database.IsEmailRegistered(oauthUser.Email) {
 		code := utils.GenerateRandomString(64)
 		googleOauthSetupHandler.SetupUser[code] = &googleOauthSetupHandler.UnregisteredUser{
 			Code:       code,
