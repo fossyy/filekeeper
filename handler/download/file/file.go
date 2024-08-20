@@ -5,13 +5,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/fossyy/filekeeper/db"
 )
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("id")
-	file, err := db.DB.GetFile(fileID)
+	file, err := app.Server.Database.GetFile(fileID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

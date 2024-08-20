@@ -3,7 +3,6 @@ package cache
 import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/google/uuid"
 	"sync"
@@ -74,8 +73,8 @@ func init() {
 			for _, file := range fileCache {
 				file.mu.Lock()
 				if currentTime.Sub(file.AccessAt) > time.Minute*1 {
-					db.DB.UpdateUploadedByte(file.UploadedByte, file.ID.String())
-					db.DB.UpdateUploadedChunk(file.UploadedChunk, file.ID.String())
+					app.Server.Database.UpdateUploadedByte(file.UploadedByte, file.ID.String())
+					app.Server.Database.UpdateUploadedChunk(file.UploadedChunk, file.ID.String())
 					delete(fileCache, file.ID.String())
 					cacheClean++
 				}
@@ -92,7 +91,7 @@ func GetUser(email string) (*UserWithExpired, error) {
 		return user, nil
 	}
 
-	userData, err := db.DB.GetUser(email)
+	userData, err := app.Server.Database.GetUser(email)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +121,7 @@ func GetFile(id string) (*FileWithExpired, error) {
 		return file, nil
 	}
 
-	uploadData, err := db.DB.GetFile(id)
+	uploadData, err := app.Server.Database.GetFile(id)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +148,7 @@ func (file *FileWithExpired) UpdateProgress(index int64, size int64) {
 }
 
 func GetUserFile(name, ownerID string) (*FileWithExpired, error) {
-	fileData, err := db.DB.GetUserFile(name, ownerID)
+	fileData, err := app.Server.Database.GetUserFile(name, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -163,9 +162,9 @@ func GetUserFile(name, ownerID string) (*FileWithExpired, error) {
 }
 
 func (file *FileWithExpired) FinalizeFileUpload() {
-	db.DB.UpdateUploadedByte(file.UploadedByte, file.ID.String())
-	db.DB.UpdateUploadedChunk(file.UploadedChunk, file.ID.String())
-	db.DB.FinalizeFileUpload(file.ID.String())
+	app.Server.Database.UpdateUploadedByte(file.UploadedByte, file.ID.String())
+	app.Server.Database.UpdateUploadedChunk(file.UploadedChunk, file.ID.String())
+	app.Server.Database.FinalizeFileUpload(file.ID.String())
 	delete(fileCache, file.ID.String())
 	return
 }

@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/google/uuid"
@@ -93,7 +92,7 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.File, error) 
 		Done:          false,
 	}
 
-	err = db.DB.CreateFile(&newFile)
+	err = app.Server.Database.CreateFile(&newFile)
 	if err != nil {
 		app.Server.Logger.Error(err.Error())
 		return models.File{}, err

@@ -5,7 +5,6 @@ import (
 	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"net/http"
 
-	"github.com/fossyy/filekeeper/db"
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	"github.com/fossyy/filekeeper/types"
 )
@@ -19,7 +18,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := db.DB.CreateUser(data.User)
+	err := app.Server.Database.CreateUser(data.User)
 	if err != nil {
 		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,

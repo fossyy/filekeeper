@@ -5,14 +5,13 @@ import (
 	"github.com/fossyy/filekeeper/view/client/download"
 	"net/http"
 
-	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 )
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
-	files, err := db.DB.GetFiles(userSession.UserID.String())
+	files, err := app.Server.Database.GetFiles(userSession.UserID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
