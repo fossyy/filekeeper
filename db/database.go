@@ -33,6 +33,7 @@ type Database interface {
 
 	CreateUser(user *models.User) error
 	GetUser(email string) (*models.User, error)
+	GetAllUsers() ([]models.User, error)
 	UpdateUserPassword(email string, password string) error
 
 	CreateFile(file *models.File) error
@@ -195,6 +196,15 @@ func (db *mySQLdb) GetUser(email string) (*models.User, error) {
 	return &user, nil
 }
 
+func (db *mySQLdb) GetAllUsers() ([]models.User, error) {
+	var users []models.User
+	err := db.DB.Table("users").Select("user_id, Username, Email").Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (db *mySQLdb) UpdateUserPassword(email string, password string) error {
 	var user models.User
 	err := db.DB.Table("users").Where("email = ?", email).First(&user).Error
@@ -316,6 +326,16 @@ func (db *postgresDB) GetUser(email string) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (db *postgresDB) GetAllUsers() ([]models.User, error) {
+	var users []models.User
+	err := db.DB.Table("users").Select("user_id, username, email").Find(&users).Error
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	return users, nil
 }
 
 func (db *postgresDB) UpdateUserPassword(email string, password string) error {
