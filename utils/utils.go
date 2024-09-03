@@ -66,25 +66,25 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 func ValidatePassword(password string) bool {
-	if len(password) < 6 {
+	if len(password) < 8 {
 		return false
 	}
 
 	var (
-		hasNumber    int
+		hasNumber    bool
 		hasUppercase bool
 	)
 
 	for _, char := range password {
 		switch {
 		case unicode.IsNumber(char):
-			hasNumber++
+			hasNumber = true
 		case unicode.IsUpper(char):
 			hasUppercase = true
 		}
 	}
 
-	return hasNumber >= 3 && hasUppercase
+	return hasNumber && hasUppercase
 }
 
 func ConvertFileSize(byte int64) string {
