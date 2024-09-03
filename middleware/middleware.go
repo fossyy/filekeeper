@@ -41,6 +41,24 @@ func (w *wrapper) WriteHeader(code int) {
 
 func Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Header.Get("upgrade") == "websocket" {
+			hijacker, ok := writer.(http.Hijacker)
+			if !ok {
+				http.Error(writer, "Hijacking not supported", http.StatusInternalServerError)
+				return
+			}
+			hijack, _, err := hijacker.Hijack()
+			if err != nil {
+				http.Error(writer, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer hijack.Close()
+			rw := NewHijackWriter(hijack)
+			app.Server.Logger.Info(fmt.Sprintf("%s %s %s %v", utils.ClientIP(request), "WEBSOCKET", request.RequestURI, http.StatusSwitchingProtocols))
+			next.ServeHTTP(rw, request)
+			return
+		}
+
 		address := strings.Split(utils.Getenv("CORS_LIST"), ",")
 
 		for _, addr := range address {

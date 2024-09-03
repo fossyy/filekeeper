@@ -13,7 +13,7 @@ templ Main() {
 							<p class="text-sm text-muted-foreground">Real-time metrics for your server.</p>
 						</div>
 						<div class="p-6">
-							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							<div class="grid grid-cols-4 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 								<div class="flex flex-col items-center justify-center gap-2 rounded-lg bg-background p-4">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +38,7 @@ templ Main() {
 										<path d="M9 2v2"></path>
 										<path d="M9 20v2"></path>
 									</svg>
-									<div class="text-2xl font-bold">75%</div>
+									<div id="cpu_usage" class="text-2xl font-bold">0%</div>
 									<div class="text-sm text-muted-foreground">CPU Usage</div>
 								</div>
 								<div class="flex flex-col items-center justify-center gap-2 rounded-lg bg-background p-4">
@@ -64,31 +64,49 @@ templ Main() {
 										<path d="M2 15h20"></path>
 										<path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1.1a2 2 0 0 0 0 3.837V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5.1a2 2 0 0 0 0-3.837Z"></path>
 									</svg>
-									<div class="text-2xl font-bold">8GB</div>
+									<div id="memory_usage" class="text-2xl font-bold">0GB</div>
 									<div class="text-sm text-muted-foreground">Memory Usage</div>
 								</div>
 								<div class="flex flex-col items-center justify-center gap-2 rounded-lg bg-background p-4">
 									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="24"
-										height="24"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										class="h-8 w-8"
-									>
-										<rect x="16" y="16" width="6" height="6" rx="1"></rect>
-										<rect x="2" y="16" width="6" height="6" rx="1"></rect>
-										<rect x="9" y="2" width="6" height="6" rx="1"></rect>
-										<path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"></path>
-										<path d="M12 12V8"></path>
-									</svg>
-									<div class="text-2xl font-bold">100Mbps</div>
-									<div class="text-sm text-muted-foreground">Network Usage</div>
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="24"
+                                      height="24"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      stroke-width="2"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      class="h-8 w-8"
+                                    >
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                      <polyline points="17 8 12 3 7 8"></polyline>
+                                      <line x1="12" x2="12" y1="3" y2="15"></line>
+                                    </svg>
+									<div id="upload_speed" class="text-2xl font-bold">0Mbps</div>
+									<div class="text-sm text-muted-foreground">Upload Speed</div>
 								</div>
+								<div class="flex flex-col items-center justify-center gap-2 rounded-lg bg-background p-4">
+                                	<svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="24"
+                                      height="24"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      stroke-width="2"
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      class="h-8 w-8"
+                                    >
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                      <polyline points="7 10 12 15 17 10"></polyline>
+                                      <line x1="12" x2="12" y1="15" y2="3"></line>
+                                    </svg>
+                                	<div id="download_speed" class="text-2xl font-bold">0Mbps</div>
+                                	<div class="text-sm text-muted-foreground">Download Speed</div>
+                                </div>
 							</div>
 						</div>
 					</div>
@@ -425,5 +443,6 @@ templ Main() {
 				</div>
 			</main>
 		</div>
+		<script src="/public/websocket.js" />
 	}
 }
