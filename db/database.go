@@ -64,6 +64,10 @@ func NewMYSQLdb(username, password, host, port, dbName string) Database {
 		Logger: gormLogger.Default.LogMode(gormLogger.Silent),
 	})
 
+	if err != nil {
+		panic("failed to connect database: " + err.Error())
+	}
+
 	initDB.Raw("SELECT count(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = ?", dbName).Scan(&count)
 	if count <= 0 {
 		if err := initDB.Exec("CREATE DATABASE IF NOT EXISTS " + dbName).Error; err != nil {
