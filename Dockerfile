@@ -11,6 +11,7 @@ RUN npm install -g clean-css-cli
 RUN npx tailwindcss -i ./public/input.css -o ./tmp/output.css
 RUN javascript-obfuscator ./public/upload.js --compact true --self-defending true --output ./public/upload_obfuscated.js
 RUN javascript-obfuscator ./public/validatePassword.js --compact true --self-defending true --output ./public/validatePassword_obfuscated.js
+RUN javascript-obfuscator ./public/websocket.js --compact true --self-defending true --output ./public/websocket_obfuscated.js
 RUN cleancss -o ./public/output.css ./tmp/output.css
 
 FROM golang:1.22.2-alpine3.19 AS go_builder
@@ -20,6 +21,7 @@ COPY . .
 COPY --from=node_builder /src/public /src/public
 COPY --from=node_builder /src/public/upload_obfuscated.js /src/public/upload.js
 COPY --from=node_builder /src/public/validatePassword_obfuscated.js /src/public/validatePassword.js
+COPY --from=node_builder /src/public/websocket_obfuscated.js /src/public/websocket.js
 
 RUN apk update && apk upgrade && apk add --no-cache ca-certificates tzdata
 RUN update-ca-certificates
