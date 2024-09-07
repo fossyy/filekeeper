@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/cache"
 	"io"
 	"net/http"
 	"os"
@@ -31,7 +30,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileData, err := cache.GetUserFile(fileInfo.Name, userSession.UserID.String())
+	fileData, err := app.Server.Service.GetUserFile(fileInfo.Name, userSession.UserID.String())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			upload, err := handleNewUpload(userSession, fileInfo)

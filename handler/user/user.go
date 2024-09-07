@@ -17,24 +17,28 @@ var errorMessages = map[string]string{
 func GET(w http.ResponseWriter, r *http.Request) {
 	var component templ.Component
 	userSession := r.Context().Value("user").(types.User)
-
+	sessions, err := session.GetSessions(userSession.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	if err := r.URL.Query().Get("error"); err != "" {
 		message, ok := errorMessages[err]
 		if !ok {
 			message = "Unknown error occurred. Please contact support at bagas@fossy.my.id for assistance."
 		}
 
-		component = userView.Main("Filekeeper - User Page", userSession, session.GetSessions(userSession.Email), types.Message{
+		component = userView.Main("Filekeeper - User Page", userSession, sessions, types.Message{
 			Code:    0,
 			Message: message,
 		})
 	} else {
-		component = userView.Main("Filekeeper - User Page", userSession, session.GetSessions(userSession.Email), types.Message{
+		component = userView.Main("Filekeeper - User Page", userSession, sessions, types.Message{
 			Code:    1,
 			Message: "",
 		})
 	}
-	err := component.Render(r.Context(), w)
+	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

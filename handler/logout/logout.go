@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/fossyy/filekeeper/session"
-	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 )
 
@@ -25,7 +24,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 
 	storeSession.Delete()
-	session.RemoveSessionInfo(storeSession.Values["user"].(types.User).Email, cookie.Value)
+	session.RemoveSessionInfo(storeSession.Values.Email, cookie.Value)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:   utils.Getenv("SESSION_NAME"),

@@ -38,14 +38,18 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	if totp.Verify(code, time.Now().Unix()) {
 		storeSession, err := session.Get(key)
-		if err != nil {
-			return
-		}
-		storeSession.Values["user"] = types.User{
+		err = storeSession.Change(types.User{
 			UserID:        user.UserID,
 			Email:         user.Email,
 			Username:      user.Username,
 			Authenticated: true,
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if err != nil {
+			return
 		}
 		userAgent := r.Header.Get("User-Agent")
 		browserInfo, osInfo := ParseUserAgent(userAgent)

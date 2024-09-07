@@ -81,13 +81,10 @@ func Handler(next http.Handler) http.Handler {
 }
 
 func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
-	status, user, sessionID := session.GetSession(r)
+	status, user, _ := session.GetSession(r)
 
 	switch status {
 	case session.Authorized:
-		userSession := session.GetSessionInfo(user.Email, sessionID)
-		userSession.UpdateAccessTime()
-
 		ctx := context.WithValue(r.Context(), "user", user)
 		req := r.WithContext(ctx)
 		r.Context().Value("user")

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/a-h/templ"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -37,8 +36,8 @@ func init() {
 		"login_required":             "You need to log in again to proceed. Please try logging in again.",
 		"account_selection_required": "Please select an account to proceed with the request.",
 		"consent_required":           "Consent is required to proceed. Please provide consent to continue.",
+		"csrf_token_error":           "The CSRF token is missing or invalid. Please refresh the page and try again.",
 	}
-
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +76,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
-	userData, err := cache.GetUser(email)
+	userData, err := app.Server.Service.GetUser(r.Context(), email)
 	if err != nil {
 		component := signinView.Main("Filekeeper - Sign in Page", types.Message{
 			Code:    0,
@@ -95,27 +94,33 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
 		if userData.Totp != "" {
-			storeSession := session.Create()
-			storeSession.Values["user"] = types.User{
+
+			storeSession, err := session.Create(types.User{
 				UserID:        userData.UserID,
 				Email:         email,
 				Username:      userData.Username,
 				Totp:          userData.Totp,
 				Authenticated: false,
+			})
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
 			}
 			storeSession.Save(w)
 			http.Redirect(w, r, "/auth/totp", http.StatusSeeOther)
 			return
 		}
 
-		storeSession := session.Create()
-		storeSession.Values["user"] = types.User{
+		storeSession, err := session.Create(types.User{
 			UserID:        userData.UserID,
 			Email:         email,
 			Username:      userData.Username,
 			Authenticated: true,
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
-
 		userAgent := r.Header.Get("User-Agent")
 		browserInfo, osInfo := ParseUserAgent(userAgent)
 

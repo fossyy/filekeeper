@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/view/client/user/totp"
 	"image/png"
 	"net/http"
@@ -75,7 +74,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		cache.DeleteUser(userSession.Email)
+		app.Server.Service.DeleteUser(userSession.Email)
 		component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
 			Code:    1,
 			Message: "Your TOTP setup is complete! Your account is now more secure.",

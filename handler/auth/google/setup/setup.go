@@ -1,7 +1,8 @@
 package googleOauthSetupHandler
 
 import (
-	"fmt"
+	"encoding/json"
+	"errors"
 	"github.com/fossyy/filekeeper/app"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	"github.com/fossyy/filekeeper/session"
@@ -11,8 +12,8 @@ import (
 	"github.com/fossyy/filekeeper/view/client/auth"
 	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -20,50 +21,26 @@ type UnregisteredUser struct {
 	Code       string
 	Email      string
 	CreateTime time.Time
-	mu         sync.Mutex
-}
-
-var SetupUser map[string]*UnregisteredUser
-
-func init() {
-
-	SetupUser = make(map[string]*UnregisteredUser)
-
-	ticker := time.NewTicker(time.Minute)
-	go func() {
-		for {
-			<-ticker.C
-			currentTime := time.Now()
-			cacheClean := 0
-			cleanID := utils.GenerateRandomString(10)
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [GoogleSetup] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
-
-			for _, data := range SetupUser {
-				data.mu.Lock()
-				if currentTime.Sub(data.CreateTime) > time.Minute*10 {
-					delete(SetupUser, data.Code)
-					cacheClean++
-				}
-
-				data.mu.Unlock()
-			}
-
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [GoogleSetup] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
-		}
-	}()
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-	if _, ok := SetupUser[code]; !ok {
-		http.Redirect(w, r, "/signup", http.StatusSeeOther)
+	_, err := app.Server.Cache.GetCache(r.Context(), "GoogleSetup:"+code)
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			http.Redirect(w, r, "/signup", http.StatusSeeOther)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
+
 	component := authView.GoogleSetup("Filekeeper - Setup Page", types.Message{
 		Code:    3,
 		Message: "",
 	})
-	err := component.Render(r.Context(), w)
+	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
@@ -73,12 +50,22 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 func POST(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-	unregisteredUser, ok := SetupUser[code]
-	if !ok {
+	cache, err := app.Server.Cache.GetCache(r.Context(), "GoogleSetup:"+code)
+
+	if errors.Is(err, redis.Nil) {
 		http.Error(w, "Unauthorized Action", http.StatusUnauthorized)
 		return
 	}
-	err := r.ParseForm()
+
+	var unregisteredUser UnregisteredUser
+	err = json.Unmarshal([]byte(cache), &unregisteredUser)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+
+	err = r.ParseForm()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
@@ -126,14 +113,15 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delete(SetupUser, code)
-
-	storeSession := session.Create()
-	storeSession.Values["user"] = types.User{
+	storeSession, err := session.Create(types.User{
 		UserID:        userID,
 		Email:         unregisteredUser.Email,
 		Username:      username,
 		Authenticated: true,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	userAgent := r.Header.Get("User-Agent")

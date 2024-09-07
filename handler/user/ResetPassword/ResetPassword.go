@@ -2,7 +2,6 @@ package userHandlerResetPassword
 
 import (
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -14,7 +13,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
 	currentPassword := r.Form.Get("currentPassword")
 	password := r.Form.Get("password")
-	user, err := cache.GetUser(userSession.Email)
+	user, err := app.Server.Service.GetUser(r.Context(), userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -38,7 +37,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session.RemoveAllSessions(userSession.Email)
-	cache.DeleteUser(userSession.Email)
+	app.Server.Service.DeleteUser(userSession.Email)
 
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 	return

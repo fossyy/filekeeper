@@ -6,15 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/cache"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
+	"github.com/redis/go-redis/v9"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 )
 
@@ -46,49 +45,22 @@ type OauthUser struct {
 	VerifiedEmail bool   `json:"verified_email"`
 }
 
-type CsrfToken struct {
-	Token      string
-	CreateTime time.Time
-	mu         sync.Mutex
-}
-
-var CsrfTokens map[string]*CsrfToken
-
-func init() {
-
-	CsrfTokens = make(map[string]*CsrfToken)
-
-	ticker := time.NewTicker(time.Minute)
-	go func() {
-		for {
-			<-ticker.C
-			currentTime := time.Now()
-			cacheClean := 0
-			cleanID := utils.GenerateRandomString(10)
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [csrf_token] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
-
-			for _, data := range CsrfTokens {
-				data.mu.Lock()
-				if currentTime.Sub(data.CreateTime) > time.Minute*10 {
-					delete(CsrfTokens, data.Token)
-					cacheClean++
-				}
-				data.mu.Unlock()
-			}
-
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [csrf_token] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
-		}
-	}()
-}
-
 func GET(w http.ResponseWriter, r *http.Request) {
-	if _, ok := CsrfTokens[r.URL.Query().Get("state")]; !ok {
-		//csrf token mismatch error
+	_, err := app.Server.Cache.GetCache(r.Context(), "CsrfTokens:"+r.URL.Query().Get("state"))
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	delete(CsrfTokens, r.URL.Query().Get("state"))
+	err = app.Server.Cache.DeleteCache(r.Context(), "CsrfTokens:"+r.URL.Query().Get("state"))
+	if err != nil {
+		http.Redirect(w, r, fmt.Sprintf("/signin?error=%s", "csrf_token_error"), http.StatusFound)
+		return
+	}
 
 	if err := r.URL.Query().Get("error"); err != "" {
 		http.Redirect(w, r, fmt.Sprintf("/signin?error=%s", err), http.StatusFound)
@@ -146,16 +118,23 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	if !app.Server.Database.IsEmailRegistered(oauthUser.Email) {
 		code := utils.GenerateRandomString(64)
-		googleOauthSetupHandler.SetupUser[code] = &googleOauthSetupHandler.UnregisteredUser{
+
+		user := googleOauthSetupHandler.UnregisteredUser{
 			Code:       code,
 			Email:      oauthUser.Email,
 			CreateTime: time.Now(),
+		}
+		newGoogleSetupJSON, _ := json.Marshal(user)
+		err = app.Server.Cache.SetCache(r.Context(), "GoogleSetup:"+code, newGoogleSetupJSON, time.Minute*15)
+		if err != nil {
+			fmt.Println("Error setting up Google Setup:", err)
+			return
 		}
 		http.Redirect(w, r, fmt.Sprintf("/auth/google/setup/%s", code), http.StatusSeeOther)
 		return
 	}
 
-	user, err := cache.GetUser(oauthUser.Email)
+	user, err := app.Server.Service.GetUser(r.Context(), oauthUser.Email)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -163,12 +142,15 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	storeSession := session.Create()
-	storeSession.Values["user"] = types.User{
+	storeSession, err := session.Create(types.User{
 		UserID:        user.UserID,
 		Email:         oauthUser.Email,
 		Username:      user.Username,
 		Authenticated: true,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	userAgent := r.Header.Get("User-Agent")

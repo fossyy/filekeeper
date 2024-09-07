@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"fmt"
+	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -27,28 +28,7 @@ const (
 	EnableSSL  SSLMode = "enable"
 )
 
-type Database interface {
-	IsUserRegistered(email string, username string) bool
-	IsEmailRegistered(email string) bool
-
-	CreateUser(user *models.User) error
-	GetUser(email string) (*models.User, error)
-	GetAllUsers() ([]models.User, error)
-	UpdateUserPassword(email string, password string) error
-
-	CreateFile(file *models.File) error
-	GetFile(fileID string) (*models.File, error)
-	GetUserFile(name string, ownerID string) (*models.File, error)
-	GetFiles(ownerID string) ([]*models.File, error)
-
-	UpdateUploadedByte(index int64, fileID string)
-	UpdateUploadedChunk(index int64, fileID string)
-	FinalizeFileUpload(fileID string)
-
-	InitializeTotp(email string, secret string) error
-}
-
-func NewMYSQLdb(username, password, host, port, dbName string) Database {
+func NewMYSQLdb(username, password, host, port, dbName string) types.Database {
 	var err error
 	var count int64
 
@@ -110,7 +90,7 @@ func NewMYSQLdb(username, password, host, port, dbName string) Database {
 	return &mySQLdb{DB}
 }
 
-func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) Database {
+func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) types.Database {
 	var err error
 	var count int64
 
