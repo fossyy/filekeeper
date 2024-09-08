@@ -3,13 +3,15 @@ package signupHandler
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/fossyy/filekeeper/view/client/email"
 	signupView "github.com/fossyy/filekeeper/view/client/signup"
+	"github.com/redis/go-redis/v9"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/fossyy/filekeeper/types"
@@ -20,39 +22,7 @@ import (
 type UnverifiedUser struct {
 	User       *models.User
 	Code       string
-	mu         sync.Mutex
 	CreateTime time.Time
-}
-
-var VerifyUser map[string]*UnverifiedUser
-var VerifyEmail map[string]string
-
-func init() {
-	VerifyUser = make(map[string]*UnverifiedUser)
-	VerifyEmail = make(map[string]string)
-
-	ticker := time.NewTicker(time.Minute)
-	go func() {
-		for {
-			<-ticker.C
-			currentTime := time.Now()
-			cacheClean := 0
-			cleanID := utils.GenerateRandomString(10)
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [signup] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
-
-			for _, data := range VerifyUser {
-				data.mu.Lock()
-				if currentTime.Sub(data.CreateTime) > time.Minute*10 {
-					delete(VerifyUser, data.Code)
-					delete(VerifyEmail, data.User.Email)
-					cacheClean++
-				}
-				data.mu.Unlock()
-			}
-
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [signup] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
-		}
-	}()
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -136,16 +106,18 @@ func verifyEmail(user *models.User) error {
 	var buffer bytes.Buffer
 	var code string
 
-	code = VerifyEmail[user.Email]
-	userData, ok := VerifyUser[code]
-
-	if !ok {
-		code = utils.GenerateRandomString(64)
+	storedCode, err := app.Server.Cache.GetCache(context.Background(), "VerificationCode:"+user.Email)
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			code = utils.GenerateRandomString(64)
+		} else {
+			return err
+		}
 	} else {
-		code = userData.Code
+		code = storedCode
 	}
 
-	err := emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://%s/signup/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
+	err = emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://%s/signup/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
 	if err != nil {
 		return err
 	}
@@ -155,13 +127,25 @@ func verifyEmail(user *models.User) error {
 		Code:       code,
 		CreateTime: time.Now(),
 	}
+	newUnverifiedUser, err := json.Marshal(unverifiedUser)
+	if err != nil {
+		return err
+	}
 
-	VerifyUser[code] = &unverifiedUser
-	VerifyEmail[user.Email] = code
+	err = app.Server.Cache.SetCache(context.Background(), "UnverifiedUser:"+code, newUnverifiedUser, 10*time.Minute)
+	if err != nil {
+		return err
+	}
+
+	err = app.Server.Cache.SetCache(context.Background(), "VerificationCode:"+user.Email, code, 10*time.Minute)
+	if err != nil {
+		return err
+	}
 
 	err = app.Server.Mail.Send(user.Email, "Account Registration Verification", buffer.String())
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

@@ -14,6 +14,7 @@ services:
   redis:
     image: redis:7.4.0
     container_name: redis-filekeeper
+    command: ["redis-server", "--requirepass", "VerySecretPassword"]
     networks:
       - filekeeper
 
@@ -23,9 +24,9 @@ services:
     environment:
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 8000
-      DOMAIN: filekeeper.fossy.my.id
+      DOMAIN: filekeeper.example.com
       CORS_PROTO: https
-      CORS_LIST: filekeeper.fossy.my.id:443,fossy.my.id:443
+      CORS_LIST: filekeeper.example.com:443,example.com:443
       CORS_METHODS: POST,GET
       DB_HOST: postgres-filekeeper
       DB_PORT: 5432
@@ -48,7 +49,9 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.filekeeper.rule=Host(`filekeeper-staging.com`)"
+      - "traefik.http.routers.filekeeper.rule=Host(`filekeeper.example.com`)"
+      - "traefik.http.routers.filekeeper.entrypoints=websecure"
+      - "traefik.http.routers.filekeeper.tls.certresolver=myresolver"
       - "traefik.http.services.filekeeper.loadbalancer.server.port=8000"
     depends_on:
       - postgres-server
@@ -61,18 +64,18 @@ services:
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
+      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.le.acme.tlschallenge=true"
-      - "--certificatesresolvers.le.acme.email=your-email@example.com"
-      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=bagas@example.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./letsencrypt:/letsencrypt"
+      - "/opt/letsencrypt:/letsencrypt"
     networks:
       - filekeeper
       - traefik

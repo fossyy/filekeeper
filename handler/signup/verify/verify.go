@@ -1,28 +1,45 @@
 package signupVerifyHandler
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"github.com/fossyy/filekeeper/app"
+	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	signupView "github.com/fossyy/filekeeper/view/client/signup"
+	"github.com/redis/go-redis/v9"
 	"net/http"
 
-	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	"github.com/fossyy/filekeeper/types"
 )
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-	data, ok := signupHandler.VerifyUser[code]
 
-	if !ok {
-		w.WriteHeader(http.StatusNotFound)
+	userDataStr, err := app.Server.Cache.GetCache(context.Background(), "UnverifiedUser:"+code)
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		app.Server.Logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	err := app.Server.Database.CreateUser(data.User)
+	var unverifiedUser signupHandler.UnverifiedUser
+	err = json.Unmarshal([]byte(userDataStr), &unverifiedUser)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+
+	err = app.Server.Database.CreateUser(unverifiedUser.User)
 	if err != nil {
 		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
-			Message: "Email or Username has been registered",
+			Message: "Email or Username has already been registered",
 		})
 		err := component.Render(r.Context(), w)
 		if err != nil {
@@ -33,11 +50,17 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delete(signupHandler.VerifyUser, code)
-	delete(signupHandler.VerifyEmail, data.User.Email)
+	err = app.Server.Cache.DeleteCache(context.Background(), "UnverifiedUser:"+code)
+	if err != nil {
+		app.Server.Logger.Error(err.Error())
+	}
+
+	err = app.Server.Cache.DeleteCache(context.Background(), "VerificationCode:"+unverifiedUser.User.Email)
+	if err != nil {
+		app.Server.Logger.Error(err.Error())
+	}
 
 	component := signupView.VerifySuccess("Filekeeper - Verify Page")
-
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -39,7 +39,7 @@ func (r *Service) GetUser(ctx context.Context, email string) (*models.User, erro
 		}
 
 		newUserJSON, _ := json.Marshal(user)
-		err = r.cache.SetCache(ctx, email, newUserJSON, time.Hour*24)
+		err = r.cache.SetCache(ctx, "UserCache:"+email, newUserJSON, time.Hour*12)
 		if err != nil {
 			return nil, err
 		}
