@@ -33,25 +33,14 @@ type FileData struct {
 	Downloaded int64
 }
 
-type UserWithExpired struct {
-	UserID   uuid.UUID
-	Username string
-	Email    string
-	Password string
-	Totp     string
-	AccessAt time.Time
-}
-
-type FileWithExpired struct {
-	ID            uuid.UUID
-	OwnerID       uuid.UUID
-	Name          string
-	Size          int64
-	Downloaded    int64
-	UploadedByte  int64
-	UploadedChunk int64
-	Done          bool
-	AccessAt      time.Time
+type FileWithDetail struct {
+	ID         uuid.UUID
+	OwnerID    uuid.UUID
+	Name       string
+	Size       int64
+	Downloaded int64
+	Chunk      map[string]bool
+	Done       bool
 }
 
 type Database interface {
@@ -68,10 +57,6 @@ type Database interface {
 	GetUserFile(name string, ownerID string) (*models.File, error)
 	GetFiles(ownerID string) ([]*models.File, error)
 
-	UpdateUploadedByte(index int64, fileID string)
-	UpdateUploadedChunk(index int64, fileID string)
-	FinalizeFileUpload(fileID string)
-
 	InitializeTotp(email string, secret string) error
 }
 
@@ -83,8 +68,8 @@ type CachingServer interface {
 }
 
 type Services interface {
-	GetUser(ctx context.Context, email string) (*UserWithExpired, error)
+	GetUser(ctx context.Context, email string) (*models.User, error)
 	DeleteUser(email string)
-	GetFile(id string) (*FileWithExpired, error)
-	GetUserFile(name, ownerID string) (*FileWithExpired, error)
+	GetFile(id string) (*models.File, error)
+	GetUserFile(name, ownerID string) (*FileWithDetail, error)
 }

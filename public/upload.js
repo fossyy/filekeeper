@@ -32,7 +32,7 @@ async function handleFile(file){
         if (responseData.Done === false) {
             addNewUploadElement(file)
             const fileChunks = await splitFile(file, chunkSize);
-            await uploadChunks(file.name,file.size, fileChunks, responseData.UploadedChunk, responseData.ID);
+            await uploadChunks(file.name,file.size, fileChunks, responseData.Chunk, responseData.ID);
         } else {
             alert("file already uploaded")
         }
@@ -123,7 +123,7 @@ async function splitFile(file, chunkSize) {
     return fileChunks;
 }
 
-async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
+async function uploadChunks(name, size, chunks, chunkArray, FileID) {
     let byteUploaded = 0
     let progress1 = document.getElementById(`progress-${name}-1`);
     let progress2 = document.getElementById(`progress-${name}-2`);
@@ -132,7 +132,7 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
     for (let index = 0; index < chunks.length; index++) {
         const percentComplete = Math.round((index + 1) / chunks.length * 100);
         const chunk = chunks[index];
-        if (!(index <= uploadedChunk)) {
+        if (!(chunkArray["chunk_"+index])) {
             const formData = new FormData();
             formData.append('name', name);
             formData.append('chunk', chunk);
@@ -152,13 +152,19 @@ async function uploadChunks(name, size, chunks, uploadedChunk= -1, FileID) {
             const totalTime = (endTime - startTime) / 1000;
             const uploadSpeed = chunk.size / totalTime / 1024 / 1024;
             byteUploaded += chunk.size
-            console.log(byteUploaded)
             progress3.innerText = `${uploadSpeed.toFixed(2)} MB/s`;
             progress4.innerText = `Uploading ${percentComplete}% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
         } else {
             progress1.setAttribute("aria-valuenow", percentComplete);
             progress2.style.width = `${percentComplete}%`;
+            progress3.innerText = `Fixing Missing Byte`;
+            progress4.innerText = `Uploading Missing Byte ${percentComplete}% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
             byteUploaded += chunk.size
         }
     }
+    console.log(chunks)
+    console.log(chunkArray)
+
+    progress3.innerText = `Done`;
+    progress4.innerText = `File Uploaded 100% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
 }

@@ -235,27 +235,6 @@ func (db *mySQLdb) GetFiles(ownerID string) ([]*models.File, error) {
 	return files, err
 }
 
-func (db *mySQLdb) UpdateUploadedByte(byte int64, fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = ?", fileID).First(&file)
-	file.UploadedByte = byte
-	db.Save(&file)
-}
-
-func (db *mySQLdb) UpdateUploadedChunk(index int64, fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = ?", fileID).First(&file)
-	file.UploadedChunk = index
-	db.Save(&file)
-}
-
-func (db *mySQLdb) FinalizeFileUpload(fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = ?", fileID).First(&file)
-	file.Done = true
-	db.Save(&file)
-}
-
 func (db *mySQLdb) InitializeTotp(email string, secret string) error {
 	var user models.User
 	err := db.DB.Table("users").Where("email = ?", email).First(&user).Error
@@ -316,7 +295,6 @@ func (db *postgresDB) GetAllUsers() ([]models.User, error) {
 	var users []models.User
 	err := db.DB.Table("users").Select("user_id, username, email").Find(&users).Error
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	return users, nil
@@ -366,26 +344,6 @@ func (db *postgresDB) GetFiles(ownerID string) ([]*models.File, error) {
 		return nil, err
 	}
 	return files, err
-}
-
-func (db *postgresDB) UpdateUploadedByte(byte int64, fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = $1", fileID).First(&file)
-	file.UploadedByte = byte
-	db.Save(&file)
-}
-func (db *postgresDB) UpdateUploadedChunk(index int64, fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = $1", fileID).First(&file)
-	file.UploadedChunk = index
-	db.Save(&file)
-}
-
-func (db *postgresDB) FinalizeFileUpload(fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = $1", fileID).First(&file)
-	file.Done = true
-	db.Save(&file)
 }
 
 func (db *postgresDB) InitializeTotp(email string, secret string) error {
