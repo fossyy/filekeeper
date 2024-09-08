@@ -24,9 +24,12 @@ func main() {
 	dbHost := utils.Getenv("DB_HOST")
 	dbPort := utils.Getenv("DB_PORT")
 	dbName := utils.Getenv("DB_NAME")
+	redisHost := utils.Getenv("REDIS_HOST")
+	redisPort := utils.Getenv("REDIS_PORT")
+	redisPassword := utils.Getenv("REDIS_PASSWORD")
 
 	database := db.NewPostgresDB(dbUser, dbPass, dbHost, dbPort, dbName, db.DisableSSL)
-	cacheServer := cache.NewRedisServer(database)
+	cacheServer := cache.NewRedisServer(redisHost, redisPort, redisPassword, database)
 	services := service.NewService(database, cacheServer)
 
 	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
