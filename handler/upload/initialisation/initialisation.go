@@ -3,8 +3,8 @@ package initialisation
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/cache"
 	"io"
 	"net/http"
 	"os"
@@ -31,13 +31,33 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileData, err := cache.GetUserFile(fileInfo.Name, userSession.UserID.String())
+	fileData, err := app.Server.Service.GetUserFile(fileInfo.Name, userSession.UserID.String())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			upload, err := handleNewUpload(userSession, fileInfo)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
+			}
+			fileData = &types.FileWithDetail{
+				ID:         fileData.ID,
+				OwnerID:    fileData.OwnerID,
+				Name:       fileData.Name,
+				Size:       fileData.Size,
+				Downloaded: fileData.Downloaded,
+			}
+			fileData.Chunk = make(map[string]bool)
+			fileData.Done = true
+			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String(), fileData.Name)
+			for i := 0; i <= int(fileInfo.Chunk-1); i++ {
+				fileName := fmt.Sprintf("%s/chunk_%d", saveFolder, i)
+
+				if _, err := os.Stat(fileName); os.IsNotExist(err) {
+					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
+					fileData.Done = false
+				} else {
+					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = true
+				}
 			}
 			respondJSON(w, upload)
 			return
@@ -46,11 +66,19 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if fileData.Done {
-		respondJSON(w, map[string]bool{"Done": true})
-		return
-	}
+	fileData.Chunk = make(map[string]bool)
+	fileData.Done = true
+	saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String(), fileData.Name)
+	for i := 0; i <= int(fileInfo.Chunk-1); i++ {
+		fileName := fmt.Sprintf("%s/chunk_%d", saveFolder, i)
 
+		if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
+			fileData.Done = false
+		} else {
+			fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = true
+		}
+	}
 	respondJSON(w, fileData)
 }
 
@@ -82,14 +110,12 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.File, error) 
 	}
 
 	newFile := models.File{
-		ID:            fileID,
-		OwnerID:       ownerID,
-		Name:          file.Name,
-		Size:          file.Size,
-		Downloaded:    0,
-		UploadedByte:  0,
-		UploadedChunk: -1,
-		Done:          false,
+		ID:         fileID,
+		OwnerID:    ownerID,
+		Name:       file.Name,
+		Size:       file.Size,
+		TotalChunk: file.Chunk - 1,
+		Downloaded: 0,
 	}
 
 	err = app.Server.Database.CreateFile(&newFile)
@@ -97,7 +123,6 @@ func handleNewUpload(user types.User, file types.FileInfo) (models.File, error) 
 		app.Server.Logger.Error(err.Error())
 		return models.File{}, err
 	}
-
 	return newFile, nil
 }
 

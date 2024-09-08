@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
+	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/routes/admin"
 	"github.com/fossyy/filekeeper/routes/client"
+	"github.com/fossyy/filekeeper/service"
 	"github.com/fossyy/filekeeper/utils"
 	"strconv"
 )
@@ -24,11 +26,13 @@ func main() {
 	dbName := utils.Getenv("DB_NAME")
 
 	database := db.NewPostgresDB(dbUser, dbPass, dbHost, dbPort, dbName, db.DisableSSL)
+	cacheServer := cache.NewRedisServer(database)
+	services := service.NewService(database, cacheServer)
 
 	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
 	mailServer := email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 
-	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, mailServer)
+	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, services, mailServer)
 	app.Admin = app.NewAdminServer(adminAddr, middleware.Handler(admin.SetupRoutes()), database)
 
 	go func() {

@@ -1,177 +1,67 @@
 package cache
 
 import (
-	"fmt"
-	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/utils"
-	"github.com/google/uuid"
-	"sync"
+	"context"
+	"github.com/fossyy/filekeeper/types"
+	"github.com/redis/go-redis/v9"
 	"time"
 )
 
-type UserWithExpired struct {
-	UserID   uuid.UUID
-	Username string
-	Email    string
-	Password string
-	Totp     string
-	AccessAt time.Time
-	mu       sync.Mutex
+type RedisServer struct {
+	client   *redis.Client
+	database types.Database
 }
 
-type FileWithExpired struct {
-	ID            uuid.UUID
-	OwnerID       uuid.UUID
-	Name          string
-	Size          int64
-	Downloaded    int64
-	UploadedByte  int64
-	UploadedChunk int64
-	Done          bool
-	AccessAt      time.Time
-	mu            sync.Mutex
+func NewRedisServer(db types.Database) types.CachingServer {
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "Password123",
+		DB:       0,
+	})
+	return &RedisServer{client: client, database: db}
 }
 
-var userCache map[string]*UserWithExpired
-var fileCache map[string]*FileWithExpired
+func (r *RedisServer) GetCache(ctx context.Context, key string) (string, error) {
+	val, err := r.client.Get(ctx, key).Result()
+	if err != nil {
+		return "", err
+	}
+	return val, nil
+}
 
-func init() {
+func (r *RedisServer) SetCache(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+	err := r.client.Set(ctx, key, value, expiration).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-	userCache = make(map[string]*UserWithExpired)
-	fileCache = make(map[string]*FileWithExpired)
-	ticker := time.NewTicker(time.Minute)
+func (r *RedisServer) DeleteCache(ctx context.Context, key string) error {
+	err := r.client.Del(ctx, key).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-	go func() {
-		for {
-			<-ticker.C
-			currentTime := time.Now()
-			cacheClean := 0
-			cleanID := utils.GenerateRandomString(10)
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [user] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+func (r *RedisServer) GetKeys(ctx context.Context, pattern string) ([]string, error) {
+	var cursor uint64
+	var keys []string
+	for {
+		var newKeys []string
+		var err error
 
-			for _, user := range userCache {
-				user.mu.Lock()
-				if currentTime.Sub(user.AccessAt) > time.Hour*8 {
-					delete(userCache, user.Email)
-					cacheClean++
-				}
-				user.mu.Unlock()
-			}
-
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [user] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+		newKeys, cursor, err = r.client.Scan(ctx, cursor, pattern, 0).Result()
+		if err != nil {
+			return nil, err
 		}
-	}()
 
-	go func() {
-		for {
-			<-ticker.C
-			currentTime := time.Now()
-			cacheClean := 0
-			cleanID := utils.GenerateRandomString(10)
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [files] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
+		keys = append(keys, newKeys...)
 
-			for _, file := range fileCache {
-				file.mu.Lock()
-				if currentTime.Sub(file.AccessAt) > time.Minute*1 {
-					app.Server.Database.UpdateUploadedByte(file.UploadedByte, file.ID.String())
-					app.Server.Database.UpdateUploadedChunk(file.UploadedChunk, file.ID.String())
-					delete(fileCache, file.ID.String())
-					cacheClean++
-				}
-				file.mu.Unlock()
-			}
-
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [files] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
+		if cursor == 0 {
+			break
 		}
-	}()
+	}
+	return keys, nil
 }
-
-func GetUser(email string) (*UserWithExpired, error) {
-	if user, ok := userCache[email]; ok {
-		return user, nil
-	}
-
-	userData, err := app.Server.Database.GetUser(email)
-	if err != nil {
-		return nil, err
-	}
-
-	userCache[email] = &UserWithExpired{
-		UserID:   userData.UserID,
-		Username: userData.Username,
-		Email:    userData.Email,
-		Password: userData.Password,
-		Totp:     userData.Totp,
-		AccessAt: time.Now(),
-	}
-
-	return userCache[email], nil
-}
-
-func DeleteUser(email string) {
-	userCache[email].mu.Lock()
-	defer userCache[email].mu.Unlock()
-
-	delete(userCache, email)
-}
-
-func GetFile(id string) (*FileWithExpired, error) {
-	if file, ok := fileCache[id]; ok {
-		file.AccessAt = time.Now()
-		return file, nil
-	}
-
-	uploadData, err := app.Server.Database.GetFile(id)
-	if err != nil {
-		return nil, err
-	}
-
-	fileCache[id] = &FileWithExpired{
-		ID:            uploadData.ID,
-		OwnerID:       uploadData.OwnerID,
-		Name:          uploadData.Name,
-		Size:          uploadData.Size,
-		Downloaded:    uploadData.Downloaded,
-		UploadedByte:  uploadData.UploadedByte,
-		UploadedChunk: uploadData.UploadedChunk,
-		Done:          uploadData.Done,
-		AccessAt:      time.Now(),
-	}
-
-	return fileCache[id], nil
-}
-
-func (file *FileWithExpired) UpdateProgress(index int64, size int64) {
-	file.UploadedChunk = index
-	file.UploadedByte = size
-	file.AccessAt = time.Now()
-}
-
-func GetUserFile(name, ownerID string) (*FileWithExpired, error) {
-	fileData, err := app.Server.Database.GetUserFile(name, ownerID)
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := GetFile(fileData.ID.String())
-	if err != nil {
-		return nil, err
-	}
-
-	return file, nil
-}
-
-func (file *FileWithExpired) FinalizeFileUpload() {
-	app.Server.Database.UpdateUploadedByte(file.UploadedByte, file.ID.String())
-	app.Server.Database.UpdateUploadedChunk(file.UploadedChunk, file.ID.String())
-	app.Server.Database.FinalizeFileUpload(file.ID.String())
-	delete(fileCache, file.ID.String())
-	return
-}
-
-//func DeleteUploadInfo(id string) {
-//	filesUploadedCache[id].mu.Lock()
-//	defer filesUploadedCache[id].mu.Unlock()
-//
-//	delete(filesUploadedCache, id)
-//}

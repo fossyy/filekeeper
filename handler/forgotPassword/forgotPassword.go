@@ -3,13 +3,14 @@ package forgotPasswordHandler
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/view/client/email"
 	"github.com/fossyy/filekeeper/view/client/forgotPassword"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"net/http"
 	"sync"
 	"time"
@@ -25,35 +26,6 @@ type ForgotPassword struct {
 	Code       string
 	mu         sync.Mutex
 	CreateTime time.Time
-}
-
-var ListForgotPassword map[string]*ForgotPassword
-var UserForgotPassword = make(map[string]string)
-
-func init() {
-	ListForgotPassword = make(map[string]*ForgotPassword)
-	ticker := time.NewTicker(time.Minute)
-	go func() {
-		for {
-			<-ticker.C
-			currentTime := time.Now()
-			cacheClean := 0
-			cleanID := utils.GenerateRandomString(10)
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [Forgot Password] [%s] initiated at %02d:%02d:%02d", cleanID, currentTime.Hour(), currentTime.Minute(), currentTime.Second()))
-
-			for _, data := range ListForgotPassword {
-				data.mu.Lock()
-				if currentTime.Sub(data.CreateTime) > time.Minute*10 {
-					delete(ListForgotPassword, data.User.Email)
-					delete(UserForgotPassword, data.Code)
-					cacheClean++
-				}
-				data.mu.Unlock()
-			}
-
-			app.Server.Logger.Info(fmt.Sprintf("Cache cleanup [Forgot Password] [%s] completed: %d entries removed. Finished at %s", cleanID, cacheClean, time.Since(currentTime)))
-		}
-	}()
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -79,7 +51,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	emailForm := r.Form.Get("email")
 
-	user, err := cache.GetUser(emailForm)
+	user, err := app.Server.Service.GetUser(r.Context(), emailForm)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		component := forgotPasswordView.Main("Filekeeper - Forgot Password Page", types.Message{
 			Code:    0,
@@ -119,30 +91,47 @@ func POST(w http.ResponseWriter, r *http.Request) {
 }
 
 func verifyForgot(user *models.User) error {
+	var userData *ForgotPassword
 	var code string
+	var err error
+	code, err = app.Server.Cache.GetCache(context.Background(), "ForgotPasswordCode:"+user.Email)
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			code = utils.GenerateRandomString(64)
+			userData = &ForgotPassword{
+				User:       user,
+				Code:       code,
+				CreateTime: time.Now(),
+			}
 
-	var buffer bytes.Buffer
-	data, ok := ListForgotPassword[user.Email]
-
-	if !ok {
-		code = utils.GenerateRandomString(64)
+			newForgotUser, err := json.Marshal(userData)
+			if err != nil {
+				return err
+			}
+			err = app.Server.Cache.SetCache(context.Background(), "ForgotPasswordCode:"+user.Email, code, time.Minute*15)
+			if err != nil {
+				return err
+			}
+			err = app.Server.Cache.SetCache(context.Background(), "ForgotPassword:"+userData.Code, newForgotUser, time.Minute*15)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	} else {
-		code = data.Code
+		storedCode, err := app.Server.Cache.GetCache(context.Background(), "ForgotPassword:"+code)
+		err = json.Unmarshal([]byte(storedCode), &userData)
+		if err != nil {
+			return err
+		}
 	}
 
-	err := emailView.ForgotPassword(user.Username, fmt.Sprintf("https://%s/forgot-password/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
+	var buffer bytes.Buffer
+	err = emailView.ForgotPassword(user.Username, fmt.Sprintf("https://%s/forgot-password/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
 	if err != nil {
 		return err
 	}
-
-	userData := &ForgotPassword{
-		User:       user,
-		Code:       code,
-		CreateTime: time.Now(),
-	}
-
-	UserForgotPassword[code] = user.Email
-	ListForgotPassword[user.Email] = userData
 
 	err = app.Server.Mail.Send(user.Email, "Password Change Request", buffer.String())
 	if err != nil {

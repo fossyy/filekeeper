@@ -101,10 +101,6 @@ templ content(message types.Message, title string, user types.User, ListSession 
                                                     </th>
                                                     <th
                                                         class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
-                                                        Last Activity
-                                                    </th>
-                                                    <th
-                                                        class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0">
                                                         Actions
                                                     </th>
                                                 </tr>
@@ -118,8 +114,6 @@ templ content(message types.Message, title string, user types.User, ListSession 
                                                     <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.Browser + ses.Version}
                                                     </td>
                                                     <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.OS + ses.OSVersion}
-                                                    </td>
-                                                    <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.AccessAt}
                                                     </td>
                                                     <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
                                                         <button
@@ -322,8 +316,6 @@ templ SessionTable(ListSession []*session.SessionInfo){
             <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.Browser + ses.Version}
             </td>
             <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.OS + ses.OSVersion}
-            </td>
-            <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">{ses.AccessAt}
             </td>
             <td class="p-4 align-middle [&amp;:has([role=checkbox])]:pr-0">
                 <button

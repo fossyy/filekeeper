@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"fmt"
+	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
@@ -27,28 +28,7 @@ const (
 	EnableSSL  SSLMode = "enable"
 )
 
-type Database interface {
-	IsUserRegistered(email string, username string) bool
-	IsEmailRegistered(email string) bool
-
-	CreateUser(user *models.User) error
-	GetUser(email string) (*models.User, error)
-	GetAllUsers() ([]models.User, error)
-	UpdateUserPassword(email string, password string) error
-
-	CreateFile(file *models.File) error
-	GetFile(fileID string) (*models.File, error)
-	GetUserFile(name string, ownerID string) (*models.File, error)
-	GetFiles(ownerID string) ([]*models.File, error)
-
-	UpdateUploadedByte(index int64, fileID string)
-	UpdateUploadedChunk(index int64, fileID string)
-	FinalizeFileUpload(fileID string)
-
-	InitializeTotp(email string, secret string) error
-}
-
-func NewMYSQLdb(username, password, host, port, dbName string) Database {
+func NewMYSQLdb(username, password, host, port, dbName string) types.Database {
 	var err error
 	var count int64
 
@@ -110,7 +90,7 @@ func NewMYSQLdb(username, password, host, port, dbName string) Database {
 	return &mySQLdb{DB}
 }
 
-func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) Database {
+func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) types.Database {
 	var err error
 	var count int64
 
@@ -255,27 +235,6 @@ func (db *mySQLdb) GetFiles(ownerID string) ([]*models.File, error) {
 	return files, err
 }
 
-func (db *mySQLdb) UpdateUploadedByte(byte int64, fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = ?", fileID).First(&file)
-	file.UploadedByte = byte
-	db.Save(&file)
-}
-
-func (db *mySQLdb) UpdateUploadedChunk(index int64, fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = ?", fileID).First(&file)
-	file.UploadedChunk = index
-	db.Save(&file)
-}
-
-func (db *mySQLdb) FinalizeFileUpload(fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = ?", fileID).First(&file)
-	file.Done = true
-	db.Save(&file)
-}
-
 func (db *mySQLdb) InitializeTotp(email string, secret string) error {
 	var user models.User
 	err := db.DB.Table("users").Where("email = ?", email).First(&user).Error
@@ -336,7 +295,6 @@ func (db *postgresDB) GetAllUsers() ([]models.User, error) {
 	var users []models.User
 	err := db.DB.Table("users").Select("user_id, username, email").Find(&users).Error
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	return users, nil
@@ -386,26 +344,6 @@ func (db *postgresDB) GetFiles(ownerID string) ([]*models.File, error) {
 		return nil, err
 	}
 	return files, err
-}
-
-func (db *postgresDB) UpdateUploadedByte(byte int64, fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = $1", fileID).First(&file)
-	file.UploadedByte = byte
-	db.Save(&file)
-}
-func (db *postgresDB) UpdateUploadedChunk(index int64, fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = $1", fileID).First(&file)
-	file.UploadedChunk = index
-	db.Save(&file)
-}
-
-func (db *postgresDB) FinalizeFileUpload(fileID string) {
-	var file models.File
-	db.DB.Table("files").Where("id = $1", fileID).First(&file)
-	file.Done = true
-	db.Save(&file)
 }
 
 func (db *postgresDB) InitializeTotp(email string, secret string) error {

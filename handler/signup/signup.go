@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
+	"github.com/fossyy/filekeeper/utils"
 	"github.com/fossyy/filekeeper/view/client/email"
 	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
-	"github.com/fossyy/filekeeper/utils"
 	"github.com/google/uuid"
 )
 

@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
+	"github.com/fossyy/filekeeper/types"
 	"net/http"
 )
 
@@ -12,12 +12,14 @@ var Admin App
 
 type App struct {
 	http.Server
-	Database db.Database
+	Database types.Database
+	Cache    types.CachingServer
+	Service  types.Services
 	Logger   *logger.AggregatedLogger
 	Mail     *email.SmtpServer
 }
 
-func NewClientServer(addr string, handler http.Handler, logger logger.AggregatedLogger, database db.Database, mail email.SmtpServer) App {
+func NewClientServer(addr string, handler http.Handler, logger logger.AggregatedLogger, database types.Database, cache types.CachingServer, service types.Services, mail email.SmtpServer) App {
 	return App{
 		Server: http.Server{
 			Addr:    addr,
@@ -25,11 +27,13 @@ func NewClientServer(addr string, handler http.Handler, logger logger.Aggregated
 		},
 		Logger:   &logger,
 		Database: database,
+		Cache:    cache,
+		Service:  service,
 		Mail:     &mail,
 	}
 }
 
-func NewAdminServer(addr string, handler http.Handler, database db.Database) App {
+func NewAdminServer(addr string, handler http.Handler, database types.Database) App {
 	return App{
 		Server: http.Server{
 			Addr:    addr,

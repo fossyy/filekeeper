@@ -1,7 +1,9 @@
 package downloadFileHandler
 
 import (
+	"fmt"
 	"github.com/fossyy/filekeeper/app"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -28,22 +30,21 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	openFile, err := os.OpenFile(filepath.Join(saveFolder, file.Name), os.O_RDONLY, 0)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		app.Server.Logger.Error(err.Error())
-		return
-	}
-	defer openFile.Close()
+	w.Header().Set("Content-Disposition", "attachment; filename="+file.Name)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	for i := 0; i <= int(file.TotalChunk); i++ {
+		chunkPath := filepath.Join(saveFolder, file.Name, fmt.Sprintf("chunk_%d", i))
 
-	stat, err := openFile.Stat()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		app.Server.Logger.Error(err.Error())
-		return
+		chunkFile, err := os.Open(chunkPath)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error opening chunk: %v", err), http.StatusInternalServerError)
+			return
+		}
+		_, err = io.Copy(w, chunkFile)
+		chunkFile.Close()
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error writing chunk: %v", err), http.StatusInternalServerError)
+			return
+		}
 	}
-
-	w.Header().Set("Content-Disposition", "attachment; filename="+stat.Name())
-	http.ServeContent(w, r, stat.Name(), stat.ModTime(), openFile)
-	return
 }
