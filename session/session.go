@@ -54,7 +54,7 @@ func Create(values types.User) (*Session, error) {
 		return nil, err
 	}
 
-	err = app.Server.Cache.SetCache(context.Background(), "Session:"+id, string(sessionData), time.Hour*24)
+	err = app.Server.Cache.SetCache(context.Background(), "Session:"+id, string(sessionData), time.Hour*24*7)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func AddSessionInfo(email string, sessionInfo *SessionInfo) error {
 		return err
 	}
 
-	err = app.Server.Cache.SetCache(context.Background(), "UserSessionInfo:"+email+":"+sessionInfo.SessionID, string(sessionInfoData), 0)
+	err = app.Server.Cache.SetCache(context.Background(), "UserSessionInfo:"+email+":"+sessionInfo.SessionID, string(sessionInfoData), time.Hour*24*7)
 	if err != nil {
 		return err
 	}
