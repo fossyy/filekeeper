@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/redis/go-redis/v9"
 	"time"
@@ -12,10 +13,10 @@ type RedisServer struct {
 	database types.Database
 }
 
-func NewRedisServer(db types.Database) types.CachingServer {
+func NewRedisServer(host, port, password string, db types.Database) types.CachingServer {
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "Password123",
+		Addr:     fmt.Sprintf("%s:%s", host, port),
+		Password: password,
 		DB:       0,
 	})
 	return &RedisServer{client: client, database: db}

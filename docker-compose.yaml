@@ -1,13 +1,19 @@
 version: '3.8'
 
 services:
-  mysql-filekeeper:
-    image: mysql:latest
-    container_name: mysql-filekeeper
+  postgres-server:
+    image: postgres:16.0
+    container_name: postgres-filekeeper
     environment:
-      MYSQL_ROOT_PASSWORD: VerySecretPassword
+      POSTGRES_PASSWORD: VerySecretPassword
     volumes:
-      - /opt/mysql:/var/lib/mysql
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - filekeeper
+
+  redis:
+    image: redis:7.4.0
+    container_name: redis-filekeeper
     networks:
       - filekeeper
 
@@ -21,9 +27,9 @@ services:
       CORS_PROTO: https
       CORS_LIST: filekeeper.fossy.my.id:443,fossy.my.id:443
       CORS_METHODS: POST,GET
-      DB_HOST: mysql-filekeeper
-      DB_PORT: 3306
-      DB_USERNAME: root
+      DB_HOST: postgres-filekeeper
+      DB_PORT: 5432
+      DB_USERNAME: postgres
       DB_PASSWORD: VerySecretPassword
       DB_NAME: filekeeper
       SMTP_HOST: mail.example.com
@@ -32,15 +38,49 @@ services:
       SMTP_PASSWORD: VerySecretPassword
       SESSION_NAME: Session
       SESSION_MAX_AGE: 604800
+      REDIS_HOST: redis-filekeeper
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: VerySecretPassword
     volumes:
       - /opt/filekeeper/uploads:/src/uploads
     networks:
       - filekeeper
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.filekeeper.rule=Host(`filekeeper-staging.com`)"
+      - "traefik.http.services.filekeeper.loadbalancer.server.port=8000"
     depends_on:
-      - mysql-filekeeper
+      - postgres-server
+      - redis
     restart: on-failure
+
+  traefik:
+    image: traefik:v2.8
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.email=your-email@example.com"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "8000:8000"
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./letsencrypt:/letsencrypt"
+    networks:
+      - filekeeper
+      - traefik
 
 networks:
   filekeeper:
+  traefik:
+
+volumes:
+  postgres:
+  letsencrypt:
