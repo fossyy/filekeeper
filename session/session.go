@@ -16,9 +16,7 @@ import (
 )
 
 type Session struct {
-	ID         string
-	Values     types.User
-	CreateTime time.Time
+	ID string
 }
 
 type SessionInfo struct {
@@ -44,41 +42,24 @@ func (e *SessionNotFoundError) Error() string {
 	return "session not found"
 }
 
-func Get(id string) (*Session, error) {
-	session, err := app.Server.Cache.GetCache(context.Background(), "Session:"+id)
-	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			return nil, &SessionNotFoundError{}
-		}
-		return nil, err
-	}
-	var userSession Session
-	err = json.Unmarshal([]byte(session), &userSession)
-	if err != nil {
-		return nil, err
-	}
-	return &userSession, nil
+func Get(id string) *Session {
+	return &Session{ID: id}
 }
 
 func Create(values types.User) (*Session, error) {
 	id := utils.GenerateRandomString(128)
-	session := &Session{
-		ID:         id,
-		CreateTime: time.Now(),
-		Values:     values,
-	}
 
-	sessionData, err := json.Marshal(session)
+	sessionData, err := json.Marshal(values)
 	if err != nil {
 		return nil, err
 	}
 
-	err = app.Server.Cache.SetCache(context.Background(), "Session:"+id, string(sessionData), time.Hour*24) // Set expiration time as needed
+	err = app.Server.Cache.SetCache(context.Background(), "Session:"+id, string(sessionData), time.Hour*24)
 	if err != nil {
 		return nil, err
 	}
 
-	return session, nil
+	return &Session{ID: id}, nil
 }
 
 func (s *Session) Change(user types.User) error {
@@ -200,23 +181,21 @@ func GetSession(r *http.Request) (UserStatus, types.User, string) {
 		return Unauthorized, types.User{}, ""
 	}
 
-	var storeSession Session
+	var storeSession types.User
 	err = json.Unmarshal([]byte(sessionData), &storeSession)
+
 	if err != nil {
 		return Unauthorized, types.User{}, ""
 	}
 
-	userSession := storeSession.Values
-
-	if !userSession.Authenticated && userSession.Totp != "" {
-		return Unauthorized, userSession, cookie.Value
+	if !storeSession.Authenticated && storeSession.Totp != "" {
+		return Unauthorized, storeSession, cookie.Value
 	}
 
-	if !userSession.Authenticated {
+	if !storeSession.Authenticated {
 		return Unauthorized, types.User{}, ""
 	}
-
-	return Authorized, userSession, cookie.Value
+	return Authorized, storeSession, cookie.Value
 }
 
 func GetSessions(email string) ([]*SessionInfo, error) {

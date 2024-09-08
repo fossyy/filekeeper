@@ -10,7 +10,7 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	_, mySession, _ := session.GetSession(r)
-	otherSession, _ := session.Get(id)
+	otherSession := session.Get(id)
 	if _, err := session.GetSessionInfo(mySession.Email, otherSession.ID); err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return

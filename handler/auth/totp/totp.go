@@ -37,8 +37,8 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	totp := gotp.NewDefaultTOTP(user.Totp)
 
 	if totp.Verify(code, time.Now().Unix()) {
-		storeSession, err := session.Get(key)
-		err = storeSession.Change(types.User{
+		storeSession := session.Get(key)
+		err := storeSession.Change(types.User{
 			UserID:        user.UserID,
 			Email:         user.Email,
 			Username:      user.Username,
