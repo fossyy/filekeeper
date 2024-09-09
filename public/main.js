@@ -1,45 +1,60 @@
-document.addEventListener("dragover", function (event) {
-    event.preventDefault();
-});
+if (!window.mySocket) {
+    window.mySocket = new WebSocket(`ws://${window.location.host}/user`);
 
-document.addEventListener("drop", async function (event) {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0]
-    await handleFile(file)
-});
+    window.mySocket.onopen = function(event) {
+        console.log('WebSocket is open now.');
+    };
 
-document.getElementById('dropzone-file').addEventListener('change', async function(event) {
-    event.preventDefault();
-    const file = event.target.files[0]
-    await handleFile(file)
-});
+    window.mySocket.onmessage = async function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.action === "UploadNewFile") {
+                if (data.response.Done === false) {
+                    const file = window.fileIdMap[data.responseID];
+                    addNewUploadElement(file);
+                    const fileChunks = await splitFile(file, file.chunkSize);
+                    await uploadChunks(file.name, file.size, fileChunks, data.response.Chunk, data.response.ID);
+                } else {
+                    alert("File already uploaded.");
+                }
+            }
+        } catch (error) {
+            console.error('Error parsing message data:', error);
+        }
+    };
+
+    window.mySocket.onerror = function(event) {
+        console.error('WebSocket error observed:', event);
+    };
+
+    window.mySocket.onclose = function(event) {
+        console.log('WebSocket is closed now.');
+    };
+}
+
+function generateUniqueId() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
 
 async function handleFile(file){
     const chunkSize = 2 * 1024 * 1024;
     const chunks = Math.ceil(file.size / chunkSize);
+    const fileId = generateUniqueId();
     const data = JSON.stringify({
+        "action": "UploadNewFile",
         "name": file.name,
         "size": file.size,
         "chunk": chunks,
+        "requestID": fileId,
     });
+    file.chunkSize = chunkSize;
+    window.fileIdMap = window.fileIdMap || {};
+    window.fileIdMap[fileId] = file;
 
-    fetch('/upload/init', {
-        method: 'POST',
-        body: data,
-    }).then(async response => {
-        const responseData = await response.json()
-        console.log(responseData)
-        if (responseData.Done === false) {
-            addNewUploadElement(file)
-            const fileChunks = await splitFile(file, chunkSize);
-            await uploadChunks(file.name,file.size, fileChunks, responseData.Chunk, responseData.ID);
-        } else {
-            alert("file already uploaded")
-        }
-
-    }).catch(error => {
-        console.error('Error uploading file:', error);
-    });
+    window.mySocket.send(data)
 }
 
 function addNewUploadElement(file){

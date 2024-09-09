@@ -3,7 +3,7 @@ package uploadView
 import "github.com/fossyy/filekeeper/view/client/layout"
 
 templ content(title string) {
-    @layout.Base(title){
+    @layout.BaseAuth(title){
         <div class="flex items-center min-h-screen p-4 sm:p-6 bg-gray-900 text-white">
             <div class="mx-auto w-full max-w-md space-y-8">
                 <div class="rounded-lg border bg-card text-card-foreground shadow-sm w-full max-w-md" data-v0-t="card">
@@ -43,7 +43,23 @@ templ content(title string) {
                 </div>
             </div>
         </div>
-        <script src="/public/upload.js" />
+        <script type="text/javascript">
+            document.addEventListener("dragover", function (event) {
+                event.preventDefault();
+            });
+
+            document.addEventListener("drop", async function (event) {
+                event.preventDefault();
+                const file = event.dataTransfer.files[0]
+                await handleFile(file)
+            });
+
+            document.getElementById('dropzone-file').addEventListener('change', async function(event) {
+                event.preventDefault();
+                const file = event.target.files[0]
+                await handleFile(file)
+            });
+        </script>
     }
 }
 

@@ -6,5 +6,7 @@
 
 .env
 
+docker-compose.staging.yaml
+
 *_templ.txt
 *_templ.go

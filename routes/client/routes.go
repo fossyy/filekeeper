@@ -15,7 +15,6 @@ import (
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	signupVerifyHandler "github.com/fossyy/filekeeper/handler/signup/verify"
 	uploadHandler "github.com/fossyy/filekeeper/handler/upload"
-	"github.com/fossyy/filekeeper/handler/upload/initialisation"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	userHandlerResetPassword "github.com/fossyy/filekeeper/handler/user/ResetPassword"
 	userSessionTerminateHandler "github.com/fossyy/filekeeper/handler/user/session/terminate"
@@ -116,10 +115,6 @@ func SetupRoutes() *http.ServeMux {
 
 	handler.HandleFunc("POST /upload/{id}", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Auth(uploadHandler.POST, w, r)
-	})
-
-	handler.HandleFunc("POST /upload/init", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(initialisation.POST, w, r)
 	})
 
 	handler.HandleFunc("GET /download", func(w http.ResponseWriter, r *http.Request) {
