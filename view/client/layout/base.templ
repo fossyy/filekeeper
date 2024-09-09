@@ -41,6 +41,18 @@ templ BaseAuth(title string){
         <div id="content">
             { children... }
         </div>
+        <script type="text/javascript">
+            function addScript() {
+                if (!window.scriptAdded) {
+                    const script = document.createElement('script');
+                    script.src = "/public/main.js";
+                    window.scriptAdded = true;
+                    script.onerror = onerror;
+                    document.head.appendChild(script);
+                }
+            }
+            addScript()
+        </script>
     </body>
     </html>
 }
