@@ -1,5 +1,6 @@
 if (!window.mySocket) {
-    window.mySocket = new WebSocket(`ws://${window.location.host}/user`);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    window.mySocket = new WebSocket(`${wsProtocol}://${window.location.host}/user`);
 
     window.mySocket.onopen = function(event) {
         console.log('WebSocket is open now.');
