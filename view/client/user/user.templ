@@ -7,7 +7,7 @@ import (
 )
 
 templ content(message types.Message, title string, user types.User, ListSession []*session.SessionInfo) {
-    @layout.Base(title){
+    @layout.BaseAuth(title){
         @layout.Navbar(user)
         <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
             <div class="grid gap-10 lg:grid-cols-[1fr_300px]">

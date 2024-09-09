@@ -6,7 +6,7 @@ import (
 )
 
 templ component(title string, files []types.FileData){
-    @layout.Base(title){
+    @layout.BaseAuth(title){
         <div class="dark min-h-screen p-4 sm:p-6 bg-gray-900 text-white">
             <div class="space-y-4">
                <header class="text-center">

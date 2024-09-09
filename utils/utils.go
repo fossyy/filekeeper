@@ -87,7 +87,7 @@ func ValidatePassword(password string) bool {
 	return hasNumber && hasUppercase
 }
 
-func ConvertFileSize(byte int64) string {
+func ConvertFileSize(byte uint64) string {
 	if byte < 1024 {
 		return fmt.Sprintf("%d B", byte)
 	} else if byte < 1024*1024 {

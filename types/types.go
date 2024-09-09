@@ -22,23 +22,23 @@ type User struct {
 
 type FileInfo struct {
 	Name  string `json:"name"`
-	Size  int64  `json:"size"`
-	Chunk int64  `json:"chunk"`
+	Size  uint64 `json:"size"`
+	Chunk uint64 `json:"chunk"`
 }
 
 type FileData struct {
 	ID         string
 	Name       string
 	Size       string
-	Downloaded int64
+	Downloaded uint64
 }
 
 type FileWithDetail struct {
 	ID         uuid.UUID
 	OwnerID    uuid.UUID
 	Name       string
-	Size       int64
-	Downloaded int64
+	Size       uint64
+	Downloaded uint64
 	Chunk      map[string]bool
 	Done       bool
 }

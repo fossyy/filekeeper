@@ -14,7 +14,7 @@ type File struct {
 	ID         uuid.UUID `gorm:"primaryKey;not null;unique"`
 	OwnerID    uuid.UUID `gorm:"not null"`
 	Name       string    `gorm:"not null"`
-	Size       int64     `gorm:"not null"`
-	TotalChunk int64     `gorm:"not null"`
-	Downloaded int64     `gorm:"not null;default=0"`
+	Size       uint64    `gorm:"not null"`
+	TotalChunk uint64    `gorm:"not null"`
+	Downloaded uint64    `gorm:"not null;default=0"`
 }

@@ -1,22 +1,63 @@
 package userHandler
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/a-h/templ"
 	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/types"
-	"github.com/fossyy/filekeeper/view/client/user"
-	"net/http"
-
 	"github.com/fossyy/filekeeper/session"
+	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/types/models"
+	"github.com/fossyy/filekeeper/view/client/user"
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
+	"gorm.io/gorm"
+	"net/http"
+	"os"
+	"path/filepath"
 )
 
 var errorMessages = map[string]string{
 	"password_not_match": "The passwords provided do not match. Please try again.",
 }
 
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
+type ActionType string
+
+const (
+	UploadNewFile ActionType = "UploadNewFile"
+	DeleteFile    ActionType = "DeleteFile"
+	Ping          ActionType = "Ping"
+)
+
+type WebsocketAction struct {
+	Action ActionType `json:"action"`
+}
+
+type ActionUploadNewFile struct {
+	Action    string `json:"action"`
+	Name      string `json:"name"`
+	Size      uint64 `json:"size"`
+	Chunk     uint64 `json:"chunk"`
+	RequestID string `json:"requestID"`
+}
+
 func GET(w http.ResponseWriter, r *http.Request) {
-	var component templ.Component
 	userSession := r.Context().Value("user").(types.User)
+	if r.Header.Get("upgrade") == "websocket" {
+		upgrade, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			panic(err)
+			return
+		}
+		handlerWS(upgrade, userSession)
+	}
+	var component templ.Component
 	sessions, err := session.GetSessions(userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -43,5 +84,161 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
+	}
+}
+
+func handlerWS(conn *websocket.Conn, userSession types.User) {
+	defer conn.Close()
+	var err error
+	var message []byte
+
+	for {
+		_, message, err = conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				fmt.Println("Unexpected connection closure:", err)
+			} else {
+				fmt.Println("Connection closed:", err)
+			}
+			return
+		}
+		var action WebsocketAction
+		err = json.Unmarshal(message, &action)
+		if err != nil {
+			fmt.Println("Error unmarshalling WebsocketAction:", err)
+			sendErrorResponse(conn, action.Action)
+			continue
+		}
+
+		switch action.Action {
+		case UploadNewFile:
+			var uploadNewFile ActionUploadNewFile
+			err = json.Unmarshal(message, &uploadNewFile)
+			if err != nil {
+				fmt.Println("Error unmarshalling ActionUploadNewFile:", err)
+				sendErrorResponse(conn, action.Action)
+				continue
+			}
+			var file *models.File
+			file, err = app.Server.Database.GetUserFile(uploadNewFile.Name, userSession.UserID.String())
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					newFile := models.File{
+						ID:         uuid.New(),
+						OwnerID:    userSession.UserID,
+						Name:       uploadNewFile.Name,
+						Size:       uploadNewFile.Size,
+						TotalChunk: uploadNewFile.Chunk,
+						Downloaded: 0,
+					}
+					err := app.Server.Database.CreateFile(&newFile)
+					if err != nil {
+						sendErrorResponse(conn, action.Action)
+						continue
+					}
+					fileData := &types.FileWithDetail{
+						ID:         newFile.ID,
+						OwnerID:    newFile.OwnerID,
+						Name:       newFile.Name,
+						Size:       newFile.Size,
+						Downloaded: newFile.Downloaded,
+					}
+					fileData.Chunk = make(map[string]bool)
+					fileData.Done = true
+					saveFolder := filepath.Join("uploads", userSession.UserID.String(), newFile.ID.String(), newFile.Name)
+					for i := 0; i <= int(newFile.TotalChunk); i++ {
+						fileName := fmt.Sprintf("%s/chunk_%d", saveFolder, i)
+						if _, err := os.Stat(fileName); os.IsNotExist(err) {
+							fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
+							fileData.Done = false
+						} else {
+							fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = true
+						}
+					}
+					sendSuccessResponseWithID(conn, action.Action, fileData, uploadNewFile.RequestID)
+					continue
+				} else {
+					sendErrorResponse(conn, action.Action)
+					continue
+				}
+			}
+			fileData := &types.FileWithDetail{
+				ID:         file.ID,
+				OwnerID:    file.OwnerID,
+				Name:       file.Name,
+				Size:       file.Size,
+				Downloaded: file.Downloaded,
+				Done:       false,
+			}
+			fileData.Chunk = make(map[string]bool)
+			fileData.Done = true
+			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String(), fileData.Name)
+			for i := 0; i <= int(file.TotalChunk-1); i++ {
+				fileName := fmt.Sprintf("%s/chunk_%d", saveFolder, i)
+
+				if _, err := os.Stat(fileName); os.IsNotExist(err) {
+					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
+					fileData.Done = false
+				} else {
+					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = true
+				}
+			}
+			sendSuccessResponseWithID(conn, action.Action, fileData, uploadNewFile.RequestID)
+			continue
+		case Ping:
+			sendSuccessResponse(conn, action.Action, map[string]string{"message": "received"})
+			continue
+		}
+	}
+}
+
+func sendErrorResponse(conn *websocket.Conn, action ActionType) {
+	response := map[string]interface{}{
+		"action": action,
+		"status": "error",
+	}
+	marshal, err := json.Marshal(response)
+	if err != nil {
+		fmt.Println("Error marshalling error response:", err)
+		return
+	}
+	err = conn.WriteMessage(websocket.TextMessage, marshal)
+	if err != nil {
+		fmt.Println("Error writing error response:", err)
+	}
+}
+
+func sendSuccessResponse(conn *websocket.Conn, action ActionType, response interface{}) {
+	responseJSON := map[string]interface{}{
+		"action":   action,
+		"status":   "success",
+		"response": response,
+	}
+	marshal, err := json.Marshal(responseJSON)
+	if err != nil {
+		fmt.Println("Error marshalling success response:", err)
+		return
+	}
+	err = conn.WriteMessage(websocket.TextMessage, marshal)
+	if err != nil {
+		fmt.Println("Error writing success response:", err)
+	}
+}
+
+func sendSuccessResponseWithID(conn *websocket.Conn, action ActionType, response interface{}, responseID string) {
+	responseJSON := map[string]interface{}{
+		"action":     action,
+		"status":     "success",
+		"response":   response,
+		"responseID": responseID,
+	}
+	marshal, err := json.Marshal(responseJSON)
+	if err != nil {
+		fmt.Println("Error marshalling success response:", err)
+		return
+	}
+	err = conn.WriteMessage(websocket.TextMessage, marshal)
+	if err != nil {
+		fmt.Println("Error writing success response:", err)
 	}
 }

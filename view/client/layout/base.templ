@@ -23,6 +23,28 @@ templ Base(title string){
     </html>
 }
 
+templ BaseAuth(title string){
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="Secure and reliable file hosting service. Upload, organize, and share your documents, images, videos, and more. Sign up now to keep your files always within reach." />
+        <meta name="keywords" content="file hosting, file sharing, cloud storage, data storage, secure file hosting, filekeeper, drive, mega" />
+        <meta name="author" content="Filekeeper" />
+        <link href="/public/output.css" rel="stylesheet"/>
+        <title>{ title }</title>
+        <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+        <script src="/public/main.js"></script>
+    </head>
+    <body>
+        <div id="content">
+            { children... }
+        </div>
+    </body>
+    </html>
+}
+
 templ Navbar(user types.User) {
     <header class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
         <div class="flex items-center gap-4">
