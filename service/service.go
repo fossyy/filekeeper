@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
@@ -26,6 +27,7 @@ func (r *Service) GetUser(ctx context.Context, email string) (*models.User, erro
 	userJSON, err := app.Server.Cache.GetCache(ctx, "UserCache:"+email)
 	if err == redis.Nil {
 		userData, err := r.db.GetUser(email)
+		fmt.Println(userData)
 		if err != nil {
 			return nil, err
 		}
@@ -64,6 +66,18 @@ func (r *Service) DeleteUser(email string) {
 	if err != nil {
 		return
 	}
+}
+
+func (r *Service) GetUserStorageUsage(ownerID string) (uint64, error) {
+	files, err := app.Server.Database.GetFiles(ownerID)
+	if err != nil {
+		return 0, err
+	}
+	var total uint64 = 0
+	for _, file := range files {
+		total += file.Size
+	}
+	return total, nil
 }
 
 func (r *Service) GetFile(id string) (*models.File, error) {

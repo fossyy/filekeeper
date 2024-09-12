@@ -6,7 +6,7 @@ import (
     "github.com/fossyy/filekeeper/session"
 )
 
-templ content(message types.Message, title string, user types.User, ListSession []*session.SessionInfo) {
+templ content(message types.Message, title string, user types.User, allowance *types.Allowance, ListSession []*session.SessionInfo) {
     @layout.BaseAuth(title){
         @layout.Navbar(user)
         <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
@@ -231,24 +231,19 @@ templ content(message types.Message, title string, user types.User, ListSession 
 
                 <div class="space-y-8">
                     <div class="rounded-lg border bg-card text-card-foreground shadow-sm" data-v0-t="card">
-                        <div class="flex flex-col space-y-1.5 p-6">
-                            <h3 class="whitespace-nowrap text-2xl font-semibold leading-none tracking-tight">Storage Usage
-                            </h3>
+                        <div class="flex flex-row justify-between items-center p-6">
+                            <h3 class="whitespace-nowrap text-2xl font-semibold leading-none tracking-tight">Storage Usage</h3>
+                            <svg class="w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" x2="2" y1="12" y2="12"></line>
+                                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                                <line x1="6" x2="6.01" y1="16" y2="16"></line>
+                                <line x1="10" x2="10.01" y1="16" y2="16"></line>
+                            </svg>
                         </div>
                         <div class="p-6 grid gap-4">
-                            <div class="flex items-center justify-between">
-                                <span>Used</span>
-                                <span>42.0GB</span>
-                            </div>
+                            <div class="text-2xl font-bold">{allowance.AllowanceUsedByte} / {allowance.AllowanceByte}</div>
                             <div class="w-full bg-gray-300 rounded-full h-2.5">
-                                <div class="bg-gray-800 h-2.5 rounded-full" style="width: 45%"></div>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span>Available</span>
-                                <span>6.9GB</span>
-                            </div>
-                            <div class="w-full bg-gray-300 rounded-full h-2.5">
-                                <div class="bg-gray-800 h-2.5 rounded-full" style="width: 100%"></div>
+                                <div class="bg-gray-800 h-2.5 rounded-full" id="allowanceProgress" style="width: 0%;"></div>
                             </div>
                             <a
                                 class="hover:bg-gray-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
@@ -291,6 +286,7 @@ templ content(message types.Message, title string, user types.User, ListSession 
                 </div>
             </div>
         </main>
+        @templ.JSONScript("AllowanceUsedPercent", allowance.AllowanceUsedPercent)
         <script type="text/javascript">
             document.getElementById('currentPassword').addEventListener('input', function() {
                 var validationBox = document.getElementById('validationBox');
@@ -300,6 +296,11 @@ templ content(message types.Message, title string, user types.User, ListSession 
                     validationBox.classList.add('hidden');
                 }
             });
+
+            let allowanceProgress = document.getElementById(`allowanceProgress`);
+            const AllowanceUsedPercent = JSON.parse(document.getElementById('AllowanceUsedPercent').textContent);
+            allowanceProgress.style.width = `${AllowanceUsedPercent}%`;
+            console.log(AllowanceUsedPercent)
           </script>
         <script src="/public/validatePassword.js" />
         @layout.Footer()
@@ -331,6 +332,6 @@ templ SessionTable(ListSession []*session.SessionInfo){
     </tbody>
 }
 
-templ Main(title string, user types.User, ListSession []*session.SessionInfo, message types.Message) {
-	@content(message, title, user, ListSession)
+templ Main(title string, user types.User, allowance *types.Allowance, ListSession []*session.SessionInfo, message types.Message) {
+	@content(message, title, user, allowance, ListSession)
 }

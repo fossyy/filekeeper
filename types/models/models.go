@@ -3,18 +3,26 @@ package models
 import "github.com/google/uuid"
 
 type User struct {
-	UserID   uuid.UUID `gorm:"primaryKey;not null;unique"`
-	Username string    `gorm:"unique;not null"`
-	Email    string    `gorm:"unique;not null"`
-	Password string    `gorm:"not null"`
-	Totp     string    `gorm:"not null"`
+	UserID   uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Username string    `gorm:"type:varchar(255);unique;not null"`
+	Email    string    `gorm:"type:varchar(255);unique;not null"`
+	Password string    `gorm:"type:text;not null"`
+	Totp     string    `gorm:"type:varchar(255);not null"`
 }
 
 type File struct {
-	ID         uuid.UUID `gorm:"primaryKey;not null;unique"`
-	OwnerID    uuid.UUID `gorm:"not null"`
-	Name       string    `gorm:"not null"`
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey"`
+	OwnerID    uuid.UUID `gorm:"type:uuid;not null"`
+	Name       string    `gorm:"type:text;not null"`
 	Size       uint64    `gorm:"not null"`
 	TotalChunk uint64    `gorm:"not null"`
-	Downloaded uint64    `gorm:"not null;default=0"`
+	Downloaded uint64    `gorm:"not null;default:0"`
+	Owner      *User     `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE;"`
+}
+
+type Allowance struct {
+	UserID        uuid.UUID `gorm:"type:uuid;primaryKey"`
+	AllowanceByte uint64    `gorm:"not null"`
+	AllowanceFile uint64    `gorm:"not null"`
+	User          *User     `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
 }

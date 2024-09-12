@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
+	"github.com/google/uuid"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"os"
-	"strings"
 )
 
 type mySQLdb struct {
@@ -71,21 +70,20 @@ func NewMYSQLdb(username, password, host, port, dbName string) types.Database {
 		panic("failed to connect database: " + err.Error())
 	}
 
-	file, err := os.ReadFile("schema.sql")
+	err = DB.AutoMigrate(&models.User{})
 	if err != nil {
-		panic("Error opening file: " + err.Error())
+		panic(err.Error())
+		return nil
 	}
-
-	queries := strings.Split(string(file), ";")
-	for _, query := range queries {
-		query = strings.TrimSpace(query)
-		if query == "" {
-			continue
-		}
-		err := DB.Exec(query).Error
-		if err != nil {
-			panic("Error executing query: " + err.Error())
-		}
+	err = DB.AutoMigrate(&models.File{})
+	if err != nil {
+		panic(err.Error())
+		return nil
+	}
+	err = DB.AutoMigrate(&models.Allowance{})
+	if err != nil {
+		panic(err.Error())
+		return nil
 	}
 	return &mySQLdb{DB}
 }
@@ -100,6 +98,10 @@ func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) 
 	}), &gorm.Config{
 		Logger: gormLogger.Default.LogMode(gormLogger.Silent),
 	})
+
+	if err != nil {
+		panic("failed to connect database: " + err.Error())
+	}
 
 	initDB.Raw("SELECT count(*) FROM pg_database WHERE datname = ?", dbName).Scan(&count)
 	if count <= 0 {
@@ -119,23 +121,21 @@ func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) 
 		panic("failed to connect database: " + err.Error())
 	}
 
-	file, err := os.ReadFile("schema.sql")
+	err = DB.AutoMigrate(&models.User{})
 	if err != nil {
-		panic("Error opening file: " + err.Error())
+		panic(err.Error())
+		return nil
 	}
-
-	queries := strings.Split(string(file), ";")
-	for _, query := range queries {
-		query = strings.TrimSpace(query)
-		if query == "" {
-			continue
-		}
-		err := DB.Exec(query).Error
-		if err != nil {
-			panic("Error executing query: " + err.Error())
-		}
+	err = DB.AutoMigrate(&models.File{})
+	if err != nil {
+		panic(err.Error())
+		return nil
 	}
-
+	err = DB.AutoMigrate(&models.Allowance{})
+	if err != nil {
+		panic(err.Error())
+		return nil
+	}
 	return &postgresDB{DB}
 }
 
@@ -165,6 +165,10 @@ func (db *mySQLdb) IsEmailRegistered(email string) bool {
 
 func (db *mySQLdb) CreateUser(user *models.User) error {
 	err := db.DB.Create(user).Error
+	if err != nil {
+		return err
+	}
+	err = db.CreateAllowance(user.UserID)
 	if err != nil {
 		return err
 	}
@@ -198,6 +202,28 @@ func (db *mySQLdb) UpdateUserPassword(email string, password string) error {
 	user.Password = password
 	db.Save(&user)
 	return nil
+}
+
+func (db *mySQLdb) CreateAllowance(userID uuid.UUID) error {
+	userAllowance := &models.Allowance{
+		UserID:        userID,
+		AllowanceByte: 1024 * 1024 * 1024 * 10,
+		AllowanceFile: 10,
+	}
+	err := db.DB.Create(userAllowance).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *mySQLdb) GetAllowance(userID uuid.UUID) (*models.Allowance, error) {
+	var allowance models.Allowance
+	err := db.DB.Table("allowances").Where("user_id = ?", userID).First(&allowance).Error
+	if err != nil {
+		return nil, err
+	}
+	return &allowance, nil
 }
 
 func (db *mySQLdb) CreateFile(file *models.File) error {
@@ -279,6 +305,10 @@ func (db *postgresDB) CreateUser(user *models.User) error {
 	if err != nil {
 		return err
 	}
+	err = db.CreateAllowance(user.UserID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -309,6 +339,28 @@ func (db *postgresDB) UpdateUserPassword(email string, password string) error {
 	user.Password = password
 	db.Save(&user)
 	return nil
+}
+
+func (db *postgresDB) CreateAllowance(userID uuid.UUID) error {
+	userAllowance := &models.Allowance{
+		UserID:        userID,
+		AllowanceByte: 1024 * 1024 * 1024 * 10,
+		AllowanceFile: 10,
+	}
+	err := db.DB.Create(userAllowance).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *postgresDB) GetAllowance(userID uuid.UUID) (*models.Allowance, error) {
+	var allowance models.Allowance
+	err := db.DB.Table("allowances").Where("user_id = $1", userID).First(&allowance).Error
+	if err != nil {
+		return nil, err
+	}
+	return &allowance, nil
 }
 
 func (db *postgresDB) CreateFile(file *models.File) error {
