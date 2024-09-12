@@ -43,7 +43,7 @@ templ content(message types.Message, title string, user types.User, allowance *t
                                 </label>
                                 <div class="flex items-center gap-4">
                                     <div
-                                        class="relative inline-flex items-center justify-center w-10 h-10 overflow-hidden bg-gray-100 rounded-full">
+                                        class="inline-flex items-center justify-center w-10 h-10 overflow-hidden bg-gray-100 rounded-full">
                                         <span class="font-medium text-gray-600">JL</span>
                                     </div>
                                     <button
@@ -82,7 +82,7 @@ templ content(message types.Message, title string, user types.User, allowance *t
                             </div>
                             <div class="grid gap-2">
                                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                                    <div class="relative w-full overflow-auto">
+                                    <div class="w-full overflow-auto">
                                         <table class="w-full caption-bottom text-sm">
                                             <thead class="[&amp;_tr]:border-b">
                                                 <tr
@@ -297,10 +297,9 @@ templ content(message types.Message, title string, user types.User, allowance *t
                 }
             });
 
-            let allowanceProgress = document.getElementById(`allowanceProgress`);
-            const AllowanceUsedPercent = JSON.parse(document.getElementById('AllowanceUsedPercent').textContent);
+            window.allowanceProgress = document.getElementById(`allowanceProgress`);
+            window.AllowanceUsedPercent = JSON.parse(document.getElementById('AllowanceUsedPercent').textContent);
             allowanceProgress.style.width = `${AllowanceUsedPercent}%`;
-            console.log(AllowanceUsedPercent)
           </script>
         <script src="/public/validatePassword.js" />
         @layout.Footer()

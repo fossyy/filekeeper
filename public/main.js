@@ -145,6 +145,7 @@ async function uploadChunks(name, size, chunks, chunkArray, FileID) {
     let progress2 = document.getElementById(`progress-${name}-2`);
     let progress3 = document.getElementById(`progress-${name}-3`);
     let progress4 = document.getElementById(`progress-${name}-4`);
+    let isFailed = false
     for (let index = 0; index < chunks.length; index++) {
         const percentComplete = Math.round((index + 1) / chunks.length * 100);
         const chunk = chunks[index];
@@ -159,10 +160,17 @@ async function uploadChunks(name, size, chunks, chunkArray, FileID) {
             progress2.style.width = `${percentComplete}%`;
 
             const startTime = performance.now();
-            await fetch(`/upload/${FileID}`, {
-                method: 'POST',
-                body: formData
-            });
+            try {
+                await fetch(`/upload/${FileID}`, {
+                    method: 'POST',
+                    body: formData
+                });
+            } catch (error) {
+                ChangeModal("Error", "There was an issue with your upload. Please try again later or contact support if the problem persists.")
+                toggleModal();
+                isFailed = true
+                break
+            }
 
             const endTime = performance.now();
             const totalTime = (endTime - startTime) / 1000;
@@ -178,9 +186,20 @@ async function uploadChunks(name, size, chunks, chunkArray, FileID) {
             byteUploaded += chunk.size
         }
     }
-    console.log(chunks)
-    console.log(chunkArray)
+    if (isFailed) {
+        progress3.innerText = `Upload Failed`;
+        progress4.innerText = `There was an issue uploading the file. Please try again.`;
+    } else {
+        progress3.innerText = `Done`;
+        progress4.innerText = `File Uploaded 100% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
+    }
+}
 
-    progress3.innerText = `Done`;
-    progress4.innerText = `File Uploaded 100% - ${convertFileSize(byteUploaded)} of ${ convertFileSize(size)}`;
+function ChangeModal(title, content) {
+    const modalContainer = document.getElementById('modalContainer');
+    const modalTitle = modalContainer.querySelector('#modal h2');
+    const modalContent = modalContainer.querySelector('.prose');
+
+    modalTitle.textContent = title;
+    modalContent.innerHTML = content;
 }
