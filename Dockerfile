@@ -36,7 +36,6 @@ WORKDIR /src
 
 COPY --from=go_builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=go_builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=go_builder /src/schema.sql /src
 COPY --from=go_builder /src/public /src/public
 COPY --from=go_builder /src/tmp/main /src
 
