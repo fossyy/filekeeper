@@ -9,6 +9,7 @@ import (
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
+	"github.com/fossyy/filekeeper/utils"
 	"github.com/fossyy/filekeeper/view/client/user"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -57,24 +58,44 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		}
 		handlerWS(upgrade, userSession)
 	}
+
 	var component templ.Component
 	sessions, err := session.GetSessions(userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	allowance, err := app.Server.Database.GetAllowance(userSession.UserID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	usage, err := app.Server.Service.GetUserStorageUsage(userSession.UserID.String())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	allowanceStats := &types.Allowance{
+		AllowanceByte:        utils.ConvertFileSize(allowance.AllowanceByte),
+		AllowanceUsedByte:    utils.ConvertFileSize(usage),
+		AllowanceUsedPercent: fmt.Sprintf("%.2f", float64(usage)/float64(allowance.AllowanceByte)*100),
+	}
+
 	if err := r.URL.Query().Get("error"); err != "" {
 		message, ok := errorMessages[err]
 		if !ok {
 			message = "Unknown error occurred. Please contact support at bagas@fossy.my.id for assistance."
 		}
 
-		component = userView.Main("Filekeeper - User Page", userSession, sessions, types.Message{
+		component = userView.Main("Filekeeper - User Page", userSession, allowanceStats, sessions, types.Message{
 			Code:    0,
 			Message: message,
 		})
 	} else {
-		component = userView.Main("Filekeeper - User Page", userSession, sessions, types.Message{
+		component = userView.Main("Filekeeper - User Page", userSession, allowanceStats, sessions, types.Message{
 			Code:    1,
 			Message: "",
 		})

@@ -20,10 +20,10 @@ type User struct {
 	Authenticated bool
 }
 
-type FileInfo struct {
-	Name  string `json:"name"`
-	Size  uint64 `json:"size"`
-	Chunk uint64 `json:"chunk"`
+type Allowance struct {
+	AllowanceByte        string
+	AllowanceUsedByte    string
+	AllowanceUsedPercent string
 }
 
 type FileData struct {
@@ -52,6 +52,9 @@ type Database interface {
 	GetAllUsers() ([]models.User, error)
 	UpdateUserPassword(email string, password string) error
 
+	CreateAllowance(userID uuid.UUID) error
+	GetAllowance(userID uuid.UUID) (*models.Allowance, error)
+
 	CreateFile(file *models.File) error
 	GetFile(fileID string) (*models.File, error)
 	GetUserFile(name string, ownerID string) (*models.File, error)
@@ -72,4 +75,5 @@ type Services interface {
 	DeleteUser(email string)
 	GetFile(id string) (*models.File, error)
 	GetUserFile(name, ownerID string) (*FileWithDetail, error)
+	GetUserStorageUsage(ownerID string) (uint64, error)
 }
