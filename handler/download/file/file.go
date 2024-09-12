@@ -32,18 +32,20 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+file.Name)
 	w.Header().Set("Content-Type", "application/octet-stream")
-	for i := 0; i <= int(file.TotalChunk); i++ {
+	for i := 0; i <= int(file.TotalChunk)-1; i++ {
 		chunkPath := filepath.Join(saveFolder, file.Name, fmt.Sprintf("chunk_%d", i))
 
 		chunkFile, err := os.Open(chunkPath)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error opening chunk: %v", err), http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		_, err = io.Copy(w, chunkFile)
 		chunkFile.Close()
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error writing chunk: %v", err), http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 	}
