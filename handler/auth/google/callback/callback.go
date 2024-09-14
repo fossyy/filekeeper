@@ -127,7 +127,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		newGoogleSetupJSON, _ := json.Marshal(user)
 		err = app.Server.Cache.SetCache(r.Context(), "GoogleSetup:"+code, newGoogleSetupJSON, time.Minute*15)
 		if err != nil {
-			fmt.Println("Error setting up Google Setup:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		http.Redirect(w, r, fmt.Sprintf("/auth/google/setup/%s", code), http.StatusSeeOther)

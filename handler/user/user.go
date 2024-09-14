@@ -117,16 +117,16 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 		_, message, err = conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				fmt.Println("Unexpected connection closure:", err)
+				app.Server.Logger.Error("Unexpected connection closure:", err)
 			} else {
-				fmt.Println("Connection closed:", err)
+				app.Server.Logger.Error("Connection closed:", err)
 			}
 			return
 		}
 		var action WebsocketAction
 		err = json.Unmarshal(message, &action)
 		if err != nil {
-			fmt.Println("Error unmarshalling WebsocketAction:", err)
+			app.Server.Logger.Error("Error unmarshalling WebsocketAction:", err)
 			sendErrorResponse(conn, action.Action)
 			continue
 		}
@@ -136,7 +136,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 			var uploadNewFile ActionUploadNewFile
 			err = json.Unmarshal(message, &uploadNewFile)
 			if err != nil {
-				fmt.Println("Error unmarshalling ActionUploadNewFile:", err)
+				app.Server.Logger.Error("Error unmarshalling ActionUploadNewFile:", err)
 				sendErrorResponse(conn, action.Action)
 				continue
 			}
@@ -220,12 +220,12 @@ func sendErrorResponse(conn *websocket.Conn, action ActionType) {
 	}
 	marshal, err := json.Marshal(response)
 	if err != nil {
-		fmt.Println("Error marshalling error response:", err)
+		app.Server.Logger.Error("Error marshalling error response:", err)
 		return
 	}
 	err = conn.WriteMessage(websocket.TextMessage, marshal)
 	if err != nil {
-		fmt.Println("Error writing error response:", err)
+		app.Server.Logger.Error("Error writing error response:", err)
 	}
 }
 
@@ -237,12 +237,12 @@ func sendSuccessResponse(conn *websocket.Conn, action ActionType, response inter
 	}
 	marshal, err := json.Marshal(responseJSON)
 	if err != nil {
-		fmt.Println("Error marshalling success response:", err)
+		app.Server.Logger.Error("Error marshalling success response:", err)
 		return
 	}
 	err = conn.WriteMessage(websocket.TextMessage, marshal)
 	if err != nil {
-		fmt.Println("Error writing success response:", err)
+		app.Server.Logger.Error("Error writing success response:", err)
 	}
 }
 
@@ -255,11 +255,11 @@ func sendSuccessResponseWithID(conn *websocket.Conn, action ActionType, response
 	}
 	marshal, err := json.Marshal(responseJSON)
 	if err != nil {
-		fmt.Println("Error marshalling success response:", err)
+		app.Server.Logger.Error("Error marshalling success response:", err)
 		return
 	}
 	err = conn.WriteMessage(websocket.TextMessage, marshal)
 	if err != nil {
-		fmt.Println("Error writing success response:", err)
+		app.Server.Logger.Error("Error writing success response:", err)
 	}
 }
