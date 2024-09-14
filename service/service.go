@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
@@ -27,7 +26,6 @@ func (r *Service) GetUser(ctx context.Context, email string) (*models.User, erro
 	userJSON, err := app.Server.Cache.GetCache(ctx, "UserCache:"+email)
 	if err == redis.Nil {
 		userData, err := r.db.GetUser(email)
-		fmt.Println(userData)
 		if err != nil {
 			return nil, err
 		}
