@@ -1,4 +1,4 @@
-FROM node:current-alpine3.19 AS node_builder
+FROM node:current-alpine3.20 AS node_builder
 
 WORKDIR /src
 COPY /public /src/public
@@ -14,7 +14,7 @@ RUN javascript-obfuscator ./public/validatePassword.js --compact true --self-def
 RUN javascript-obfuscator ./public/websocket.js --compact true --self-defending true --output ./public/websocket_obfuscated.js
 RUN cleancss -o ./public/output.css ./tmp/output.css
 
-FROM golang:1.22.2-alpine3.19 AS go_builder
+FROM golang:1.23.1-alpine3.20 AS go_builder
 
 WORKDIR /src
 COPY . .
