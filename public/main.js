@@ -9,14 +9,25 @@ if (!window.mySocket) {
     window.mySocket.onmessage = async function(event) {
         try {
             const data = JSON.parse(event.data);
-            if (data.action === "UploadNewFile") {
-                if (data.response.Done === false) {
-                    const file = window.fileIdMap[data.responseID];
-                    addNewUploadElement(file);
-                    const fileChunks = await splitFile(file, file.chunkSize);
-                    await uploadChunks(file.name, file.size, fileChunks, data.response.Chunk, data.response.ID);
+            if (data.status === "error") {
+                if (data.message === "File Is Different") {
+                    ChangeModal("Error", "A file with the same name already exists but has a different hash value. This may indicate that the file is different, despite having the same name. Please verify the file or consider renaming it before proceeding.")
+                    toggleModal();
                 } else {
-                    alert("File already uploaded.");
+                    ChangeModal("Error", "There was an issue with your upload. Please try again later or contact support if the problem persists.")
+                    toggleModal();
+                }
+            } else {
+                if (data.action === "UploadNewFile") {
+                    if (data.response.Done === false) {
+                        const file = window.fileIdMap[data.responseID];
+                        addNewUploadElement(file);
+                        const fileChunks = await splitFile(file, file.chunkSize);
+                        await uploadChunks(file.name, file.size, fileChunks, data.response.Chunk, data.response.ID);
+                    } else {
+                        ChangeModal("Error", "File already uploaded.")
+                        toggleModal();
+                    }
                 }
             }
         } catch (error) {
@@ -44,11 +55,17 @@ async function handleFile(file){
     const chunkSize = 2 * 1024 * 1024;
     const chunks = Math.ceil(file.size / chunkSize);
     const fileId = generateUniqueId();
+    const startChunk = await file.slice(0, chunkSize).arrayBuffer();
+    const endChunk = await file.slice((chunks-1) * chunkSize, file.size).arrayBuffer();
+    const startChunkHash = await hash(startChunk)
+    const endChunkHash = await  hash(endChunk)
     const data = JSON.stringify({
         "action": "UploadNewFile",
         "name": file.name,
         "size": file.size,
         "chunk": chunks,
+        "startHash": startChunkHash,
+        "endHash": endChunkHash,
         "requestID": fileId,
     });
     file.chunkSize = chunkSize;
@@ -133,10 +150,20 @@ async function splitFile(file, chunkSize) {
         const start = i * chunkSize;
         const end = Math.min(fileSize, start + chunkSize);
         const chunk = file.slice(start, end);
+        chunk.hash = "test"
         fileChunks.push(chunk);
     }
 
     return fileChunks;
+}
+
+async function hash(arrayBuffer) {
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+        .map((bytes) => bytes.toString(16).padStart(2, '0'))
+        .join('');
+    return hashHex;
 }
 
 async function uploadChunks(name, size, chunks, chunkArray, FileID) {

@@ -45,6 +45,8 @@ type ActionUploadNewFile struct {
 	Name      string `json:"name"`
 	Size      uint64 `json:"size"`
 	Chunk     uint64 `json:"chunk"`
+	StartHash string `json:"startHash"`
+	EndHash   string `json:"endHash"`
 	RequestID string `json:"requestID"`
 }
 
@@ -127,7 +129,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 		err = json.Unmarshal(message, &action)
 		if err != nil {
 			app.Server.Logger.Error("Error unmarshalling WebsocketAction:", err)
-			sendErrorResponse(conn, action.Action)
+			sendErrorResponse(conn, action.Action, "Internal Server Error")
 			continue
 		}
 
@@ -137,7 +139,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 			err = json.Unmarshal(message, &uploadNewFile)
 			if err != nil {
 				app.Server.Logger.Error("Error unmarshalling ActionUploadNewFile:", err)
-				sendErrorResponse(conn, action.Action)
+				sendErrorResponse(conn, action.Action, "Internal Server Error")
 				continue
 			}
 			var file *models.File
@@ -149,12 +151,14 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 						OwnerID:    userSession.UserID,
 						Name:       uploadNewFile.Name,
 						Size:       uploadNewFile.Size,
+						StartHash:  uploadNewFile.StartHash,
+						EndHash:    uploadNewFile.EndHash,
 						TotalChunk: uploadNewFile.Chunk,
 						Downloaded: 0,
 					}
 					err := app.Server.Database.CreateFile(&newFile)
 					if err != nil {
-						sendErrorResponse(conn, action.Action)
+						sendErrorResponse(conn, action.Action, "Error Creating File")
 						continue
 					}
 					fileData := &types.FileWithDetail{
@@ -179,9 +183,13 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 					sendSuccessResponseWithID(conn, action.Action, fileData, uploadNewFile.RequestID)
 					continue
 				} else {
-					sendErrorResponse(conn, action.Action)
+					sendErrorResponse(conn, action.Action, "Unknown error")
 					continue
 				}
+			}
+			if uploadNewFile.StartHash != file.StartHash || uploadNewFile.EndHash != file.EndHash {
+				sendErrorResponse(conn, action.Action, "File Is Different")
+				continue
 			}
 			fileData := &types.FileWithDetail{
 				ID:         file.ID,
@@ -213,10 +221,11 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 	}
 }
 
-func sendErrorResponse(conn *websocket.Conn, action ActionType) {
+func sendErrorResponse(conn *websocket.Conn, action ActionType, message string) {
 	response := map[string]interface{}{
-		"action": action,
-		"status": "error",
+		"action":  action,
+		"status":  "error",
+		"message": message,
 	}
 	marshal, err := json.Marshal(response)
 	if err != nil {
