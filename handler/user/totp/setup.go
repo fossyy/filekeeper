@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/a-h/templ"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/view/client/user/totp"
 	"image/png"
@@ -41,10 +42,18 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
-		Code:    3,
-		Message: "",
-	})
+	var component templ.Component
+	if r.Header.Get("hx-request") == "true" {
+		component = userTotpSetupView.MainContent(base64Str, secret, userSession, types.Message{
+			Code:    3,
+			Message: "",
+		})
+	} else {
+		component = userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
+			Code:    3,
+			Message: "",
+		})
+	}
 	if err := component.Render(r.Context(), w); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -69,26 +78,42 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	var component templ.Component
 	if totp.Verify(code, time.Now().Unix()) {
 		if err := app.Server.Database.InitializeTotp(userSession.Email, secret); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		app.Server.Service.DeleteUser(userSession.Email)
-		component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
-			Code:    1,
-			Message: "Your TOTP setup is complete! Your account is now more secure.",
-		})
+		if r.Header.Get("hx-request") == "true" {
+			component = userTotpSetupView.MainContent(base64Str, secret, userSession, types.Message{
+				Code:    1,
+				Message: "Your TOTP setup is complete! Your account is now more secure.",
+			})
+		} else {
+			component = userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
+				Code:    1,
+				Message: "Your TOTP setup is complete! Your account is now more secure.",
+			})
+		}
+
 		if err := component.Render(r.Context(), w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		return
 	} else {
-		component := userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
-			Code:    0,
-			Message: "The code you entered is incorrect. Please double-check the code and try again.",
-		})
+		if r.Header.Get("hx-request") == "true" {
+			component = userTotpSetupView.MainContent(base64Str, secret, userSession, types.Message{
+				Code:    0,
+				Message: "The code you entered is incorrect. Please double-check the code and try again.",
+			})
+		} else {
+			component = userTotpSetupView.Main("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
+				Code:    0,
+				Message: "The code you entered is incorrect. Please double-check the code and try again.",
+			})
+		}
 		if err := component.Render(r.Context(), w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

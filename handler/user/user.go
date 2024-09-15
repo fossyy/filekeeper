@@ -61,7 +61,6 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		handlerWS(upgrade, userSession)
 	}
 
-	var component templ.Component
 	sessions, err := session.GetSessions(userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -86,21 +85,35 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		AllowanceUsedPercent: fmt.Sprintf("%.2f", float64(usage)/float64(allowance.AllowanceByte)*100),
 	}
 
+	var component templ.Component
 	if err := r.URL.Query().Get("error"); err != "" {
 		message, ok := errorMessages[err]
 		if !ok {
 			message = "Unknown error occurred. Please contact support at bagas@fossy.my.id for assistance."
 		}
-
-		component = userView.Main("Filekeeper - User Page", userSession, allowanceStats, sessions, types.Message{
-			Code:    0,
-			Message: message,
-		})
+		if r.Header.Get("hx-request") == "true" {
+			component = userView.MainContent(userSession, allowanceStats, sessions, types.Message{
+				Code:    0,
+				Message: message,
+			})
+		} else {
+			component = userView.Main("Filekeeper - User Page", userSession, allowanceStats, sessions, types.Message{
+				Code:    0,
+				Message: message,
+			})
+		}
 	} else {
-		component = userView.Main("Filekeeper - User Page", userSession, allowanceStats, sessions, types.Message{
-			Code:    1,
-			Message: "",
-		})
+		if r.Header.Get("hx-request") == "true" {
+			component = userView.MainContent(userSession, allowanceStats, sessions, types.Message{
+				Code:    1,
+				Message: "",
+			})
+		} else {
+			component = userView.Main("Filekeeper - User Page", userSession, allowanceStats, sessions, types.Message{
+				Code:    1,
+				Message: "",
+			})
+		}
 	}
 	err = component.Render(r.Context(), w)
 	if err != nil {

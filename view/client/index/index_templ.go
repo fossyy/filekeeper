@@ -47,12 +47,12 @@ func content(title string, user types.User) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if user.Authenticated {
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"w-full flex items-center justify-center px-8 py-3 text-base leading-6 font-medium rounded-md text-white bg-pink-400 hover:bg-pink-500 hover:text-white focus:ring ring-offset-2 ring-pink-400 focus:outline-none transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10\" href=\"/user\" hx-get=\"/user\" hx-swap=\"outerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Open Dashboard</a>")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"w-full flex items-center justify-center px-8 py-3 text-base leading-6 font-medium rounded-md text-white bg-pink-400 hover:bg-pink-500 hover:text-white focus:ring ring-offset-2 ring-pink-400 focus:outline-none transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10\" href=\"/user\" hx-get=\"/user\" hx-swap=\"innerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Open Dashboard</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"w-full flex items-center justify-center px-8 py-3 text-base leading-6 font-medium rounded-md text-white bg-pink-400 hover:bg-pink-500 hover:text-white focus:ring ring-offset-2 ring-pink-400 focus:outline-none transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10\" href=\"/signup\" hx-get=\"/signup\" hx-swap=\"outerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Get started</a>")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"w-full flex items-center justify-center px-8 py-3 text-base leading-6 font-medium rounded-md text-white bg-pink-400 hover:bg-pink-500 hover:text-white focus:ring ring-offset-2 ring-pink-400 focus:outline-none transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10\" href=\"/signup\" hx-get=\"/signup\" hx-swap=\"innerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Get started</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

@@ -30,7 +30,7 @@ type FileData struct {
 	ID         string
 	Name       string
 	Size       string
-	Downloaded uint64
+	Downloaded string
 }
 
 type FileWithDetail struct {

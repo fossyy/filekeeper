@@ -1,4 +1,4 @@
-package downloadFileHandler
+package downloadHandler
 
 import (
 	"fmt"
