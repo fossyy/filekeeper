@@ -8,128 +8,129 @@ import (
 templ component(title string, files []types.FileData, user types.User) {
 	@layout.BaseAuth(title) {
 		@layout.Navbar(user)
-		<main class="flex-grow h-full bg-gray-100">
-			<div class="bg-gray-50 min-h-screen px-4 py-8 sm:px-6 lg:px-8">
-				<a
-					class="inline-flex items-center space-x-2 rounded-md bg-muted px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-					href="/user"
-					hx-get="/user"
-					hx-swap="innerHTML"
-					hx-push-url="true"
-					hx-target="#content"
-					rel="ugc"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						class="h-4 w-4"
-					>
-						<path d="m12 19-7-7 7-7"></path>
-						<path d="M19 12H5"></path>
-					</svg>
-					<span>Back</span>
-				</a>
-				<div class="mx-auto max-w-7xl">
-					<div id="dropzone-file" class="border-2 border-dashed border-gray-300 rounded-lg p-8 mb-8 text-center hover:bg-gray-200 transition-colors duration-200 ease-in-out cursor-pointer">
-                        <label for="file-upload" class="flex flex-col items-center justify-center pt-5 pb-6 cursor-pointer">
-                          <svg class="w-12 h-12 mb-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                          <p class="mb-2 text-lg text-gray-500 font-semibold">
-                            Click to upload or drag and drop
-                          </p>
-                        </label>
-                        <input id="file-upload" name="file-upload" type="file" class="hidden" />
-                      </div>
-					<div class="overflow-x-auto bg-white shadow-md rounded-lg">
-						<table class="w-full text-sm text-left text-gray-500">
-							<thead class="text-xs text-gray-700 uppercase bg-gray-50">
-								<tr>
-									<th scope="col" class="px-6 py-3 w-[40%]">File Name</th>
-									<th scope="col" class="px-6 py-3 w-[20%]">File Size</th>
-									<th scope="col" class="px-6 py-3 w-[20%]">Downloads</th>
-									<th scope="col" class="px-6 py-3 w-[20%]">Action</th>
-								</tr>
-							</thead>
-							<tbody>
-								for _, file := range files {
-                            	    <tr class="bg-white border-b">
-                                    	<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center">
-                                    		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 mr-2 text-green-500">
-                                    			<rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
-                                    			<circle cx="9" cy="9" r="2"></circle>
-                                    			<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-                                    		</svg>
-                                    		{file.Name}
-                                    	</td>
-                                    	<td class="px-6 py-4">{file.Size}</td>
-                                    	<td class="px-6 py-4">
-                                    		<div class="flex items-center">
-                                    			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 mr-2 text-gray-400">
-                                    				<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    				<polyline points="7 10 12 15 17 10"></polyline>
-                                    				<line x1="12" x2="12" y1="15" y2="3"></line>
-                                    			</svg>
-                                                {file.Downloaded}
-                                    		</div>
-                                    	</td>
-                                    	<td class="px-6 py-4">
-                                    		<a href={ templ.SafeURL("/file/" + file.ID) } class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-xs">
-                                    			Download
-                                    		</a>
-                                    	</td>
-                                    </tr>
-                            	}
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</main>
-		<div id="FileUploadBox">
-
-		</div>
-		<script type="text/javascript">
-            document.addEventListener("dragover", function (event) {
-                event.preventDefault();
-                document.getElementById('dropzone-file').classList.add('bg-gray-100', 'border-blue-500');
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                document.getElementById('dropzone-file').addEventListener(eventName,  highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                document.getElementById('dropzone-file').addEventListener(eventName, unhighlight, false);
-            });
-
-            function highlight(e) {
-                document.getElementById('dropzone-file').classList.add('bg-gray-100', 'border-blue-500');
-            }
-
-            function unhighlight(e) {
-                document.getElementById('dropzone-file').classList.remove('bg-gray-100', 'border-blue-500');
-            }
-            document.addEventListener("drop", async function (event) {
-                event.preventDefault();
-                const file = event.dataTransfer.files[0]
-                await handleFile(file)
-            });
-
-            document.getElementById('dropzone-file').addEventListener('change', async function(event) {
-                event.preventDefault();
-                const file = event.target.files[0]
-                await handleFile(file)
-            });
-        </script>
+		@MainContent(files)
 	}
+}
+
+templ MainContent(files []types.FileData) {
+    <main class="flex-grow h-full bg-gray-100">
+    	<div class="bg-gray-50 min-h-screen px-4 py-8 sm:px-6 lg:px-8">
+    		<a
+    			class="inline-flex items-center space-x-2 rounded-md bg-muted px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+    			href="/user"
+    			hx-get="/user"
+    			hx-swap="innerHTML"
+    			hx-push-url="true"
+    			hx-target="#content"
+    			rel="ugc"
+    		>
+    			<svg
+    				xmlns="http://www.w3.org/2000/svg"
+    				width="24"
+    				height="24"
+    				viewBox="0 0 24 24"
+    				fill="none"
+    				stroke="currentColor"
+    				stroke-width="2"
+    				stroke-linecap="round"
+    				stroke-linejoin="round"
+    				class="h-4 w-4"
+    			>
+    				<path d="m12 19-7-7 7-7"></path>
+    				<path d="M19 12H5"></path>
+    			</svg>
+    			<span>Back</span>
+    		</a>
+    		<div class="mx-auto max-w-7xl">
+    			<div id="dropzone-file" class="border-2 border-dashed border-gray-300 rounded-lg p-8 mb-8 text-center hover:bg-gray-200 transition-colors duration-200 ease-in-out cursor-pointer">
+                    <label for="file-upload" class="flex flex-col items-center justify-center pt-5 pb-6 cursor-pointer">
+                      <svg class="w-12 h-12 mb-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p class="mb-2 text-lg text-gray-500 font-semibold">
+                        Click to upload or drag and drop
+                      </p>
+                    </label>
+                    <input id="file-upload" name="file-upload" type="file" class="hidden" />
+                  </div>
+    			<div class="overflow-x-auto bg-white shadow-md rounded-lg">
+    				<table class="w-full text-sm text-left text-gray-500">
+    					<thead class="text-xs text-gray-700 uppercase bg-gray-50">
+    						<tr>
+    							<th scope="col" class="px-6 py-3 w-[40%]">File Name</th>
+    							<th scope="col" class="px-6 py-3 w-[20%]">File Size</th>
+    							<th scope="col" class="px-6 py-3 w-[20%]">Downloads</th>
+    							<th scope="col" class="px-6 py-3 w-[20%]">Action</th>
+    						</tr>
+    					</thead>
+    					<tbody>
+    						for _, file := range files {
+                        	    <tr class="bg-white border-b">
+                                	<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center">
+                                		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 mr-2 text-green-500">
+                                			<rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+                                			<circle cx="9" cy="9" r="2"></circle>
+                                			<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                                		</svg>
+                                		{file.Name}
+                                	</td>
+                                	<td class="px-6 py-4">{file.Size}</td>
+                                	<td class="px-6 py-4">
+                                		<div class="flex items-center">
+                                			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 mr-2 text-gray-400">
+                                				<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                				<polyline points="7 10 12 15 17 10"></polyline>
+                                				<line x1="12" x2="12" y1="15" y2="3"></line>
+                                			</svg>
+                                            {file.Downloaded}
+                                		</div>
+                                	</td>
+                                	<td class="px-6 py-4">
+                                		<a href={ templ.SafeURL("/file/" + file.ID) } class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-xs">
+                                			Download
+                                		</a>
+                                	</td>
+                                </tr>
+                        	}
+    					</tbody>
+    				</table>
+    			</div>
+    		</div>
+    	</div>
+    </main>
+    <script type="text/javascript">
+        document.addEventListener("dragover", function (event) {
+            event.preventDefault();
+            document.getElementById('dropzone-file').classList.add('bg-gray-100', 'border-blue-500');
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            document.getElementById('dropzone-file').addEventListener(eventName,  highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            document.getElementById('dropzone-file').addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            document.getElementById('dropzone-file').classList.add('bg-gray-100', 'border-blue-500');
+        }
+
+        function unhighlight(e) {
+            document.getElementById('dropzone-file').classList.remove('bg-gray-100', 'border-blue-500');
+        }
+        document.addEventListener("drop", async function (event) {
+            event.preventDefault();
+            const file = event.dataTransfer.files[0]
+            await handleFile(file)
+        });
+
+        document.getElementById('dropzone-file').addEventListener('change', async function(event) {
+            event.preventDefault();
+            const file = event.target.files[0]
+            await handleFile(file)
+        });
+    </script>
 }
 
 templ Main(title string, files []types.FileData, user types.User) {
