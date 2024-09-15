@@ -5,8 +5,9 @@ import (
 	googleOauthCallbackHandler "github.com/fossyy/filekeeper/handler/auth/google/callback"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	totpHandler "github.com/fossyy/filekeeper/handler/auth/totp"
-	downloadHandler "github.com/fossyy/filekeeper/handler/download"
-	downloadFileHandler "github.com/fossyy/filekeeper/handler/download/file"
+	fileHandler "github.com/fossyy/filekeeper/handler/file"
+	downloadHandler "github.com/fossyy/filekeeper/handler/file/download"
+	uploadHandler "github.com/fossyy/filekeeper/handler/file/upload"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
 	forgotPasswordVerifyHandler "github.com/fossyy/filekeeper/handler/forgotPassword/verify"
 	indexHandler "github.com/fossyy/filekeeper/handler/index"
@@ -14,7 +15,6 @@ import (
 	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	signupHandler "github.com/fossyy/filekeeper/handler/signup"
 	signupVerifyHandler "github.com/fossyy/filekeeper/handler/signup/verify"
-	uploadHandler "github.com/fossyy/filekeeper/handler/upload"
 	userHandler "github.com/fossyy/filekeeper/handler/user"
 	userHandlerResetPassword "github.com/fossyy/filekeeper/handler/user/ResetPassword"
 	userSessionTerminateHandler "github.com/fossyy/filekeeper/handler/user/session/terminate"
@@ -109,20 +109,16 @@ func SetupRoutes() *http.ServeMux {
 		middleware.Auth(userHandlerTotpSetup.POST, w, r)
 	})
 
-	handler.HandleFunc("GET /upload", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(uploadHandler.GET, w, r)
+	handler.HandleFunc("GET /file", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(fileHandler.GET, w, r)
 	})
 
-	handler.HandleFunc("POST /upload/{id}", func(w http.ResponseWriter, r *http.Request) {
+	handler.HandleFunc("POST /file/{id}", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Auth(uploadHandler.POST, w, r)
 	})
 
-	handler.HandleFunc("GET /download", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(downloadHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("GET /download/{id}", func(w http.ResponseWriter, r *http.Request) {
-		downloadFileHandler.GET(w, r)
+	handler.HandleFunc("GET /file/{id}", func(w http.ResponseWriter, r *http.Request) {
+		downloadHandler.GET(w, r)
 	})
 
 	handler.HandleFunc("GET /logout", func(w http.ResponseWriter, r *http.Request) {

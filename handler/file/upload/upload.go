@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
-	filesView "github.com/fossyy/filekeeper/view/client/upload"
 	"io"
 	"net/http"
 	"os"
@@ -12,14 +11,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-func GET(w http.ResponseWriter, r *http.Request) {
-	component := filesView.Main("Filekeeper - Upload")
-	if err := component.Render(r.Context(), w); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-}
 
 func POST(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("id")
