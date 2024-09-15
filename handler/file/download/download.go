@@ -3,6 +3,7 @@ package downloadHandler
 import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
+	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types/models"
 	"io"
 	"net/http"
@@ -19,6 +20,17 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
+	}
+
+	status, userSession, _ := session.GetSession(r)
+	if file.IsPrivate {
+		if status == session.Unauthorized || status == session.InvalidSession {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		} else if file.OwnerID != userSession.UserID {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 	}
 
 	uploadDir := "uploads"

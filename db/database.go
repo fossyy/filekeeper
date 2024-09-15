@@ -275,6 +275,15 @@ func (db *mySQLdb) IncrementDownloadCount(fileID string) error {
 	return nil
 }
 
+func (db *mySQLdb) ChangeFileVisibility(fileID string) error {
+	err := db.DB.Model(&models.File{}).Where("id = ?", fileID).Select("is_private").
+		Updates(map[string]interface{}{"is_private": gorm.Expr("NOT is_private")}).Error
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (db *mySQLdb) InitializeTotp(email string, secret string) error {
 	var user models.User
 	err := db.DB.Table("users").Where("email = ?", email).First(&user).Error
@@ -420,6 +429,16 @@ func (db *postgresDB) IncrementDownloadCount(fileID string) error {
 	}
 	file.Downloaded = file.Downloaded + 1
 	err = db.DB.Updates(file).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *postgresDB) ChangeFileVisibility(fileID string) error {
+	err := db.DB.Model(&models.File{}).Where("id = $1", fileID).Select("is_private").
+		Updates(map[string]interface{}{"is_private": gorm.Expr("NOT is_private")}).Error
+
 	if err != nil {
 		return err
 	}
