@@ -68,6 +68,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", file.Size))
 
 	sendFileChunk(w, saveFolder, file, 0, int64(file.Size-1))
+	return
 }
 
 func sendFileChunk(w http.ResponseWriter, saveFolder string, file *models.File, start, end int64) {
@@ -130,6 +131,14 @@ func sendFileChunk(w http.ResponseWriter, saveFolder string, file *models.File, 
 				return
 			}
 			toSend -= int64(n)
+			if i == int64(file.TotalChunk)-1 && toSend == 0 {
+				err := app.Server.Database.IncrementDownloadCount(file.ID.String())
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error writing chunk: %v", err), http.StatusInternalServerError)
+					app.Server.Logger.Error(err.Error())
+					return
+				}
+			}
 		}
 	}
 }

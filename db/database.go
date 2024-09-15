@@ -261,6 +261,20 @@ func (db *mySQLdb) GetFiles(ownerID string) ([]*models.File, error) {
 	return files, err
 }
 
+func (db *mySQLdb) IncrementDownloadCount(fileID string) error {
+	var file models.File
+	err := db.DB.Table("files").Where("id = ?", fileID).First(&file).Error
+	if err != nil {
+		return err
+	}
+	file.Downloaded = file.Downloaded + 1
+	err = db.DB.Updates(file).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (db *mySQLdb) InitializeTotp(email string, secret string) error {
 	var user models.User
 	err := db.DB.Table("users").Where("email = ?", email).First(&user).Error
@@ -396,6 +410,20 @@ func (db *postgresDB) GetFiles(ownerID string) ([]*models.File, error) {
 		return nil, err
 	}
 	return files, err
+}
+
+func (db *postgresDB) IncrementDownloadCount(fileID string) error {
+	var file models.File
+	err := db.DB.Table("files").Where("id = $1", fileID).First(&file).Error
+	if err != nil {
+		return err
+	}
+	file.Downloaded = file.Downloaded + 1
+	err = db.DB.Updates(file).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (db *postgresDB) InitializeTotp(email string, secret string) error {
