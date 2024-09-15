@@ -2,6 +2,7 @@ package fileHandler
 
 import (
 	"fmt"
+	"github.com/a-h/templ"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -28,7 +29,12 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	component := fileView.Main("File Dashboard", filesData, userSession)
+	var component templ.Component
+	if r.Header.Get("hx-request") == "true" {
+		component = fileView.MainContent(filesData)
+	} else {
+		component = fileView.Main("File Dashboard", filesData, userSession)
+	}
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		fmt.Println(err.Error())
