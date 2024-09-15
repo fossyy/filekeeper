@@ -25,13 +25,14 @@ func GET(w http.ResponseWriter, r *http.Request) {
 			ID:         files[i].ID.String(),
 			Name:       files[i].Name,
 			Size:       utils.ConvertFileSize(files[i].Size),
+			IsPrivate:  files[i].IsPrivate,
 			Downloaded: strconv.FormatUint(files[i].Downloaded, 10),
 		})
 	}
 
 	var component templ.Component
 	if r.Header.Get("hx-request") == "true" {
-		component = fileView.MainContent(filesData)
+		component = fileView.MainContent(filesData, userSession)
 	} else {
 		component = fileView.Main("File Dashboard", filesData, userSession)
 	}

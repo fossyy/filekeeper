@@ -30,6 +30,7 @@ type FileData struct {
 	ID         string
 	Name       string
 	Size       string
+	IsPrivate  bool
 	Downloaded string
 }
 
@@ -60,6 +61,7 @@ type Database interface {
 	GetUserFile(name string, ownerID string) (*models.File, error)
 	GetFiles(ownerID string) ([]*models.File, error)
 	IncrementDownloadCount(fileID string) error
+	ChangeFileVisibility(fileID string) error
 
 	InitializeTotp(email string, secret string) error
 }

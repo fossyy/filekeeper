@@ -18,6 +18,7 @@ type File struct {
 	TotalChunk uint64    `gorm:"not null"`
 	StartHash  string    `gorm:"type:text;not null"`
 	EndHash    string    `gorm:"type:text;not null"`
+	IsPrivate  bool      `gorm:"not null;default:true"`
 	Downloaded uint64    `gorm:"not null;default:0"`
 	Owner      *User     `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE;"`
 }
