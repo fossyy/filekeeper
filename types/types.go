@@ -59,6 +59,7 @@ type Database interface {
 	GetFile(fileID string) (*models.File, error)
 	GetUserFile(name string, ownerID string) (*models.File, error)
 	GetFiles(ownerID string) ([]*models.File, error)
+	IncrementDownloadCount(fileID string) error
 
 	InitializeTotp(email string, secret string) error
 }
