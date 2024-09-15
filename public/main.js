@@ -163,10 +163,17 @@ async function uploadChunks(name, size, chunks, chunkArray, FileID) {
 
             const startTime = performance.now();
             try {
-                await fetch(`/file/${FileID}`, {
+                const request = await fetch(`/file/${FileID}`, {
                     method: 'POST',
                     body: formData
                 });
+                console.log(request.status)
+                if (request.status !== 202) {
+                    ChangeModal("Error", "There was an issue with your upload. Please try again later or contact support if the problem persists.")
+                    toggleModal();
+                    isFailed = true
+                    break
+                }
             } catch (error) {
                 ChangeModal("Error", "There was an issue with your upload. Please try again later or contact support if the problem persists.")
                 toggleModal();
