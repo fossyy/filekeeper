@@ -34,7 +34,7 @@ func content(title string, user types.User) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"bg-white\">")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -42,22 +42,22 @@ func content(title string, user types.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<main class=\"container mx-auto px-6 py-16 text-center\"><h1 class=\"text-5xl font-bold text-gray-900 mb-2\">Your files, always within reach</h1><p class=\"text-gray-700 text-lg mb-8\">Store, access, and share your files from anywhere. We offer secure and reliable file storage, so you can focus on what matters most.</p><div class=\"flex justify-center items-center space-x-4\"><div class=\"sm:flex sm:justify-center lg:justify-start\"><div class=\"rounded-md shadow\">")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if user.Authenticated {
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"w-full flex items-center justify-center px-8 py-3 text-base leading-6 font-medium rounded-md text-white bg-pink-400 hover:bg-pink-500 hover:text-white focus:ring ring-offset-2 ring-pink-400 focus:outline-none transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10\" href=\"/user\" hx-get=\"/user\" hx-swap=\"innerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Open Dashboard</a>")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"w-full flex items-center justify-center px-8 py-3 text-base leading-6 font-medium rounded-md text-white bg-pink-400 hover:bg-pink-500 hover:text-white focus:ring ring-offset-2 ring-pink-400 focus:outline-none transition duration-150 ease-in-out md:py-4 md:text-lg md:px-10\" href=\"/signup\" hx-get=\"/signup\" hx-swap=\"innerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Get started</a>")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></div><section class=\"w-full py-12 md:py-24 lg:py-32\"><div class=\"container px-4 md:px-6\"><div class=\"grid gap-8 sm:grid-cols-2 md:grid-cols-3\"><div class=\"grid gap-1 items-center\"><div class=\"flex justify-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"h-8 w-8 text-gray-900\"><path d=\"M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z\"></path></svg></div><h3 class=\"text-lg font-bold\">Unlimited Storage</h3><p class=\"text-gray-500\">Store as many files as you need with our generous storage limits.</p></div><div class=\"grid gap-1 items-center\"><div class=\"flex justify-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"h-8 w-8 text-gray-900\"><rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\" ry=\"2\"></rect> <path d=\"M7 11V7a5 5 0 0 1 10 0v4\"></path></svg></div><h3 class=\"text-lg font-bold\">Secure Encryption</h3><p class=\"text-gray-500\">Your files are encrypted with the latest security protocols to keep them safe.</p></div><div class=\"grid gap-1 items-center\"><div class=\"flex justify-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"h-8 w-8 text-gray-900\"><path d=\"M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8\"></path> <polyline points=\"16 6 12 2 8 6\"></polyline> <line x1=\"12\" x2=\"12\" y1=\"2\" y2=\"15\"></line></svg></div><h3 class=\"text-lg font-bold\">Easy Sharing</h3><p class=\"text-gray-500\">Quickly share files with friends, family, or colleagues with shareable links.</p></div></div></div></section></main></div>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 5)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
