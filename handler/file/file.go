@@ -8,7 +8,6 @@ import (
 	"github.com/fossyy/filekeeper/utils"
 	fileView "github.com/fossyy/filekeeper/view/client/file"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strconv"
 )
@@ -22,17 +21,15 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var filesData []types.FileData
+
 	for _, file := range files {
 		saveFolder := filepath.Join("uploads", userSession.UserID.String(), file.ID.String(), file.Name)
-		missingChunk := false
-		for j := 0; j < int(file.TotalChunk); j++ {
-			fileName := fmt.Sprintf("%s/chunk_%d", saveFolder, j)
 
-			if _, err := os.Stat(fileName); os.IsNotExist(err) {
-				missingChunk = true
-				break
-			}
-		}
+		pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
+		chunkFiles, err := filepath.Glob(pattern)
+
+		missingChunk := err != nil || len(chunkFiles) != int(file.TotalChunk)
+
 		filesData = append(filesData, types.FileData{
 			ID:         file.ID.String(),
 			Name:       file.Name,

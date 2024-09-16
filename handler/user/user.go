@@ -15,7 +15,6 @@ import (
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -199,15 +198,31 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 						Downloaded: newFile.Downloaded,
 					}
 					fileData.Chunk = make(map[string]bool)
-					fileData.Done = true
+
 					saveFolder := filepath.Join("uploads", userSession.UserID.String(), newFile.ID.String(), newFile.Name)
-					for i := 0; i <= int(newFile.TotalChunk); i++ {
-						fileName := fmt.Sprintf("%s/chunk_%d", saveFolder, i)
-						if _, err := os.Stat(fileName); os.IsNotExist(err) {
+
+					pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
+					chunkFiles, err := filepath.Glob(pattern)
+					if err != nil {
+						app.Server.Logger.Error(err.Error())
+						fileData.Done = false
+					} else {
+						for i := 0; i <= int(newFile.TotalChunk); i++ {
 							fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
-							fileData.Done = false
-						} else {
-							fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = true
+						}
+
+						for _, chunkFile := range chunkFiles {
+							var chunkIndex int
+							fmt.Sscanf(filepath.Base(chunkFile), "chunk_%d", &chunkIndex)
+
+							fileData.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
+						}
+
+						for i := 0; i <= int(newFile.TotalChunk); i++ {
+							if !fileData.Chunk[fmt.Sprintf("chunk_%d", i)] {
+								fileData.Done = false
+								break
+							}
 						}
 					}
 					sendSuccessResponseWithID(conn, action.Action, fileData, uploadNewFile.RequestID)
@@ -227,21 +242,37 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				Name:       file.Name,
 				Size:       file.Size,
 				Downloaded: file.Downloaded,
-				Done:       false,
+				Chunk:      make(map[string]bool),
+				Done:       true,
 			}
-			fileData.Chunk = make(map[string]bool)
-			fileData.Done = true
-			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String(), fileData.Name)
-			for i := 0; i <= int(file.TotalChunk-1); i++ {
-				fileName := fmt.Sprintf("%s/chunk_%d", saveFolder, i)
 
-				if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String(), fileData.Name)
+			pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
+			chunkFiles, err := filepath.Glob(pattern)
+
+			if err != nil {
+				app.Server.Logger.Error(err.Error())
+				fileData.Done = false
+			} else {
+				for i := 0; i <= int(file.TotalChunk); i++ {
 					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
-					fileData.Done = false
-				} else {
-					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = true
+				}
+
+				for _, chunkFile := range chunkFiles {
+					var chunkIndex int
+					fmt.Sscanf(filepath.Base(chunkFile), "chunk_%d", &chunkIndex)
+
+					fileData.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
+				}
+
+				for i := 0; i <= int(file.TotalChunk); i++ {
+					if !fileData.Chunk[fmt.Sprintf("chunk_%d", i)] {
+						fileData.Done = false
+						break
+					}
 				}
 			}
+
 			sendSuccessResponseWithID(conn, action.Action, fileData, uploadNewFile.RequestID)
 			continue
 		case Ping:
