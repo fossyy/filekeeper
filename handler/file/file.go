@@ -8,6 +8,8 @@ import (
 	"github.com/fossyy/filekeeper/utils"
 	fileView "github.com/fossyy/filekeeper/view/client/file"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -20,14 +22,25 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var filesData []types.FileData
-	for i := 0; i < len(files); i++ {
+	for _, file := range files {
+		saveFolder := filepath.Join("uploads", userSession.UserID.String(), file.ID.String(), file.Name)
+		missingChunk := false
+		for j := 0; j < int(file.TotalChunk); j++ {
+			fileName := fmt.Sprintf("%s/chunk_%d", saveFolder, j)
+
+			if _, err := os.Stat(fileName); os.IsNotExist(err) {
+				missingChunk = true
+				break
+			}
+		}
 		filesData = append(filesData, types.FileData{
-			ID:         files[i].ID.String(),
-			Name:       files[i].Name,
-			Size:       utils.ConvertFileSize(files[i].Size),
-			IsPrivate:  files[i].IsPrivate,
-			Type:       files[i].Type,
-			Downloaded: strconv.FormatUint(files[i].Downloaded, 10),
+			ID:         file.ID.String(),
+			Name:       file.Name,
+			Size:       utils.ConvertFileSize(file.Size),
+			IsPrivate:  file.IsPrivate,
+			Type:       file.Type,
+			Done:       !missingChunk,
+			Downloaded: strconv.FormatUint(file.Downloaded, 10),
 		})
 	}
 
