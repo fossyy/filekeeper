@@ -31,6 +31,7 @@ type FileData struct {
 	Name       string
 	Size       string
 	IsPrivate  bool
+	Type       string
 	Downloaded string
 }
 

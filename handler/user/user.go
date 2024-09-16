@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var errorMessages = map[string]string{
@@ -157,6 +158,21 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 			}
 			var file *models.File
 			file, err = app.Server.Database.GetUserFile(uploadNewFile.Name, userSession.UserID.String())
+			allowedFileTypes := []string{"jpg", "jpeg", "png", "gif", "bmp", "tiff", "pdf", "doc", "docx", "txt", "odt", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "tar", "gz", "7z", "bz2"}
+			isAllowedFileType := func(fileType string) bool {
+				for _, allowed := range allowedFileTypes {
+					if fileType == allowed {
+						return true
+					}
+				}
+				return false
+			}
+			fileName := strings.Split(uploadNewFile.Name, ".")
+			fileType := fileName[len(fileName)-1]
+			if !isAllowedFileType(fileType) {
+				fileType = "doc"
+			}
+
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
 					newFile := models.File{
@@ -166,6 +182,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 						Size:       uploadNewFile.Size,
 						StartHash:  uploadNewFile.StartHash,
 						EndHash:    uploadNewFile.EndHash,
+						Type:       fileType,
 						TotalChunk: uploadNewFile.Chunk,
 						Downloaded: 0,
 					}

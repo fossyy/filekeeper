@@ -35,6 +35,7 @@ func PUT(w http.ResponseWriter, r *http.Request) {
 		Name:       file.Name,
 		Size:       utils.ConvertFileSize(file.Size),
 		IsPrivate:  !file.IsPrivate,
+		Type:       file.Type,
 		Downloaded: strconv.FormatUint(file.Downloaded, 10),
 	}
 	component := fileView.JustFile(fileData)
