@@ -19,6 +19,7 @@ type File struct {
 	StartHash  string    `gorm:"type:text;not null"`
 	EndHash    string    `gorm:"type:text;not null"`
 	IsPrivate  bool      `gorm:"not null;default:true"`
+	Type       string    `gorm:"type:varchar(5);not null;default:'doc'"`
 	Downloaded uint64    `gorm:"not null;default:0"`
 	Owner      *User     `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE;"`
 }
