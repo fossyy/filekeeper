@@ -25,7 +25,7 @@ func Base(title string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\" content=\"Secure and reliable file hosting service. Upload, organize, and share your documents, images, videos, and more. Sign up now to keep your files always within reach.\"><meta name=\"keywords\" content=\"file hosting, file sharing, cloud storage, data storage, secure file hosting, filekeeper, drive, mega\"><meta name=\"author\" content=\"Filekeeper\"><link href=\"/public/output.css\" rel=\"stylesheet\"><title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -38,7 +38,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</title><script src=\"https://unpkg.com/htmx.org@1.9.12\"></script></head><body><div id=\"content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -46,7 +46,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"main-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -54,7 +54,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -62,7 +62,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 5)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -86,7 +86,7 @@ func BaseAuth(title string) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 6)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><meta name=\"description\" content=\"Secure and reliable file hosting service. Upload, organize, and share your documents, images, videos, and more. Sign up now to keep your files always within reach.\"><meta name=\"keywords\" content=\"file hosting, file sharing, cloud storage, data storage, secure file hosting, filekeeper, drive, mega\"><meta name=\"author\" content=\"Filekeeper\"><link href=\"/public/output.css\" rel=\"stylesheet\"><title>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -99,7 +99,7 @@ func BaseAuth(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 7)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</title><script src=\"https://unpkg.com/htmx.org@1.9.12\"></script><script src=\"/public/main.js\"></script></head><body><div id=\"content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -107,7 +107,7 @@ func BaseAuth(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 8)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"main-content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -115,7 +115,7 @@ func BaseAuth(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 9)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><div class=\"hidden\" id=\"uploadBox\"><div class=\"fixed bottom-6 right-6 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden\"><div class=\"p-4 bg-gray-100 flex justify-between items-center\"><div class=\"flex items-center\"><span class=\"font-medium text-base\">Mengupload 1 item</span> <svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5 ml-2 text-gray-500\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M19 9l-7 7-7-7\"></path></svg></div><button class=\"text-gray-500 hover:text-gray-700\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\"></path></svg></button></div><div id=\"FileUploadBoxItem\"></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -127,7 +127,7 @@ func BaseAuth(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 10)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script type=\"text/javascript\">\n                function showFileUploadBox() {\n                    document.getElementById('FileUploadBox').classList.remove('hidden');\n                }\n            </script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -151,7 +151,7 @@ func modal() templ.Component {
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 11)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"modalContainer\" class=\"fixed inset-0 z-50 flex items-center justify-center hidden p-4 sm:p-6 md:p-8\"><div class=\"fixed inset-0 bg-black opacity-50 transition-opacity duration-300\"></div><div id=\"modal\" class=\"bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl p-4 sm:p-6 md:p-8 relative z-10 overflow-y-auto max-h-[90vh]\"><h2 class=\"text-xl sm:text-2xl font-bold mb-4\">Modal Title</h2><div class=\"prose prose-sm sm:prose lg:prose-lg\"><p class=\"mb-4\">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div><button id=\"closeModal\" class=\"mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200 ease-in-out\">Close</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -175,7 +175,7 @@ func MainScript() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 12)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script type=\"text/javascript\">\n        function addScript() {\n            if (!window.scriptAdded) {\n                const script = document.createElement('script');\n                script.src = \"/public/main.js\";\n                window.scriptAdded = true;\n                script.onerror = onerror;\n                document.head.appendChild(script);\n            }\n        }\n        addScript()\n    </script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -199,7 +199,7 @@ func modalScript() templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 13)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script type=\"text/javascript\">\n        window.modalContainer = document.getElementById('modalContainer');\n        window.closeModalBtn = document.getElementById('closeModal');\n        window.content = document.getElementById('content');\n        function toggleModal() {\n            window.modalContainer.classList.contains('hidden')\n                ? modalContainer.classList.remove('hidden')\n                : modalContainer.classList.add('hidden');\n        }\n\n        window.closeModalBtn.addEventListener('click', toggleModal);\n        window.modalContainer.addEventListener('click', function(event) {\n            if (event.target === modalContainer) {\n                toggleModal();\n            }\n        })\n    </script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -223,12 +223,12 @@ func Navbar(user types.User) templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 14)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<header class=\"flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4\"><div class=\"flex items-center gap-4\"><a class=\"flex items-center gap-2\" href=\"#\"><img src=\"/public/brand.svg\" width=\"48\" height=\"48\" alt=\"Filekeeper Logo\"> <span class=\"text-lg font-semibold\">Filekeeper</span></a></div><div class=\"flex space-x-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if user.Authenticated {
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 15)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex items-center gap-4\"><div class=\"inline-flex items-center justify-center w-10 h-10 overflow-hidden bg-gray-100 rounded-full\"><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" width=\"256\" height=\"256\" viewBox=\"0 0 256 256\" xml:space=\"preserve\"><defs></defs> <g style=\"stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;\" transform=\"translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)\"><circle cx=\"45\" cy=\"45\" r=\"44\" style=\"stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(178,178,178); fill-rule: nonzero; opacity: 1;\" transform=\"  matrix(1 0 0 1 0 0) \"></circle> <circle cx=\"44.997\" cy=\"39.727000000000004\" r=\"19.817\" style=\"stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(109,109,109); fill-rule: nonzero; opacity: 1;\" transform=\"  matrix(1 0 0 1 0 0) \"></circle> <path d=\"M 11.266 73.25 C 19.337 63.622 31.454 57.5 45 57.5 c 13.546 0 25.663 6.122 33.734 15.75 l 0 0 C 70.663 82.878 58.547 89 45 89 C 31.454 89 19.337 82.878 11.266 73.25 L 11.266 73.25 z\" style=\"stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(109,109,109); fill-rule: nonzero; opacity: 1;\" transform=\" matrix(1 0 0 1 0 0) \" stroke-linecap=\"round\"></path> <path d=\"M 45 90 C 20.187 90 0 69.813 0 45 C 0 20.187 20.187 0 45 0 c 24.813 0 45 20.187 45 45 C 90 69.813 69.813 90 45 90 z M 45 2 C 21.29 2 2 21.29 2 45 c 0 23.71 19.29 43 43 43 c 23.71 0 43 -19.29 43 -43 C 88 21.29 68.71 2 45 2 z\" style=\"stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(43,43,43); fill-rule: nonzero; opacity: 1;\" transform=\" matrix(1 0 0 1 0 0) \" stroke-linecap=\"round\"></path> <path d=\"M 78.734 73.25 c -6.576 -7.844 -15.837 -13.358 -26.368 -15.133 c 7.294 -2.925 12.451 -10.048 12.451 -18.387 c 0 -10.945 -8.873 -19.817 -19.817 -19.817 S 25.183 28.785 25.183 39.73 c 0 8.339 5.157 15.462 12.451 18.387 c -10.531 1.775 -19.793 7.29 -26.368 15.133 v 0 C 19.337 82.878 31.454 89 45 89 C 58.547 89 70.663 82.878 78.734 73.25 L 78.734 73.25 z\" style=\"stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(109,109,109); fill-rule: nonzero; opacity: 1;\" transform=\" matrix(1 0 0 1 0 0) \" stroke-linecap=\"round\"></path> <path d=\"M 45 90 c -13.344 0 -25.919 -5.871 -34.5 -16.107 L 9.961 73.25 l 0.539 -0.643 c 6.239 -7.441 14.692 -12.654 24.046 -14.883 c -6.379 -3.687 -10.363 -10.467 -10.363 -17.995 c 0 -11.479 9.339 -20.817 20.817 -20.817 s 20.817 9.339 20.817 20.817 c 0 7.528 -3.983 14.309 -10.362 17.995 c 9.354 2.229 17.808 7.441 24.046 14.883 l 0.538 0.643 l -0.538 0.643 C 70.919 84.129 58.344 90 45 90 z M 12.581 73.25 C 20.764 82.635 32.531 88 45 88 c 12.47 0 24.236 -5.365 32.419 -14.75 C 70.887 65.761 61.964 60.748 52.2 59.104 l -3.506 -0.591 l 3.3 -1.323 c 7.183 -2.882 11.823 -9.734 11.823 -17.46 c 0 -10.376 -8.441 -18.817 -18.817 -18.817 s -18.817 8.441 -18.817 18.817 c 0 7.726 4.641 14.578 11.823 17.46 l 3.3 1.323 L 37.8 59.104 C 28.037 60.748 19.114 65.76 12.581 73.25 z\" style=\"stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(43,43,43); fill-rule: nonzero; opacity: 1;\" transform=\" matrix(1 0 0 1 0 0) \" stroke-linecap=\"round\"></path></g></svg></div><div class=\"font-medium hidden sm:block\"><div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -241,7 +241,7 @@ func Navbar(user types.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 16)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"text-sm text-gray-500\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -254,17 +254,17 @@ func Navbar(user types.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 17)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 18)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a href=\"/signup\" class=\"text-gray-600 hover:text-gray-800\" hx-get=\"/signup\" hx-swap=\"outerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Sign up</a> <a href=\"/signin\" class=\"text-gray-600 hover:text-gray-800\" hx-get=\"/signin\" hx-swap=\"outerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Sign in</a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 19)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -288,7 +288,7 @@ func Footer() templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 20)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<footer class=\"bg-white p-6 md:p-8 w-full bottom-0 border-t border-gray-200 w-full py-8\"><div class=\"container mx-auto flex flex-col items-center justify-between gap-6 md:flex-row\"><div class=\"flex items-center gap-2\"><img src=\"/public/brand.svg\" width=\"48\" height=\"48\" alt=\"Filekeeper Logo\"> <span class=\"text-lg font-semibold\">Filekeeper</span></div><nav class=\"flex flex-wrap items-center justify-center gap-4 text-sm font-medium\"><a class=\"hover:underline\" href=\"#\">Pricing</a> <a class=\"hover:underline\" href=\"#\">About</a> <a class=\"hover:underline\" href=\"#\">Contact</a> <a class=\"hover:underline\" href=\"#\">Terms</a> <a class=\"hover:underline\" href=\"#\">Privacy</a></nav><p class=\"text-sm text-gray-500\">© 2024 Filekeeper. All rights reserved.</p></div></footer>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

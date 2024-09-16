@@ -31,7 +31,7 @@ func NotFound(title string) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex flex-col items-center justify-center w-full min-h-[calc(100vh-1rem)] py-10 text-center gap-4 md:gap-8\"><div class=\"space-y-2\"><h1 class=\"text-4xl font-bold tracking-tighter sm:text-5xl\">404 Not Found</h1><p class=\"max-w-[600px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed\">The page you are looking for does not exist. It might have been moved or deleted.</p></div><a class=\"inline-flex h-10 items-center rounded-md border border-gray-200 border-gray-200 bg-white px-8 text-sm font-medium shadow-sm gap-2 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950\" href=\"/\" hx-get=\"/\" hx-swap=\"outerHTML\" hx-push-url=\"true\" hx-target=\"#content\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"w-4 h-4\"><path d=\"m9 18 6-6-6-6\"></path></svg></a></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -70,7 +70,7 @@ func InternalServerError(title string) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<main class=\"container mx-auto px-4 md:px-6\"><div class=\"flex h-screen w-full flex-col items-center justify-center bg-white\"><image class=\"w-32 md:w-64 lg:w-128\" src=\"/public/InternalServerErrorIcon.svg\" alt=\"Cute Icon\"></image><div class=\"mx-auto max-w-md space-y-4 text-center\"><h1 class=\"text-4xl font-bold tracking-tight text-gray-900\">Oops! Something went wrong.</h1><p class=\"text-gray-500\">We're sorry, but an internal server error has occurred. Please try again later.</p><div class=\"grid gap-2\"><a class=\"inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-6 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50\" href=\"/\" hx-get=\"/\" hx-swap=\"outerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Go back to homepage</a></div></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
