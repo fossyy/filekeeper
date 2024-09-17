@@ -157,7 +157,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 			}
 			var file *models.File
 			file, err = app.Server.Database.GetUserFile(uploadNewFile.Name, userSession.UserID.String())
-			allowedFileTypes := []string{"jpg", "jpeg", "png", "gif", "bmp", "tiff", "pdf", "doc", "docx", "txt", "odt", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "tar", "gz", "7z", "bz2"}
+			allowedFileTypes := []string{"jpg", "jpeg", "png", "gif", "bmp", "tiff", "pdf", "doc", "docx", "txt", "odt", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "tar", "gz", "7z", "bz2", "exe", "bin", "sh", "bat", "cmd", "msi", "apk"}
 			isAllowedFileType := func(fileType string) bool {
 				for _, allowed := range allowedFileTypes {
 					if fileType == allowed {
