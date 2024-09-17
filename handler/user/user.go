@@ -199,7 +199,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 					}
 					fileData.Chunk = make(map[string]bool)
 
-					saveFolder := filepath.Join("uploads", userSession.UserID.String(), newFile.ID.String(), newFile.Name)
+					saveFolder := filepath.Join("uploads", userSession.UserID.String(), newFile.ID.String())
 
 					pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
 					chunkFiles, err := filepath.Glob(pattern)
@@ -246,7 +246,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				Done:       true,
 			}
 
-			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String(), fileData.Name)
+			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String())
 			pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
 			chunkFiles, err := filepath.Glob(pattern)
 
