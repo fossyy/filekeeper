@@ -23,7 +23,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	var filesData []types.FileData
 
 	for _, file := range files {
-		saveFolder := filepath.Join("uploads", userSession.UserID.String(), file.ID.String(), file.Name)
+		saveFolder := filepath.Join("uploads", userSession.UserID.String(), file.ID.String())
 
 		pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
 		chunkFiles, err := filepath.Glob(pattern)

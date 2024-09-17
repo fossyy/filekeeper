@@ -93,7 +93,7 @@ func sendFileChunk(w http.ResponseWriter, saveFolder string, file *models.File, 
 	endOffset := end % chunkSize
 
 	for i := startChunk; i <= endChunk; i++ {
-		chunkPath := filepath.Join(saveFolder, file.Name, fmt.Sprintf("chunk_%d", i))
+		chunkPath := filepath.Join(saveFolder, fmt.Sprintf("chunk_%d", i))
 		chunkFile, err := os.Open(chunkPath)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error opening chunk: %v", err), http.StatusInternalServerError)
