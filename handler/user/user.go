@@ -254,18 +254,16 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				app.Server.Logger.Error(err.Error())
 				fileData.Done = false
 			} else {
-				for i := 0; i <= int(file.TotalChunk); i++ {
+				for i := 0; i < int(file.TotalChunk); i++ {
 					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
 				}
-
 				for _, chunkFile := range chunkFiles {
 					var chunkIndex int
 					fmt.Sscanf(filepath.Base(chunkFile), "chunk_%d", &chunkIndex)
-
 					fileData.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
 				}
 
-				for i := 0; i <= int(file.TotalChunk); i++ {
+				for i := 0; i < int(file.TotalChunk); i++ {
 					if !fileData.Chunk[fmt.Sprintf("chunk_%d", i)] {
 						fileData.Done = false
 						break
