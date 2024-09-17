@@ -92,7 +92,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 			message = "Unknown error occurred. Please contact support at bagas@fossy.my.id for assistance."
 		}
 		if r.Header.Get("hx-request") == "true" {
-			component = userView.MainContent(userSession, allowanceStats, sessions, types.Message{
+			component = userView.MainContent("Filekeeper - User Page", userSession, allowanceStats, sessions, types.Message{
 				Code:    0,
 				Message: message,
 			})
@@ -104,7 +104,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if r.Header.Get("hx-request") == "true" {
-			component = userView.MainContent(userSession, allowanceStats, sessions, types.Message{
+			component = userView.MainContent("Filekeeper - User Page", userSession, allowanceStats, sessions, types.Message{
 				Code:    1,
 				Message: "",
 			})

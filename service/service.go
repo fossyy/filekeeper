@@ -67,7 +67,7 @@ func (r *Service) DeleteUser(email string) {
 }
 
 func (r *Service) GetUserStorageUsage(ownerID string) (uint64, error) {
-	files, err := app.Server.Database.GetFiles(ownerID)
+	files, err := app.Server.Database.GetFiles(ownerID, "", types.All)
 	if err != nil {
 		return 0, err
 	}
