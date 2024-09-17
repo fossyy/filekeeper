@@ -6,7 +6,9 @@ import (
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	totpHandler "github.com/fossyy/filekeeper/handler/auth/totp"
 	fileHandler "github.com/fossyy/filekeeper/handler/file"
+	deleteHandler "github.com/fossyy/filekeeper/handler/file/delete"
 	downloadHandler "github.com/fossyy/filekeeper/handler/file/download"
+	renameFileHandler "github.com/fossyy/filekeeper/handler/file/rename"
 	uploadHandler "github.com/fossyy/filekeeper/handler/file/upload"
 	visibilityHandler "github.com/fossyy/filekeeper/handler/file/visibility"
 	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
@@ -118,12 +120,20 @@ func SetupRoutes() *http.ServeMux {
 		middleware.Auth(uploadHandler.POST, w, r)
 	})
 
+	handler.HandleFunc("DELETE /file/{id}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(deleteHandler.DELETE, w, r)
+	})
+
 	handler.HandleFunc("GET /file/{id}", func(w http.ResponseWriter, r *http.Request) {
 		downloadHandler.GET(w, r)
 	})
 
 	handler.HandleFunc("PUT /file/{id}", func(w http.ResponseWriter, r *http.Request) {
 		middleware.Auth(visibilityHandler.PUT, w, r)
+	})
+
+	handler.HandleFunc("PATCH /file/{id}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.Auth(renameFileHandler.PATCH, w, r)
 	})
 
 	handler.HandleFunc("GET /logout", func(w http.ResponseWriter, r *http.Request) {

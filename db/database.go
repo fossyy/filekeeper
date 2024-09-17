@@ -243,6 +243,25 @@ func (db *mySQLdb) GetFile(fileID string) (*models.File, error) {
 	return &file, nil
 }
 
+func (db *mySQLdb) RenameFile(fileID string, name string) (*models.File, error) {
+	var file models.File
+	err := db.DB.Table("files").Where("id = ?", fileID).First(&file).Error
+	file.Name = name
+	err = db.DB.Save(&file).Error
+	if err != nil {
+		return &file, err
+	}
+	return &file, nil
+}
+
+func (db *mySQLdb) DeleteFile(fileID string) error {
+	err := db.DB.Table("files").Where("id = ?", fileID).Delete(&models.File{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (db *mySQLdb) GetUserFile(name string, ownerID string) (*models.File, error) {
 	var file models.File
 	err := db.DB.Table("files").Where("name = ? AND owner_id = ?", name, ownerID).First(&file).Error
@@ -401,6 +420,25 @@ func (db *postgresDB) GetFile(fileID string) (*models.File, error) {
 		return nil, err
 	}
 	return &file, nil
+}
+
+func (db *postgresDB) RenameFile(fileID string, name string) (*models.File, error) {
+	var file models.File
+	err := db.DB.Table("files").Where("id = $1", fileID).First(&file).Error
+	file.Name = name
+	err = db.DB.Save(&file).Error
+	if err != nil {
+		return &file, err
+	}
+	return &file, nil
+}
+
+func (db *postgresDB) DeleteFile(fileID string) error {
+	err := db.DB.Table("files").Where("id = $1", fileID).Delete(&models.File{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (db *postgresDB) GetUserFile(name string, ownerID string) (*models.File, error) {

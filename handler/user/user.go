@@ -157,7 +157,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 			}
 			var file *models.File
 			file, err = app.Server.Database.GetUserFile(uploadNewFile.Name, userSession.UserID.String())
-			allowedFileTypes := []string{"jpg", "jpeg", "png", "gif", "bmp", "tiff", "pdf", "doc", "docx", "txt", "odt", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "tar", "gz", "7z", "bz2"}
+			allowedFileTypes := []string{"jpg", "jpeg", "png", "gif", "bmp", "tiff", "pdf", "doc", "docx", "txt", "odt", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "tar", "gz", "7z", "bz2", "exe", "bin", "sh", "bat", "cmd", "msi", "apk"}
 			isAllowedFileType := func(fileType string) bool {
 				for _, allowed := range allowedFileTypes {
 					if fileType == allowed {
@@ -199,7 +199,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 					}
 					fileData.Chunk = make(map[string]bool)
 
-					saveFolder := filepath.Join("uploads", userSession.UserID.String(), newFile.ID.String(), newFile.Name)
+					saveFolder := filepath.Join("uploads", userSession.UserID.String(), newFile.ID.String())
 
 					pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
 					chunkFiles, err := filepath.Glob(pattern)
@@ -246,7 +246,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				Done:       true,
 			}
 
-			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String(), fileData.Name)
+			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String())
 			pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
 			chunkFiles, err := filepath.Glob(pattern)
 
@@ -254,18 +254,16 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				app.Server.Logger.Error(err.Error())
 				fileData.Done = false
 			} else {
-				for i := 0; i <= int(file.TotalChunk); i++ {
+				for i := 0; i < int(file.TotalChunk); i++ {
 					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
 				}
-
 				for _, chunkFile := range chunkFiles {
 					var chunkIndex int
 					fmt.Sscanf(filepath.Base(chunkFile), "chunk_%d", &chunkIndex)
-
 					fileData.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
 				}
 
-				for i := 0; i <= int(file.TotalChunk); i++ {
+				for i := 0; i < int(file.TotalChunk); i++ {
 					if !fileData.Chunk[fmt.Sprintf("chunk_%d", i)] {
 						fileData.Done = false
 						break

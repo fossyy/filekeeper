@@ -60,6 +60,8 @@ type Database interface {
 
 	CreateFile(file *models.File) error
 	GetFile(fileID string) (*models.File, error)
+	RenameFile(fileID string, name string) (*models.File, error)
+	DeleteFile(fileID string) error
 	GetUserFile(name string, ownerID string) (*models.File, error)
 	GetFiles(ownerID string) ([]*models.File, error)
 	IncrementDownloadCount(fileID string) error

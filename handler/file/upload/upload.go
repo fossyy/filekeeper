@@ -53,7 +53,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	basePath := filepath.Join(currentDir, uploadDir)
 	cleanBasePath := filepath.Clean(basePath)
 
-	saveFolder := filepath.Join(cleanBasePath, userSession.UserID.String(), file.ID.String(), file.Name)
+	saveFolder := filepath.Join(cleanBasePath, userSession.UserID.String(), file.ID.String())
 
 	cleanSaveFolder := filepath.Clean(saveFolder)
 

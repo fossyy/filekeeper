@@ -18,10 +18,9 @@ templ Base(title string){
     <body>
         <div id="content">
             @modal()
-            <div id="main-content">
-                { children... }
-            </div>
+            { children... }
         </div>
+        @uploadBox()
         @modalScript()
     </body>
     </html>
@@ -44,29 +43,9 @@ templ BaseAuth(title string){
     <body>
         <div id="content">
             @modal()
-            <div id="main-content">
-                { children... }
-            </div>
+            { children... }
         </div>
-        <div class="hidden" id="uploadBox">
-            <div class="fixed bottom-6 right-6 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-            	<div class="p-4 bg-gray-100 flex justify-between items-center">
-            		<div class="flex items-center">
-            			<span class="font-medium text-base">Mengupload 1 item</span>
-            			<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            			</svg>
-            		</div>
-            		<button class="text-gray-500 hover:text-gray-700">
-            			<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            			</svg>
-            		</button>
-            	</div>
-            	<div id="FileUploadBoxItem">
-            	</div>
-            </div>
-        </div>
+        @uploadBox()
         @MainScript()
         @modalScript()
             <script type="text/javascript">
@@ -90,6 +69,28 @@ templ modal() {
           Close
         </button>
       </div>
+    </div>
+}
+
+templ uploadBox() {
+    <div class="hidden" id="uploadBox">
+        <div class="fixed bottom-6 right-6 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+        	<div class="p-4 bg-gray-100 flex justify-between items-center">
+        		<div class="flex items-center">
+        			<span class="font-medium text-base">Mengupload 1 item</span>
+        			<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        			</svg>
+        		</div>
+        		<button class="text-gray-500 hover:text-gray-700">
+        			<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        			</svg>
+        		</button>
+        	</div>
+        	<div id="FileUploadBoxItem">
+        	</div>
+        </div>
     </div>
 }
 
