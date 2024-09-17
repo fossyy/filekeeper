@@ -34,13 +34,13 @@ func content(title string, err types.Message) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"dark flex items-center min-h-screen p-4 sm:p-6 bg-gray-900\"><div class=\"mx-auto w-full max-w-md space-y-8\"><header class=\"text-center\"><div class=\"space-y-2\"><h1 class=\"text-3xl font-bold text-white\">Forgot password</h1><p class=\"text-gray-500 dark:text-gray-400\">Enter your email below to reset your password</p>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			switch err.Code {
 			case 0:
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400\" role=\"alert\">")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -53,12 +53,12 @@ func content(title string, err types.Message) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></header><form class=\"space-y-4\" method=\"post\" action=\"\"><div class=\"space-y-2\"><label class=\"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white\" for=\"email\">Email</label> <input type=\"email\" class=\"flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white\" id=\"email\" name=\"email\" placeholder=\"m@example.com\" required=\"\"></div><button class=\"bg-slate-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full\" type=\"submit\">Submit</button></form></div></div>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -121,13 +121,13 @@ func NewPasswordForm(title string, err types.Message) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"dark flex items-center min-h-screen p-4 sm:p-6 bg-gray-900\"><div class=\"mx-auto w-full max-w-md space-y-8\"><header class=\"text-center\"><div class=\"space-y-2\"><h1 class=\"text-3xl font-bold text-white\">Forgot password</h1><p class=\"text-gray-500 dark:text-gray-400\">Enter your email below to reset your password</p>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 5)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			switch err.Code {
 			case 0:
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400\" role=\"alert\">")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 6)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -140,12 +140,12 @@ func NewPasswordForm(title string, err types.Message) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 7)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></header><form class=\"space-y-4\" method=\"post\" action=\"\"><div class=\"space-y-2\"><label class=\"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white\" for=\"password\">Password</label> <input type=\"password\" class=\"flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white\" id=\"password\" name=\"password\" required></div><div class=\"space-y-2\"><label class=\"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white\" for=\"confirmPassword\">Confirm Password</label> <input type=\"password\" class=\"flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-white\" id=\"confirmPassword\" required></div><div class=\"flex justify-start mt-3 ml-4 p-1\"><ul><li class=\"flex items-center py-1\"><div id=\"matchSvgContainer\" class=\"rounded-full p-1 fill-current bg-red-200 text-green-700\"><svg id=\"matchSvgIcon\" class=\"w-4 h-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path id=\"matchGoodPath\" style=\"display: none;\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 13l4 4L19 7\"></path> <path id=\"matchBadPath\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\"></path></svg></div><span id=\"matchStatusText\" class=\"font-medium text-sm ml-3 text-red-700\">Passwords do not match</span></li><li class=\"flex items-center py-1\"><div id=\"uppercaseSvgContainer\" class=\"rounded-full p-1 fill-current bg-red-200 text-green-700\"><svg id=\"uppercaseSvgIcon\" class=\"w-4 h-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path id=\"uppercaseGoodPath\" style=\"display: none;\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 13l4 4L19 7\"></path> <path id=\"uppercaseBadPath\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\"></path></svg></div><span id=\"uppercaseStatusText\" class=\"font-medium text-sm ml-3 text-red-700\">Password must contain at least one uppercase letter</span></li><li class=\"flex items-center py-1\"><div id=\"lengthSvgContainer\" class=\"rounded-full p-1 fill-current bg-red-200 text-green-700\"><svg id=\"lengthSvgIcon\" class=\"w-4 h-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path id=\"lengthGoodPath\" style=\"display: none;\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 13l4 4L19 7\"></path> <path id=\"lengthBadPath\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M6 18L18 6M6 6l12 12\"></path></svg></div><span id=\"lengthStatusText\" class=\"font-medium text-sm ml-3 text-red-700\">Password length must be at least 8 characters</span></li></ul></div><button class=\"bg-slate-200 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full\" type=\"submit\" id=\"submit\" name=\"submit\" disabled>Submit</button></form></div></div><script src=\"/public/validatePassword.js\"></script>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 8)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -184,7 +184,7 @@ func EmailSend(title string) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<style>h1, h2, h3, h4, h5, h6 { font-family: 'Arimo', sans-serif; --font-sans: 'Arimo'; }</style> <style>body { font-family: 'Libre Franklin', sans-serif; --font-sans: 'Libre Franklin'; }</style> <div class=\"flex flex-col items-center justify-center min-h-[80vh] gap-6\"><div class=\"flex items-center justify-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"h-16 w-16 text-gray-500 dark:text-gray-400\"><rect width=\"20\" height=\"16\" x=\"2\" y=\"4\" rx=\"2\"></rect> <path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"></path></svg></div><div class=\"space-y-2 text-center\"><h1 class=\"text-3xl font-bold\">Email Verification Sent</h1><p class=\"text-gray-500 dark:text-gray-400\">We've sent a verification email to your inbox. Please check your email and follow the instructions to change your password.</p></div></div>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 9)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -223,7 +223,7 @@ func ChangeSuccess(title string) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<style>h1, h2, h3, h4, h5, h6 { font-family: 'Arimo', sans-serif; --font-sans: 'Arimo'; }</style> <style>body { font-family: 'Libre Franklin', sans-serif; --font-sans: 'Libre Franklin'; }</style> <div class=\"flex flex-col items-center justify-center min-h-[80vh] gap-6\"><div class=\"bg-green-500 text-white rounded-full p-4\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"h-8 w-8\"><polyline points=\"20 6 9 17 4 12\"></polyline></svg></div><div class=\"space-y-2 text-center\"><h1 class=\"text-3xl font-bold\">Password Changed Successfully</h1><p class=\"text-gray-500 dark:text-gray-400\">Your password has been successfully updated. Feel free to continue enjoying our platform.</p></div></div>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 10)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
