@@ -14,7 +14,17 @@ import (
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
-	files, err := app.Server.Database.GetFiles(userSession.UserID.String())
+	query := r.URL.Query().Get("q")
+	status := r.URL.Query().Get("status")
+	var fileStatus types.FileStatus
+	if status == "private" {
+		fileStatus = types.Private
+	} else if status == "public" {
+		fileStatus = types.Public
+	} else {
+		fileStatus = types.All
+	}
+	files, err := app.Server.Database.GetFiles(userSession.UserID.String(), query, fileStatus)
 	if err != nil {
 		app.Server.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -41,6 +51,15 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	if r.Header.Get("hx-request") == "true" {
+		component := fileView.FileTable(filesData)
+		err := component.Render(r.Context(), w)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		return
+	}
 	allowance, err := app.Server.Database.GetAllowance(userSession.UserID)
 	if err != nil {
 		app.Server.Logger.Error(err.Error())
@@ -61,10 +80,11 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	var component templ.Component
 	if r.Header.Get("hx-request") == "true" {
-		component = fileView.MainContent(filesData, userSession, allowanceStats)
+		component = fileView.MainContent("Filekeeper - File Dashboard", filesData, userSession, allowanceStats)
 	} else {
-		component = fileView.Main("File Dashboard", filesData, userSession, allowanceStats)
+		component = fileView.Main("Filekeeper - File Dashboard", filesData, userSession, allowanceStats)
 	}
+
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		fmt.Println(err.Error())

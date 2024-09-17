@@ -8,11 +8,12 @@ import (
 
 templ content(message types.Message, title string, user types.User, allowance *types.Allowance, ListSession []*session.SessionInfo) {
     @layout.BaseAuth(title){
-        @MainContent(user, allowance, ListSession, message)
+        @MainContent(title, user, allowance, ListSession, message)
     }
 }
 
-templ MainContent(user types.User, allowance *types.Allowance, ListSession []*session.SessionInfo, message types.Message) {
+templ MainContent(title string, user types.User, allowance *types.Allowance, ListSession []*session.SessionInfo, message types.Message) {
+    <title>{title}</title>
     @layout.Navbar(user)
     <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
         <div class="grid gap-10 lg:grid-cols-[1fr_300px]">

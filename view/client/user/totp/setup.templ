@@ -7,11 +7,12 @@ import (
 
 templ content(title string, qrcode string, code string, user types.User, msg types.Message) {
     @layout.BaseAuth(title){
-        @MainContent(qrcode, code, user, msg)
+        @MainContent(title, qrcode, code, user, msg)
     }
 }
 
-templ MainContent(qrcode string, code string, user types.User, msg types.Message) {
+templ MainContent(title string, qrcode string, code string, user types.User, msg types.Message) {
+    <title>{title}</title>
     @layout.Navbar(user)
     <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
         <a

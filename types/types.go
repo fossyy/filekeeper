@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+type FileStatus string
+
+const (
+	All     FileStatus = "all"
+	Private FileStatus = "private"
+	Public  FileStatus = "public"
+)
+
 type Message struct {
 	Code    int
 	Message string
@@ -63,7 +71,7 @@ type Database interface {
 	RenameFile(fileID string, name string) (*models.File, error)
 	DeleteFile(fileID string) error
 	GetUserFile(name string, ownerID string) (*models.File, error)
-	GetFiles(ownerID string) ([]*models.File, error)
+	GetFiles(ownerID string, query string, status FileStatus) ([]*models.File, error)
 	IncrementDownloadCount(fileID string) error
 	ChangeFileVisibility(fileID string) error
 

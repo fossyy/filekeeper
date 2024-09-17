@@ -44,7 +44,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	var component templ.Component
 	if r.Header.Get("hx-request") == "true" {
-		component = userTotpSetupView.MainContent(base64Str, secret, userSession, types.Message{
+		component = userTotpSetupView.MainContent("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
 			Code:    3,
 			Message: "",
 		})
@@ -86,7 +86,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 		app.Server.Service.DeleteUser(userSession.Email)
 		if r.Header.Get("hx-request") == "true" {
-			component = userTotpSetupView.MainContent(base64Str, secret, userSession, types.Message{
+			component = userTotpSetupView.MainContent("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
 				Code:    1,
 				Message: "Your TOTP setup is complete! Your account is now more secure.",
 			})
@@ -104,7 +104,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		if r.Header.Get("hx-request") == "true" {
-			component = userTotpSetupView.MainContent(base64Str, secret, userSession, types.Message{
+			component = userTotpSetupView.MainContent("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
 				Code:    0,
 				Message: "The code you entered is incorrect. Please double-check the code and try again.",
 			})

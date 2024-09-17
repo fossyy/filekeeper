@@ -271,13 +271,28 @@ func (db *mySQLdb) GetUserFile(name string, ownerID string) (*models.File, error
 	return &file, nil
 }
 
-func (db *mySQLdb) GetFiles(ownerID string) ([]*models.File, error) {
+func (db *mySQLdb) GetFiles(ownerID string, query string, status types.FileStatus) ([]*models.File, error) {
 	var files []*models.File
-	err := db.DB.Table("files").Where("owner_id = ?", ownerID).Find(&files).Error
+	tx := db.DB.Table("files").Where("owner_id = ?", ownerID)
+
+	if query != "" {
+		tx = tx.Where("name LIKE ?", "%"+query+"%")
+	}
+
+	switch status {
+	case types.Private:
+		tx = tx.Where("is_private = ?::boolean", true)
+	case types.Public:
+		tx = tx.Where("is_private = ?::boolean", false)
+	default:
+	}
+
+	err := tx.Find(&files).Error
 	if err != nil {
 		return nil, err
 	}
-	return files, err
+
+	return files, nil
 }
 
 func (db *mySQLdb) IncrementDownloadCount(fileID string) error {
@@ -450,13 +465,38 @@ func (db *postgresDB) GetUserFile(name string, ownerID string) (*models.File, er
 	return &file, nil
 }
 
-func (db *postgresDB) GetFiles(ownerID string) ([]*models.File, error) {
+func (db *postgresDB) GetFiles(ownerID string, query string, status types.FileStatus) ([]*models.File, error) {
 	var files []*models.File
-	err := db.DB.Table("files").Where("owner_id = $1", ownerID).Find(&files).Error
+	tx := db.DB.Table("files").Where("owner_id = $1", ownerID)
+
+	if query != "" {
+		tx = tx.Where("name LIKE $2", "%"+query+"%")
+	}
+
+	if query == "" {
+		switch status {
+		case types.Private:
+			tx = tx.Where("is_private = $2::boolean", true)
+		case types.Public:
+			tx = tx.Where("is_private = $2::boolean", false)
+		default:
+		}
+	} else {
+		switch status {
+		case types.Private:
+			tx = tx.Where("is_private = $3::boolean", true)
+		case types.Public:
+			tx = tx.Where("is_private = $3::boolean", false)
+		default:
+		}
+	}
+
+	err := tx.Find(&files).Error
 	if err != nil {
 		return nil, err
 	}
-	return files, err
+
+	return files, nil
 }
 
 func (db *postgresDB) IncrementDownloadCount(fileID string) error {
