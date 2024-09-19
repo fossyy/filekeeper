@@ -1,8 +1,8 @@
 package fileView
 
 import (
-	"github.com/fossyy/filekeeper/view/client/layout"
 	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/view/client/layout"
 	"strconv"
 )
 
@@ -116,6 +116,67 @@ templ MainContent(title string, files []types.FileData, user types.User, allowan
 						<option value="public">Public</option>
 					</select>
 				</div>
+				<div id="shareModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden opacity-0 transition-opacity duration-300 z-50">
+					<div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+						<div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+						<span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+						<div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+							<div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+								<div class="sm:flex sm:items-start">
+									<div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+										<div class="flex justify-between items-center mb-4">
+											<h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+												Share link
+											</h3>
+											<button onClick={ hideShareModal() } type="button" class="text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500 transition ease-in-out duration-150">
+												<svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+												</svg>
+											</button>
+										</div>
+										<p class="text-sm text-gray-500 mt-2">
+											Share this link with others to grant access to your file.
+										</p>
+										<div id="lockDiv">
+											<div id="privateWarning" class="mt-2 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+												<div class="flex">
+													<i class="fas fa-exclamation-triangle mr-2 mt-1"></i>
+													<div>
+														<p class="font-semibold">File is private</p>
+														<p class="text-sm">Others cannot access or download your file even if you share the link. Make the file public first.</p>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="mt-4 flex items-center bg-gray-100 rounded-lg">
+											<input id="shareLink" type="text" readonly class="bg-transparent flex-grow px-4 py-2 text-gray-700 focus:outline-none" value="https://example.com/share-link" aria-label="Share link"/>
+											<button id="copyButton" class="bg-gray-200 text-gray-600 px-4 py-2 rounded-r-lg hover:bg-gray-300 focus:outline-none">
+												<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+											</button>
+										</div>
+										<div class="mt-4">
+											<p class="text-sm font-medium text-gray-700 mb-2">Share on social media</p>
+											<div class="flex space-x-2">
+												<a id="twitterShare" href="" class="flex-1 bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white font-medium py-2 px-4 rounded">
+													<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-twitter w-5 h-5 inline-block mr-1"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+													Twitter
+												</a>
+												<a id="facebookShare" href="" class="flex-1 bg-[#4267B2] hover:bg-[#365899] text-white font-medium py-2 px-4 rounded">
+													<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-facebook w-5 h-5 inline-block mr-1"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+													Facebook
+												</a>
+												<a id="linkedInShare" href="" class="flex-1 bg-[#0077B5] hover:bg-[#006699] text-white font-medium py-2 px-4 rounded">
+													<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-linkedin w-5 h-5 inline-block mr-1"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+													LinkedIn
+												</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 				<div class="max-w-full overflow-hidden rounded-lg shadow-md bg-white">
 					<div class="overflow-x-auto">
 						<div class="inline-block min-w-full align-middle">
@@ -132,149 +193,7 @@ templ MainContent(title string, files []types.FileData, user types.User, allowan
 									</thead>
 									<tbody>
 										for _, file := range files {
-											<tr id={ "file-" + file.ID } class="bg-white border-b">
-												if !file.Done {
-													<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center">
-														@FileIcon(file.Type)
-														<div class="rounded-md p-3 flex items-center space-x-3 relative w-[80%]">
-															<span class="text-sm font-medium truncate tooltip" data-tooltip={ file.Name }>
-																{ file.Name }
-															</span>
-															<div class="flex justify-end text-red-500 mr-2 tooltip" data-tooltip="File is corrupted. Please reupload.">
-																<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-																	<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-																</svg>
-																<span class="text-xs font-medium">Corrupted</span>
-															</div>
-														</div>
-													</td>
-												} else {
-													<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center">
-														@FileIcon(file.Type)
-														<div class="rounded-md p-3 flex items-center space-x-3 relative w-[80%]">
-															<span class="text-sm font-medium truncate tooltip" data-tooltip={ file.Name }>
-																{ file.Name }
-															</span>
-														</div>
-													</td>
-												}
-												<td class="px-6 py-4">{ file.Size }</td>
-												<td class="px-6 py-4">
-													<div class="flex items-center">
-														<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 mr-2 text-gray-400">
-															<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-															<polyline points="7 10 12 15 17 10"></polyline>
-															<line x1="12" x2="12" y1="15" y2="3"></line>
-														</svg>
-														{ file.Downloaded }
-													</div>
-												</td>
-												<td class="px-6 py-4">
-													<div class="flex items-center space-x-2">
-														if file.IsPrivate {
-															<div class="flex items-center space-x-2">
-																<svg
-																	xmlns="http://www.w3.org/2000/svg"
-																	class="h-5 w-5 text-gray-600"
-																	fill="none"
-																	viewBox="0 0 24 24"
-																	stroke="currentColor"
-																>
-																	<path
-																		strokeLinecap="round"
-																		strokeLinejoin="round"
-																		d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-																	></path>
-																</svg>
-																<span class="text-sm text-gray-700">Private</span>
-															</div>
-														} else {
-															<div class="flex items-center space-x-2">
-																<svg
-																	xmlns="http://www.w3.org/2000/svg"
-																	class="h-5 w-5 text-gray-600"
-																	fill="none"
-																	viewBox="0 0 24 24"
-																	stroke="currentColor"
-																>
-																	<path
-																		strokeLinecap="round"
-																		strokeLinejoin="round"
-																		d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-																	></path>
-																</svg>
-																<span class="text-sm text-gray-700">Public</span>
-															</div>
-														}
-													</div>
-												</td>
-												<td class="px-6 py-4">
-													<div class="dropdown relative inline-block text-left">
-														<button onClick={ toggleDropDown() } id="dropdown-button" class="dropdown-button bg-white border border-gray-300 rounded-md px-4 py-2 inline-flex items-center justify-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-															<svg fill="#000000" height="12px" width="12px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32.055 32.055" xml:space="preserve"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><g><path d="M3.968,12.061C1.775,12.061,0,13.835,0,16.027c0,2.192,1.773,3.967,3.968,3.967c2.189,0,3.966-1.772,3.966-3.967 C7.934,13.835,6.157,12.061,3.968,12.061z M16.233,12.061c-2.188,0-3.968,1.773-3.968,3.965c0,2.192,1.778,3.967,3.968,3.967 s3.97-1.772,3.97-3.967C20.201,13.835,18.423,12.061,16.233,12.061z M28.09,12.061c-2.192,0-3.969,1.774-3.969,3.967 c0,2.19,1.774,3.965,3.969,3.965c2.188,0,3.965-1.772,3.965-3.965S30.278,12.061,28.09,12.061z"></path> </g> </g></svg>
-														</button>
-														<div class="dropdown-menu hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-															if file.Done {
-																<div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-																	<a href={ templ.SafeURL("/file/" + file.ID) } class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
-																		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
-																		<i class="ri-file-copy-line mr-3 text-gray-400"></i> Download
-																	</a>
-																	if file.IsPrivate {
-																		<button class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem" hx-put={ "/file/" + file.ID } hx-target={ "#file-" + file.ID } hx-swap="outerHTML">
-																			<svg
-																				xmlns="http://www.w3.org/2000/svg"
-																				class="h-4 w-4 text-gray-600"
-																				fill="none"
-																				viewBox="0 0 24 24"
-																				stroke="currentColor"
-																			>
-																				<path
-																					strokeLinecap="round"
-																					strokeLinejoin="round"
-																					d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-																				></path>
-																			</svg>
-																			<i class="ri-delete-bin-line mr-3 text-gray-400"></i> Make Public
-																		</button>
-																	} else {
-																		<button class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem" hx-put={ "/file/" + file.ID } hx-target={ "#file-" + file.ID } hx-swap="outerHTML">
-																			<svg
-																				xmlns="http://www.w3.org/2000/svg"
-																				class="h-4 w-4 text-gray-600"
-																				fill="none"
-																				viewBox="0 0 24 24"
-																				stroke="currentColor"
-																			>
-																				<path
-																					strokeLinecap="round"
-																					strokeLinejoin="round"
-																					d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-																				></path>
-																			</svg>
-																			<i class="ri-delete-bin-line mr-3 text-gray-400"></i> Make Private
-																		</button>
-																	}
-																	<button class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
-																		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>
-																		<i class="ri-delete-bin-line mr-3 text-gray-400"></i> Share
-																	</button>
-																</div>
-															}
-															<div class="py-1 border-t" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-																<button onClick={ showRenameModal(file.Name, file.ID) } class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
-																	<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-pen"><path d="M2 11.5V5a2 2 0 0 1 2-2h3.9c.7 0 1.3.3 1.7.9l.8 1.2c.4.6 1 .9 1.7.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9.5"></path><path d="M11.378 13.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"></path></svg>
-																	<i class="ri-share-line mr-3 text-gray-400"></i> Rename
-																</button>
-																<button onClick={ showDeletionModal(file.Name, file.ID) } class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
-																	<svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="M20.5001 6H3.5" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path> <path d="M9.5 11L10 16" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path> <path d="M14.5 11L14 16" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path> <path d="M6.5 6C6.55588 6 6.58382 6 6.60915 5.99936C7.43259 5.97849 8.15902 5.45491 8.43922 4.68032C8.44784 4.65649 8.45667 4.62999 8.47434 4.57697L8.57143 4.28571C8.65431 4.03708 8.69575 3.91276 8.75071 3.8072C8.97001 3.38607 9.37574 3.09364 9.84461 3.01877C9.96213 3 10.0932 3 10.3553 3H13.6447C13.9068 3 14.0379 3 14.1554 3.01877C14.6243 3.09364 15.03 3.38607 15.2493 3.8072C15.3043 3.91276 15.3457 4.03708 15.4286 4.28571L15.5257 4.57697C15.5433 4.62992 15.5522 4.65651 15.5608 4.68032C15.841 5.45491 16.5674 5.97849 17.3909 5.99936C17.4162 6 17.4441 6 17.5 6" stroke="#000000" stroke-width="1.5"></path> <path d="M18.3735 15.3991C18.1965 18.054 18.108 19.3815 17.243 20.1907C16.378 21 15.0476 21 12.3868 21H11.6134C8.9526 21 7.6222 21 6.75719 20.1907C5.89218 19.3815 5.80368 18.054 5.62669 15.3991L5.16675 8.5M18.8334 8.5L18.6334 11.5" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path> </g></svg>
-																	<i class="ri-clipboard-line mr-3 text-gray-400"></i> Remove
-																</button>
-															</div>
-														</div>
-													</div>
-												</td>
-											</tr>
+											@JustFile(file)
 										}
 									</tbody>
 								</table>
@@ -363,149 +282,7 @@ templ FileTable(files []types.FileData) {
 		</thead>
 		<tbody>
 			for _, file := range files {
-				<tr id={ "file-" + file.ID } class="bg-white border-b">
-					if !file.Done {
-						<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center">
-							@FileIcon(file.Type)
-							<div class="rounded-md p-3 flex items-center space-x-3 relative w-[80%]">
-								<span class="text-sm font-medium truncate tooltip" data-tooltip={ file.Name }>
-									{ file.Name }
-								</span>
-								<div class="flex justify-end text-red-500 mr-2 tooltip" data-tooltip="File is corrupted. Please reupload.">
-									<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-									</svg>
-									<span class="text-xs font-medium">Corrupted</span>
-								</div>
-							</div>
-						</td>
-					} else {
-						<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center">
-							@FileIcon(file.Type)
-							<div class="rounded-md p-3 flex items-center space-x-3 relative w-[80%]">
-								<span class="text-sm font-medium truncate tooltip" data-tooltip={ file.Name }>
-									{ file.Name }
-								</span>
-							</div>
-						</td>
-					}
-					<td class="px-6 py-4">{ file.Size }</td>
-					<td class="px-6 py-4">
-						<div class="flex items-center">
-							<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 mr-2 text-gray-400">
-								<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-								<polyline points="7 10 12 15 17 10"></polyline>
-								<line x1="12" x2="12" y1="15" y2="3"></line>
-							</svg>
-							{ file.Downloaded }
-						</div>
-					</td>
-					<td class="px-6 py-4">
-						<div class="flex items-center space-x-2">
-							if file.IsPrivate {
-								<div class="flex items-center space-x-2">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-5 w-5 text-gray-600"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-										></path>
-									</svg>
-									<span class="text-sm text-gray-700">Private</span>
-								</div>
-							} else {
-								<div class="flex items-center space-x-2">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-5 w-5 text-gray-600"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-										></path>
-									</svg>
-									<span class="text-sm text-gray-700">Public</span>
-								</div>
-							}
-						</div>
-					</td>
-					<td class="px-6 py-4">
-						<div class="dropdown relative inline-block text-left">
-							<button onClick={ toggleDropDown() } id="dropdown-button" class="dropdown-button bg-white border border-gray-300 rounded-md px-4 py-2 inline-flex items-center justify-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-								<svg fill="#000000" height="12px" width="12px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32.055 32.055" xml:space="preserve"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><g><path d="M3.968,12.061C1.775,12.061,0,13.835,0,16.027c0,2.192,1.773,3.967,3.968,3.967c2.189,0,3.966-1.772,3.966-3.967 C7.934,13.835,6.157,12.061,3.968,12.061z M16.233,12.061c-2.188,0-3.968,1.773-3.968,3.965c0,2.192,1.778,3.967,3.968,3.967 s3.97-1.772,3.97-3.967C20.201,13.835,18.423,12.061,16.233,12.061z M28.09,12.061c-2.192,0-3.969,1.774-3.969,3.967 c0,2.19,1.774,3.965,3.969,3.965c2.188,0,3.965-1.772,3.965-3.965S30.278,12.061,28.09,12.061z"></path> </g> </g></svg>
-							</button>
-							<div class="dropdown-menu hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-								if file.Done {
-									<div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-										<a href={ templ.SafeURL("/file/" + file.ID) } class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
-											<i class="ri-file-copy-line mr-3 text-gray-400"></i> Download
-										</a>
-										if file.IsPrivate {
-											<button class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem" hx-put={ "/file/" + file.ID } hx-target={ "#file-" + file.ID } hx-swap="outerHTML">
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													class="h-4 w-4 text-gray-600"
-													fill="none"
-													viewBox="0 0 24 24"
-													stroke="currentColor"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-													></path>
-												</svg>
-												<i class="ri-delete-bin-line mr-3 text-gray-400"></i> Make Public
-											</button>
-										} else {
-											<button class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem" hx-put={ "/file/" + file.ID } hx-target={ "#file-" + file.ID } hx-swap="outerHTML">
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													class="h-4 w-4 text-gray-600"
-													fill="none"
-													viewBox="0 0 24 24"
-													stroke="currentColor"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-													></path>
-												</svg>
-												<i class="ri-delete-bin-line mr-3 text-gray-400"></i> Make Private
-											</button>
-										}
-										<button class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
-											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>
-											<i class="ri-delete-bin-line mr-3 text-gray-400"></i> Share
-										</button>
-									</div>
-								}
-								<div class="py-1 border-t" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-									<button onClick={ showRenameModal(file.Name, file.ID) } class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-pen"><path d="M2 11.5V5a2 2 0 0 1 2-2h3.9c.7 0 1.3.3 1.7.9l.8 1.2c.4.6 1 .9 1.7.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-9.5"></path><path d="M11.378 13.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"></path></svg>
-										<i class="ri-share-line mr-3 text-gray-400"></i> Rename
-									</button>
-									<button onClick={ showDeletionModal(file.Name, file.ID) } class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
-										<svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><path d="M20.5001 6H3.5" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path> <path d="M9.5 11L10 16" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path> <path d="M14.5 11L14 16" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path> <path d="M6.5 6C6.55588 6 6.58382 6 6.60915 5.99936C7.43259 5.97849 8.15902 5.45491 8.43922 4.68032C8.44784 4.65649 8.45667 4.62999 8.47434 4.57697L8.57143 4.28571C8.65431 4.03708 8.69575 3.91276 8.75071 3.8072C8.97001 3.38607 9.37574 3.09364 9.84461 3.01877C9.96213 3 10.0932 3 10.3553 3H13.6447C13.9068 3 14.0379 3 14.1554 3.01877C14.6243 3.09364 15.03 3.38607 15.2493 3.8072C15.3043 3.91276 15.3457 4.03708 15.4286 4.28571L15.5257 4.57697C15.5433 4.62992 15.5522 4.65651 15.5608 4.68032C15.841 5.45491 16.5674 5.97849 17.3909 5.99936C17.4162 6 17.4441 6 17.5 6" stroke="#000000" stroke-width="1.5"></path> <path d="M18.3735 15.3991C18.1965 18.054 18.108 19.3815 17.243 20.1907C16.378 21 15.0476 21 12.3868 21H11.6134C8.9526 21 7.6222 21 6.75719 20.1907C5.89218 19.3815 5.80368 18.054 5.62669 15.3991L5.16675 8.5M18.8334 8.5L18.6334 11.5" stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path> </g></svg>
-										<i class="ri-clipboard-line mr-3 text-gray-400"></i> Remove
-									</button>
-								</div>
-							</div>
-						</div>
-					</td>
-				</tr>
+				@JustFile(file)
 			}
 		</tbody>
 	</table>
@@ -590,7 +367,7 @@ templ JustFile(file types.FileData) {
 		</td>
 		<td class="px-6 py-4">
 			<div class="dropdown relative inline-block text-left">
-				<button onClick={ toggleDropDown() } class="dropdown-button bg-white border border-gray-300 rounded-md px-4 py-2 inline-flex items-center justify-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+				<button onClick={ toggleDropDown() } id="dropdown-button" class="dropdown-button bg-white border border-gray-300 rounded-md px-4 py-2 inline-flex items-center justify-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
 					<svg fill="#000000" height="12px" width="12px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32.055 32.055" xml:space="preserve"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g><g><g><path d="M3.968,12.061C1.775,12.061,0,13.835,0,16.027c0,2.192,1.773,3.967,3.968,3.967c2.189,0,3.966-1.772,3.966-3.967 C7.934,13.835,6.157,12.061,3.968,12.061z M16.233,12.061c-2.188,0-3.968,1.773-3.968,3.965c0,2.192,1.778,3.967,3.968,3.967 s3.97-1.772,3.97-3.967C20.201,13.835,18.423,12.061,16.233,12.061z M28.09,12.061c-2.192,0-3.969,1.774-3.969,3.967 c0,2.19,1.774,3.965,3.969,3.965c2.188,0,3.965-1.772,3.965-3.965S30.278,12.061,28.09,12.061z"></path> </g> </g></svg>
 				</button>
 				<div class="dropdown-menu hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
@@ -635,7 +412,7 @@ templ JustFile(file types.FileData) {
 									<i class="ri-delete-bin-line mr-3 text-gray-400"></i> Make Private
 								</button>
 							}
-							<button class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
+							<button onClick={ showShareModal(file.IsPrivate, file.ID) } class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 w-full" role="menuitem">
 								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>
 								<i class="ri-delete-bin-line mr-3 text-gray-400"></i> Share
 							</button>
@@ -663,8 +440,12 @@ templ FileIcon(fileType string) {
 	} else if fileType == "pdf" || fileType == "doc" || fileType == "docx" || fileType == "txt" || fileType == "odt" || fileType == "xls" || fileType == "xlsx" || fileType == "ppt" || fileType == "pptx" {
 		<svg fill="#000000" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 70 70" enable-background="new 0 0 70 70" xml:space="preserve"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><g><path d="M47.248,22.583c1.104,0,1.335-0.284,1.335-1.389v-8.863c0-1.104-0.23-1.748-1.335-1.748H23.936 c-1.104,0-2.353,0.644-2.353,1.748v8.863c0,1.104,0.248,1.389,1.353,1.389H47.248z M23.583,12.583h23v8h-23V12.583z"></path> <path d="M62.341,12.866l-8.226-8.649c-0.75-0.75-1.803-1.634-2.863-1.634H17.439c-2.209,0-3.856,2.716-3.856,4.925v55.075h-3 V30.417c0-1.104-0.896-2-2-2s-2,0.896-2,2v35c0,1.104,1.229,1.166,2.334,1.166h8.522h6.478h35.522c2.209,0,4.144-0.866,4.144-3.075 V15.694C63.583,14.634,63.091,13.616,62.341,12.866z M58.791,14.583h-7.208V7.86L58.791,14.583z M23.917,62.583h-6.334v-56h32.014 l-0.014,8.834c0,0.553,0.781,1.166,1.334,1.166h8.666v46H23.917z"></path> <path d="M33.917,26.583h-10c-0.553,0-1,0.447-1,1s0.447,1,1,1h10c0.553,0,1-0.447,1-1S34.47,26.583,33.917,26.583z"></path> <path d="M50.917,26.583h-13c-0.553,0-1,0.447-1,1s0.447,1,1,1h13c0.553,0,1-0.447,1-1S51.47,26.583,50.917,26.583z"></path> <path d="M23.917,33.583h4c0.553,0,1-0.447,1-1s-0.447-1-1-1h-4c-0.553,0-1,0.447-1,1S23.364,33.583,23.917,33.583z"></path> <path d="M39.917,32.583c0-0.553-0.447-1-1-1h-7c-0.553,0-1,0.447-1,1s0.447,1,1,1h7C39.47,33.583,39.917,33.136,39.917,32.583z"></path> <path d="M31.917,36.583h-8c-0.553,0-1,0.447-1,1s0.447,1,1,1h8c0.553,0,1-0.447,1-1S32.47,36.583,31.917,36.583z"></path> <path d="M50.917,36.583h-15c-0.553,0-1,0.447-1,1s0.447,1,1,1h15c0.553,0,1-0.447,1-1S51.47,36.583,50.917,36.583z"></path> <path d="M50.917,31.583h-7c-0.553,0-1,0.447-1,1s0.447,1,1,1h7c0.553,0,1-0.447,1-1S51.47,31.583,50.917,31.583z"></path> <path d="M42.917,56.583h-7c-0.553,0-1,0.447-1,1s0.447,1,1,1h7c0.553,0,1-0.447,1-1S43.47,56.583,42.917,56.583z"></path> <path d="M50.917,51.583h-8c-0.553,0-1,0.447-1,1s0.447,1,1,1h8c0.553,0,1-0.447,1-1S51.47,51.583,50.917,51.583z"></path> <path d="M22.917,52.583c0,0.553,0.447,1,1,1h15c0.553,0,1-0.447,1-1s-0.447-1-1-1h-15C23.364,51.583,22.917,52.03,22.917,52.583z"></path> <path d="M30.917,56.583h-7c-0.553,0-1,0.447-1,1s0.447,1,1,1h7c0.553,0,1-0.447,1-1S31.47,56.583,30.917,56.583z"></path> <path d="M23.917,43.583h6c0.553,0,1-0.447,1-1s-0.447-1-1-1h-6c-0.553,0-1,0.447-1,1S23.364,43.583,23.917,43.583z"></path> <path d="M50.917,41.583h-17c-0.553,0-1,0.447-1,1s0.447,1,1,1h17c0.553,0,1-0.447,1-1S51.47,41.583,50.917,41.583z"></path> <path d="M36.917,46.583h-13c-0.553,0-1,0.447-1,1s0.447,1,1,1h13c0.553,0,1-0.447,1-1S37.47,46.583,36.917,46.583z"></path> <path d="M50.917,46.583h-10c-0.553,0-1,0.447-1,1s0.447,1,1,1h10c0.553,0,1-0.447,1-1S51.47,46.583,50.917,46.583z"></path> </g> </g></svg>
 	} else if fileType == "zip" || fileType == "rar" || fileType == "tar" || fileType == "gz" || fileType == "7z" || fileType == "bz2" {
-		<svg width="24px" height="24px" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" id="Layer_1" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><defs><style>.cls-2,.cls-3{fill:none;stroke-width:8px;stroke:#000000;stroke-linecap:round}.cls-2{stroke-miterlimit:10}.cls-3{stroke-linejoin:round}</style>
-</defs><path d="M0 0h192v192H0z" style="fill:none"></path><path d="M21.68 31.74h148.64c.94 5.92 1.64 12.88 1.68 20.68.04 8.29-.69 15.66-1.68 21.86H21.68c-.98-6.2-1.71-13.57-1.68-21.86.03-7.8.74-14.76 1.68-20.68Z" class="cls-3"></path><path d="M34.53 41.34v22.35" class="cls-2"></path><path d="M71.38 116.78h-49.7c-.98-6.2-1.71-13.57-1.68-21.86.03-7.8.74-14.76 1.68-20.68h148.64c.94 5.92 1.64 12.88 1.68 20.68.04 8.29-.69 15.66-1.68 21.86H119" class="cls-3"></path><path d="M34.53 83.85v22.36" class="cls-2"></path><path d="M119.01 116.75h51.32c.94 5.92 1.64 12.88 1.68 20.68.04 8.29-.69 15.66-1.68 21.86H21.68c-.98-6.2-1.71-13.57-1.68-21.86.03-7.8.74-14.76 1.68-20.68h49.71" class="cls-3"></path><path d="M34.53 127.37v22.35" class="cls-2"></path><path d="M74.74 28.18h42.51v135.63H74.74z" style="stroke-width:12px;stroke-linejoin:round;stroke:#000000;stroke-linecap:round;fill:none"></path><path d="M74.74 89h-5.06l-2.02 42.43h56.68L122.32 89h-5.06" class="cls-3"></path><path d="m92.96 129-2.02-16.2c.51-2.39 2.65-4.1 5.06-4.05 2.34.05 4.36 1.73 4.85 4.05-.61 5.4-1.21 10.8-1.82 16.2h-6.07Z" style="stroke-width:6px;stroke-linejoin:round;stroke:#000000;stroke-linecap:round;fill:none"></path></g></svg>
+		<svg width="24px" height="24px" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg" id="Layer_1" fill="#000000">
+			<g stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+			<defs>
+				<style>.cls-2,.cls-3{fill:none;stroke-width:8px;stroke:#000000;stroke-linecap:round}.cls-2{stroke-miterlimit:10}.cls-3{stroke-linejoin:round}</style>
+			</defs><path d="M0 0h192v192H0z" style="fill:none"></path><path d="M21.68 31.74h148.64c.94 5.92 1.64 12.88 1.68 20.68.04 8.29-.69 15.66-1.68 21.86H21.68c-.98-6.2-1.71-13.57-1.68-21.86.03-7.8.74-14.76 1.68-20.68Z" class="cls-3"></path><path d="M34.53 41.34v22.35" class="cls-2"></path><path d="M71.38 116.78h-49.7c-.98-6.2-1.71-13.57-1.68-21.86.03-7.8.74-14.76 1.68-20.68h148.64c.94 5.92 1.64 12.88 1.68 20.68.04 8.29-.69 15.66-1.68 21.86H119" class="cls-3"></path><path d="M34.53 83.85v22.36" class="cls-2"></path><path d="M119.01 116.75h51.32c.94 5.92 1.64 12.88 1.68 20.68.04 8.29-.69 15.66-1.68 21.86H21.68c-.98-6.2-1.71-13.57-1.68-21.86.03-7.8.74-14.76 1.68-20.68h49.71" class="cls-3"></path><path d="M34.53 127.37v22.35" class="cls-2"></path><path d="M74.74 28.18h42.51v135.63H74.74z" style="stroke-width:12px;stroke-linejoin:round;stroke:#000000;stroke-linecap:round;fill:none"></path><path d="M74.74 89h-5.06l-2.02 42.43h56.68L122.32 89h-5.06" class="cls-3"></path><path d="m92.96 129-2.02-16.2c.51-2.39 2.65-4.1 5.06-4.05 2.34.05 4.36 1.73 4.85 4.05-.61 5.4-1.21 10.8-1.82 16.2h-6.07Z" style="stroke-width:6px;stroke-linejoin:round;stroke:#000000;stroke-linecap:round;fill:none"></path>
+		</svg>
 	} else if fileType == "exe" || fileType == "bin" || fileType == "sh" || fileType == "bat" || fileType == "cmd" || fileType == "msi" {
 		<svg width="24px" height="24px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g stroke-width="0"></g><g stroke-linecap="round" stroke-linejoin="round"></g> <path d="m 8 0 c -0.769531 0 -1.539062 0.292969 -2.121094 0.875 l -5.003906 5.003906 c -1.164062 1.164063 -1.164062 3.078125 0 4.242188 l 5.003906 5.003906 c 1.164063 1.164062 3.078125 1.164062 4.242188 0 l 5.007812 -5.003906 c 1.164063 -1.164063 1.164063 -3.078125 0 -4.242188 l -5.007812 -5.003906 c -0.582032 -0.582031 -1.351563 -0.875 -2.121094 -0.875 z m 0.101562 1.988281 c 0.210938 0.023438 0.414063 0.117188 0.585938 0.28125 l -0.339844 0.113281 c -0.074218 -0.136718 -0.15625 -0.269531 -0.246094 -0.394531 z m -1.570312 1.058594 c 0.300781 0.421875 0.464844 0.929687 0.46875 1.453125 c 0 1.378906 -1.121094 2.5 -2.5 2.5 c -0.523438 -0.003906 -1.03125 -0.171875 -1.449219 -0.472656 z m 3.441406 0.503906 l 3.742188 3.742188 c 0.402344 0.402343 0.402344 1.011719 0 1.414062 l -0.253906 0.25 c -0.039063 -0.046875 -0.074219 -0.09375 -0.117188 -0.140625 l 0.621094 -0.855468 l -0.808594 -0.585938 l -0.621094 0.851562 c -0.167968 -0.078124 -0.347656 -0.136718 -0.535156 -0.175781 v -1.050781 h -1 v 1.050781 c -0.183594 0.039063 -0.363281 0.097657 -0.53125 0.175781 l -0.621094 -0.851562 l -0.804687 0.585938 l 0.617187 0.855468 c -0.125 0.136719 -0.238281 0.289063 -0.332031 0.453125 l -1 -0.324219 l -0.308594 0.949219 l 1 0.324219 c -0.011719 0.09375 -0.019531 0.1875 -0.019531 0.28125 s 0.007812 0.1875 0.019531 0.28125 l -1 0.324219 l 0.308594 0.949219 l 1 -0.324219 c 0.09375 0.164062 0.207031 0.316406 0.332031 0.453125 l -0.617187 0.855468 l 0.195312 0.140626 l -0.53125 0.53125 c -0.402343 0.40625 -1.011719 0.40625 -1.414062 0 l -4.902344 -4.902344 l 0.027344 -0.039063 l 0.207031 -0.289062 c 0.332031 0.152343 0.683594 0.269531 1.046875 0.339843 v 1.179688 h 1.652344 v -1.179688 c 0.363281 -0.070312 0.714843 -0.1875 1.046875 -0.339843 l 0.207031 0.289062 l 0.484375 0.667969 l 1.332031 -0.972656 l -0.480469 -0.667969 l -0.210937 -0.289063 c 0.25 -0.269531 0.46875 -0.566406 0.644531 -0.890624 l 0.339844 0.113281 l 0.785156 0.253906 l 0.511719 -1.566406 l -0.785156 -0.257813 l -0.339844 -0.109375 c 0.023437 -0.179687 0.039063 -0.363281 0.039063 -0.550781 s -0.015626 -0.371094 -0.039063 -0.550781 l 0.339844 -0.109375 l 0.785156 -0.257813 z m 1.527344 5.449219 c 0.527344 0 0.984375 0.265625 1.25 0.667969 l -2.078125 2.082031 c -0.40625 -0.269531 -0.671875 -0.722656 -0.671875 -1.25 c 0 -0.835938 0.667969 -1.5 1.5 -1.5 z m 0 0" fill="#000000"></path> </svg>
 	} else if fileType == "apk" {
@@ -732,6 +513,63 @@ script hideRenameModal() {
     renameModalContent.classList.add('-translate-y-full', 'scale-95', 'opacity-0');
     setTimeout(() => {
         rename.classList.add('hidden');
+    }, 300);
+}
+
+script showShareModal(isPrivate bool, fileID string) {
+	const shareModal = document.getElementById('shareModal');
+    const shareModalContent = shareModal.querySelector('div');
+    const publicToggle = document.getElementById('public-toggle');
+    const lockDiv = document.getElementById('lockDiv');
+    const privateWarning = document.getElementById('privateWarning');
+    const shareLink = document.getElementById('shareLink');
+    const copyButton = document.getElementById('copyButton');
+
+	if (!isPrivate) {
+		lockDiv.classList.add('hidden');
+	} else {
+		lockDiv.classList.remove('hidden');
+	}
+
+	shareLink.value = window.location + "/" + fileID
+
+    const twitterLink = document.getElementById('twitterShare');
+    const facebookLink = document.getElementById('facebookShare');
+    const linkedinLink = document.getElementById('linkedInShare');
+
+    const twitterShareURL = `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareLink.value)}`;
+    twitterLink.setAttribute('href', twitterShareURL);
+
+    const facebookShareURL = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink.value)}`;
+    facebookLink.setAttribute('href', facebookShareURL);
+
+    const linkedinShareURL = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareLink.value)}`;
+    linkedinLink.setAttribute('href', linkedinShareURL);
+
+    copyButton.addEventListener('click', function() {
+        shareLink.select();
+        document.execCommand('copy');
+        this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>';
+        setTimeout(() => {
+            this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+        }, 2000);
+    });
+
+    shareModal.classList.remove('hidden');
+    setTimeout(() => {
+        shareModal.classList.remove('opacity-0');
+        shareModalContent.classList.remove('-translate-y-full', 'scale-95', 'opacity-0');
+    }, 50);
+}
+
+script hideShareModal() {
+    const shareModal = document.getElementById('shareModal');
+    const shareModalContent = shareModal.querySelector('div');
+
+    shareModal.classList.add('opacity-0');
+    shareModalContent.classList.add('-translate-y-full', 'scale-95', 'opacity-0');
+    setTimeout(() => {
+        shareModal.classList.add('hidden');
     }, 300);
 }
 

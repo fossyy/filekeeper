@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/fossyy/filekeeper/app"
-	"github.com/fossyy/filekeeper/types"
-	"github.com/redis/go-redis/v9"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fossyy/filekeeper/app"
+	"github.com/fossyy/filekeeper/types"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/fossyy/filekeeper/utils"
 )

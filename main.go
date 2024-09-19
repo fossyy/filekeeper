@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/db"
@@ -12,7 +14,6 @@ import (
 	"github.com/fossyy/filekeeper/routes/client"
 	"github.com/fossyy/filekeeper/service"
 	"github.com/fossyy/filekeeper/utils"
-	"strconv"
 )
 
 func main() {
