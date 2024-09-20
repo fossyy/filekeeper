@@ -37,6 +37,7 @@ const (
 	Authorized     UserStatus = "authorized"
 	Unauthorized   UserStatus = "unauthorized"
 	InvalidSession UserStatus = "invalid_session"
+	Suspicious     UserStatus = "suspicious"
 )
 
 func (e *SessionNotFoundError) Error() string {
@@ -196,6 +197,16 @@ func GetSession(r *http.Request) (UserStatus, types.User, string) {
 	if !storeSession.Authenticated {
 		return Unauthorized, types.User{}, ""
 	}
+
+	sessionInfo, err := GetSessionInfo(storeSession.Email, cookie.Value)
+	if err != nil {
+		return Unauthorized, types.User{}, ""
+	}
+
+	if sessionInfo.IP != utils.ClientIP(r) {
+		return Suspicious, storeSession, cookie.Value
+	}
+
 	return Authorized, storeSession, cookie.Value
 }
 

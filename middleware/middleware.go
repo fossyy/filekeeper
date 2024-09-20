@@ -81,7 +81,7 @@ func Handler(next http.Handler) http.Handler {
 }
 
 func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
-	status, user, _ := session.GetSession(r)
+	status, user, sessionID := session.GetSession(r)
 
 	switch status {
 	case session.Authorized:
@@ -108,6 +108,25 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 			MaxAge: -1,
 		})
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+		return
+	case session.Suspicious:
+		userSession := session.Get(sessionID)
+		err := userSession.Delete()
+		if err != nil {
+			app.Server.Logger.Error(err)
+		}
+		err = session.RemoveSessionInfo(user.Email, sessionID)
+		if err != nil {
+			app.Server.Logger.Error(err)
+			return
+		}
+		http.SetCookie(w, &http.Cookie{
+			Name:   "Session",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+		http.Redirect(w, r, "/signin?error=suspicious_session", http.StatusSeeOther)
 		return
 	default:
 		http.Redirect(w, r, "/", http.StatusSeeOther)

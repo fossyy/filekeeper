@@ -2,6 +2,7 @@ package logoutHandler
 
 import (
 	"errors"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	"net/http"
 
@@ -26,12 +27,12 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	err = storeSession.Delete()
 	if err != nil {
-		panic(err)
+		app.Server.Logger.Error(err)
 		return
 	}
 	err = session.RemoveSessionInfo(userSession.Email, cookie.Value)
 	if err != nil {
-		panic(err)
+		app.Server.Logger.Error(err)
 		return
 	}
 
