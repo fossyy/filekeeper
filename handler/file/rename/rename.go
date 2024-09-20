@@ -7,7 +7,6 @@ import (
 	"github.com/fossyy/filekeeper/utils"
 	fileView "github.com/fossyy/filekeeper/view/client/file"
 	"net/http"
-	"path/filepath"
 	"strconv"
 )
 
@@ -38,11 +37,16 @@ func PATCH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	saveFolder := filepath.Join("uploads", userSession.UserID.String(), file.ID.String())
-	pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
-	chunkFiles, err := filepath.Glob(pattern)
+	prefix := fmt.Sprintf("%s/%s/chunk_", file.OwnerID.String(), file.ID.String())
 
-	missingChunk := err != nil || len(chunkFiles) != int(file.TotalChunk)
+	existingChunks, err := app.Server.Storage.ListObjects(r.Context(), prefix)
+	if err != nil {
+		app.Server.Logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	missingChunk := len(existingChunks) != int(file.TotalChunk)
 
 	fileData := types.FileData{
 		ID:         newFile.ID.String(),

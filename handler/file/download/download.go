@@ -1,14 +1,12 @@
 package downloadHandler
 
 import (
+	"context"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types/models"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -33,16 +31,16 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	uploadDir := "uploads"
-	currentDir, _ := os.Getwd()
-	basePath := filepath.Join(currentDir, uploadDir)
-	saveFolder := filepath.Join(basePath, file.OwnerID.String(), file.ID.String())
-
-	if filepath.Dir(saveFolder) != filepath.Join(basePath, file.OwnerID.String()) {
-		http.Error(w, "Invalid Path", http.StatusInternalServerError)
-		app.Server.Logger.Error("invalid path")
-		return
-	}
+	//uploadDir := "uploads"
+	//currentDir, _ := os.Getwd()
+	//basePath := filepath.Join(currentDir, uploadDir)
+	//saveFolder := filepath.Join(basePath, file.OwnerID.String(), file.ID.String())
+	//
+	//if filepath.Dir(saveFolder) != filepath.Join(basePath, file.OwnerID.String()) {
+	//	http.Error(w, "Invalid Path", http.StatusInternalServerError)
+	//	app.Server.Logger.Error("invalid path")
+	//	return
+	//}
 
 	rangeHeader := r.Header.Get("Range")
 	if rangeHeader != "" {
@@ -69,7 +67,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, file.Size))
 			w.Header().Set("Content-Length", fmt.Sprintf("%d", end-start+1))
 			w.WriteHeader(http.StatusPartialContent)
-			sendFileChunk(w, saveFolder, file, start, end)
+			sendFileChunk(w, file, start, end)
 			return
 		}
 	}
@@ -79,11 +77,11 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", file.Size))
 
-	sendFileChunk(w, saveFolder, file, 0, int64(file.Size-1))
+	sendFileChunk(w, file, 0, int64(file.Size-1))
 	return
 }
 
-func sendFileChunk(w http.ResponseWriter, saveFolder string, file *models.File, start, end int64) {
+func sendFileChunk(w http.ResponseWriter, file *models.File, start, end int64) {
 	chunkSize := int64(2 * 1024 * 1024)
 
 	startChunk := start / chunkSize
@@ -93,63 +91,38 @@ func sendFileChunk(w http.ResponseWriter, saveFolder string, file *models.File, 
 	endOffset := end % chunkSize
 
 	for i := startChunk; i <= endChunk; i++ {
-		chunkPath := filepath.Join(saveFolder, fmt.Sprintf("chunk_%d", i))
-		chunkFile, err := os.Open(chunkPath)
+		chunkKey := fmt.Sprintf("%s/%s/chunk_%d", file.OwnerID.String(), file.ID.String(), i)
+		chunkData, err := app.Server.Storage.Get(context.TODO(), chunkKey)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error opening chunk: %v", err), http.StatusInternalServerError)
-			app.Server.Logger.Error(err.Error())
-			return
-		}
-		defer chunkFile.Close()
-
-		var chunkStart, chunkEnd int64
-		if i == startChunk {
-			chunkStart = startOffset
-		} else {
-			chunkStart = 0
-		}
-		if i == endChunk {
-			chunkEnd = endOffset
-		} else {
-			chunkEnd = chunkSize - 1
-		}
-
-		_, err = chunkFile.Seek(chunkStart, io.SeekStart)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error seeking chunk: %v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error retrieving chunk: %v", err), http.StatusInternalServerError)
 			app.Server.Logger.Error(err.Error())
 			return
 		}
 
-		buffer := make([]byte, 2048)
-		toSend := chunkEnd - chunkStart + 1
-		for toSend > 0 {
-			n, err := chunkFile.Read(buffer)
-			if err != nil && err != io.EOF {
-				http.Error(w, fmt.Sprintf("Error reading chunk: %v", err), http.StatusInternalServerError)
-				app.Server.Logger.Error(err.Error())
-				return
-			}
-			if n == 0 {
-				break
-			}
-			if int64(n) > toSend {
-				n = int(toSend)
-			}
-			_, err = w.Write(buffer[:n])
+		var dataToSend []byte
+		if i == startChunk && i == endChunk {
+			dataToSend = chunkData[startOffset : endOffset+1]
+		} else if i == startChunk {
+			dataToSend = chunkData[startOffset:]
+		} else if i == endChunk {
+			dataToSend = chunkData[:endOffset+1]
+		} else {
+			dataToSend = chunkData
+		}
+
+		_, err = w.Write(dataToSend)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error writing chunk: %v", err), http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
+			return
+		}
+
+		if i == int64(file.TotalChunk)-1 {
+			err := app.Server.Database.IncrementDownloadCount(file.ID.String())
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error writing chunk: %v", err), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Error updating download count: %v", err), http.StatusInternalServerError)
 				app.Server.Logger.Error(err.Error())
 				return
-			}
-			toSend -= int64(n)
-			if i == int64(file.TotalChunk)-1 && toSend == 0 {
-				err := app.Server.Database.IncrementDownloadCount(file.ID.String())
-				if err != nil {
-					http.Error(w, fmt.Sprintf("Error writing chunk: %v", err), http.StatusInternalServerError)
-					app.Server.Logger.Error(err.Error())
-					return
-				}
 			}
 		}
 	}
