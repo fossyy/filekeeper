@@ -37,6 +37,7 @@ func init() {
 		"account_selection_required": "Please select an account to proceed with the request.",
 		"consent_required":           "Consent is required to proceed. Please provide consent to continue.",
 		"csrf_token_error":           "The CSRF token is missing or invalid. Please refresh the page and try again.",
+		"suspicious_session":         "We've detected unusual activity on your account. Please log in again to confirm it's you.",
 	}
 }
 
