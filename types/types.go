@@ -2,9 +2,10 @@ package types
 
 import (
 	"context"
+	"time"
+
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/google/uuid"
-	"time"
 )
 
 type FileStatus string
@@ -91,4 +92,11 @@ type Services interface {
 	GetFile(id string) (*models.File, error)
 	GetUserFile(name, ownerID string) (*FileWithDetail, error)
 	GetUserStorageUsage(ownerID string) (uint64, error)
+}
+
+type Storage interface {
+	Get(ctx context.Context, key string) ([]byte, error)
+	Add(ctx context.Context, key string, data []byte) error
+	Delete(ctx context.Context, key string) error
+	ListObjects(ctx context.Context, prefix string) ([]string, error)
 }

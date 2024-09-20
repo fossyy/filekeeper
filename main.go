@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/fossyy/filekeeper/storage"
 	"strconv"
 
 	"github.com/fossyy/filekeeper/app"
@@ -36,7 +37,14 @@ func main() {
 	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
 	mailServer := email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 
-	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, services, mailServer)
+	bucket := utils.Getenv("S3_BUCKET_NAME")
+	region := utils.Getenv("S3_REGION")
+	endpoint := utils.Getenv("S3_ENDPOINT")
+	accessKey := utils.Getenv("S3_ACCESS_KEY")
+	secretKey := utils.Getenv("S3_SECRET_KEY")
+	S3 := storage.NewS3(bucket, region, endpoint, accessKey, secretKey)
+
+	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, S3, services, mailServer)
 	app.Admin = app.NewAdminServer(adminAddr, middleware.Handler(admin.SetupRoutes()), database)
 
 	go func() {

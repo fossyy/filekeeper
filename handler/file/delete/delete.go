@@ -1,11 +1,10 @@
 package deleteHandler
 
 import (
+	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	"net/http"
-	"os"
-	"path/filepath"
 )
 
 func DELETE(w http.ResponseWriter, r *http.Request) {
@@ -30,11 +29,7 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uploadDir := "uploads"
-	currentDir, _ := os.Getwd()
-	basePath := filepath.Join(currentDir, uploadDir)
-	fileFolder := filepath.Join(basePath, file.OwnerID.String(), file.ID.String())
-	err = os.RemoveAll(fileFolder)
+	err = app.Server.Storage.Delete(r.Context(), fmt.Sprintf("%s/%s", file.OwnerID.String(), file.ID.String()))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

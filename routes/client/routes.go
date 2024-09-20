@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+	"github.com/fossyy/filekeeper/app"
 	googleOauthHandler "github.com/fossyy/filekeeper/handler/auth/google"
 	googleOauthCallbackHandler "github.com/fossyy/filekeeper/handler/auth/google/callback"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
@@ -155,6 +157,25 @@ func SetupRoutes() *http.ServeMux {
 
 	handler.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/favicon.ico")
+	})
+
+	handler.HandleFunc("GET /test", func(w http.ResponseWriter, r *http.Request) {
+		objects, err := app.Server.Storage.ListObjects(r.Context(), "test/")
+		fmt.Println(objects)
+		if err != nil {
+			return
+		}
+		if r.URL.Query().Get("new") != "" {
+			app.Server.Storage.Add(r.Context(), "test.txt", []byte(r.URL.Query().Get("new")))
+			w.Write([]byte("succes"))
+			return
+		}
+		get, err := app.Server.Storage.Get(r.Context(), "test.txt")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Write(get)
 	})
 
 	fileServer := http.FileServer(http.Dir("./public"))

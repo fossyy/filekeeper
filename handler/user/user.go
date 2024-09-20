@@ -1,6 +1,7 @@
 package userHandler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +16,6 @@ import (
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 	"net/http"
-	"path/filepath"
 	"strings"
 )
 
@@ -196,33 +196,26 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 						Name:       newFile.Name,
 						Size:       newFile.Size,
 						Downloaded: newFile.Downloaded,
+						Done:       false,
 					}
 					fileData.Chunk = make(map[string]bool)
 
-					saveFolder := filepath.Join("uploads", userSession.UserID.String(), newFile.ID.String())
+					prefix := fmt.Sprintf("%s/%s/chunk_", userSession.UserID.String(), newFile.ID.String())
 
-					pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
-					chunkFiles, err := filepath.Glob(pattern)
+					existingChunks, err := app.Server.Storage.ListObjects(context.TODO(), prefix)
 					if err != nil {
 						app.Server.Logger.Error(err.Error())
-						fileData.Done = false
+						sendErrorResponse(conn, action.Action, "Unknown error")
+						continue
 					} else {
-						for i := 0; i <= int(newFile.TotalChunk); i++ {
+						for i := 0; i < int(newFile.TotalChunk); i++ {
 							fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
 						}
 
-						for _, chunkFile := range chunkFiles {
+						for _, chunkFile := range existingChunks {
 							var chunkIndex int
-							fmt.Sscanf(filepath.Base(chunkFile), "chunk_%d", &chunkIndex)
-
+							fmt.Sscanf(chunkFile, "chunk_%d", &chunkIndex)
 							fileData.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
-						}
-
-						for i := 0; i <= int(newFile.TotalChunk); i++ {
-							if !fileData.Chunk[fmt.Sprintf("chunk_%d", i)] {
-								fileData.Done = false
-								break
-							}
 						}
 					}
 					sendSuccessResponseWithID(conn, action.Action, fileData, uploadNewFile.RequestID)
@@ -246,10 +239,8 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				Done:       true,
 			}
 
-			saveFolder := filepath.Join("uploads", userSession.UserID.String(), fileData.ID.String())
-			pattern := fmt.Sprintf("%s/chunk_*", saveFolder)
-			chunkFiles, err := filepath.Glob(pattern)
-
+			prefix := fmt.Sprintf("%s/%s/chunk_", userSession.UserID.String(), file.ID.String())
+			existingChunks, err := app.Server.Storage.ListObjects(context.TODO(), prefix)
 			if err != nil {
 				app.Server.Logger.Error(err.Error())
 				fileData.Done = false
@@ -257,9 +248,9 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				for i := 0; i < int(file.TotalChunk); i++ {
 					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
 				}
-				for _, chunkFile := range chunkFiles {
+				for _, chunkFile := range existingChunks {
 					var chunkIndex int
-					fmt.Sscanf(filepath.Base(chunkFile), "chunk_%d", &chunkIndex)
+					fmt.Sscanf(chunkFile, "chunk_%d", &chunkIndex)
 					fileData.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
 				}
 
