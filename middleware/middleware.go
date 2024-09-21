@@ -86,6 +86,7 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	switch status {
 	case session.Authorized:
 		ctx := context.WithValue(r.Context(), "user", user)
+		ctx = context.WithValue(ctx, "sessionID", sessionID)
 		req := r.WithContext(ctx)
 		next.ServeHTTP(w, req)
 		return
