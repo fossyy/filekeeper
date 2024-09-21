@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -46,16 +48,19 @@ func Logger() *AggregatedLogger {
 
 	slug := log.Ldate | log.Ltime
 	infoLogger := log.New(infoLoggerWriter, "INFO: ", slug)
-	warnLogger := log.New(multiLogger, "WARN: ", slug)
-	errorLogger := log.New(multiLogger, "ERROR: ", slug)
-	panicLogger := log.New(multiLogger, "PANIC: ", slug)
 
 	return &AggregatedLogger{
 		infoLogger:  infoLogger,
-		warnLogger:  warnLogger,
-		errorLogger: errorLogger,
-		panicLogger: panicLogger,
+		warnLogger:  log.New(multiLogger, "WARN: ", slug),
+		errorLogger: log.New(multiLogger, "ERROR: ", slug),
+		panicLogger: log.New(multiLogger, "PANIC: ", slug),
 	}
+}
+
+func getFileAndLine() string {
+	_, file, line, _ := runtime.Caller(2)
+	filename := filepath.Base(file)
+	return fmt.Sprintf("%s:%d", filename, line)
 }
 
 func (l *AggregatedLogger) Info(v ...interface{}) {
@@ -63,13 +68,13 @@ func (l *AggregatedLogger) Info(v ...interface{}) {
 }
 
 func (l *AggregatedLogger) Warn(v ...interface{}) {
-	l.warnLogger.Println(v...)
+	l.warnLogger.Println(getFileAndLine(), fmt.Sprint(v...))
 }
 
 func (l *AggregatedLogger) Error(v ...interface{}) {
-	l.errorLogger.Println(v...)
+	l.errorLogger.Println(getFileAndLine(), fmt.Sprint(v...))
 }
 
 func (l *AggregatedLogger) Panic(v ...interface{}) {
-	l.panicLogger.Panic(v...)
+	l.panicLogger.Panic(getFileAndLine(), fmt.Sprint(v...))
 }
