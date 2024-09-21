@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/fossyy/filekeeper/app"
-	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
@@ -121,11 +120,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
 	userAgent := r.Header.Get("User-Agent")
-	browserInfo, osInfo := signinHandler.ParseUserAgent(userAgent)
+	browserInfo, osInfo := utils.ParseUserAgent(userAgent)
 
 	sessionInfo := session.SessionInfo{
 		SessionID: storeSession.ID,
@@ -138,7 +138,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	storeSession.Save(w)
-	session.AddSessionInfo(unregisteredUser.Email, &sessionInfo)
+	err = session.AddSessionInfo(unregisteredUser.Email, &sessionInfo)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 
 	http.Redirect(w, r, "/user", http.StatusSeeOther)
 	return

@@ -18,6 +18,7 @@ func PATCH(w http.ResponseWriter, r *http.Request) {
 	file, err := app.Server.Database.GetFile(fileID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -34,6 +35,7 @@ func PATCH(w http.ResponseWriter, r *http.Request) {
 	newFile, err := app.Server.Database.RenameFile(fileID, newName)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -41,8 +43,8 @@ func PATCH(w http.ResponseWriter, r *http.Request) {
 
 	existingChunks, err := app.Server.Storage.ListObjects(r.Context(), prefix)
 	if err != nil {
-		app.Server.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -62,8 +64,8 @@ func PATCH(w http.ResponseWriter, r *http.Request) {
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
-	fileView.JustFile(fileData)
-	w.WriteHeader(http.StatusOK)
+	return
 }

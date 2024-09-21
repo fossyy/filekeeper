@@ -1,6 +1,7 @@
 package userSessionTerminateHandler
 
 import (
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/view/client/user"
@@ -16,11 +17,24 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	otherSession.Delete()
-	session.RemoveSessionInfo(mySession.Email, otherSession.ID)
+	err := otherSession.Delete()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+
+	err = session.RemoveSessionInfo(mySession.Email, otherSession.ID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+
 	sessions, err := session.GetSessions(mySession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	component := userView.SessionTable(sessions)
@@ -30,4 +44,5 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	return
 }

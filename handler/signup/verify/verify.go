@@ -15,7 +15,6 @@ import (
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-
 	userDataStr, err := app.Server.Cache.GetCache(context.Background(), "UnverifiedUser:"+code)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
@@ -53,11 +52,15 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	err = app.Server.Cache.DeleteCache(context.Background(), "UnverifiedUser:"+code)
 	if err != nil {
 		app.Server.Logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	err = app.Server.Cache.DeleteCache(context.Background(), "VerificationCode:"+unverifiedUser.User.Email)
 	if err != nil {
 		app.Server.Logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	component := signupView.VerifySuccess("Filekeeper - Verify Page")
@@ -67,4 +70,5 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	return
 }

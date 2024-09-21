@@ -16,4 +16,5 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	return
 }

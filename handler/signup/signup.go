@@ -20,9 +20,8 @@ import (
 )
 
 type UnverifiedUser struct {
-	User       *models.User
-	Code       string
-	CreateTime time.Time
+	User *models.User
+	Code string
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +35,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	return
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
@@ -123,9 +123,8 @@ func verifyEmail(user *models.User) error {
 	}
 
 	unverifiedUser := UnverifiedUser{
-		User:       user,
-		Code:       code,
-		CreateTime: time.Now(),
+		User: user,
+		Code: code,
 	}
 	newUnverifiedUser, err := json.Marshal(unverifiedUser)
 	if err != nil {

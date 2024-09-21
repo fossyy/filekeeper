@@ -30,6 +30,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -43,6 +44,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	return
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +60,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal([]byte(data), &userData)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -98,12 +101,33 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.Server.Cache.DeleteCache(r.Context(), "ForgotPasswordCode:"+userData.User.Email)
-	app.Server.Cache.DeleteCache(r.Context(), "ForgotPassword:"+code)
+	err = app.Server.Cache.DeleteCache(r.Context(), "ForgotPasswordCode:"+userData.User.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 
-	session.RemoveAllSessions(userData.User.Email)
+	err = app.Server.Cache.DeleteCache(r.Context(), "ForgotPassword:"+code)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 
-	app.Server.Service.DeleteUser(userData.User.Email)
+	err = session.RemoveAllSessions(userData.User.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+
+	err = app.Server.Service.DeleteUser(userData.User.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 
 	component := forgotPasswordView.ChangeSuccess("Filekeeper - Forgot Password Page")
 	err = component.Render(r.Context(), w)

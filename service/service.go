@@ -59,11 +59,12 @@ func (r *Service) GetUser(ctx context.Context, email string) (*models.User, erro
 	return &user, nil
 }
 
-func (r *Service) DeleteUser(email string) {
+func (r *Service) DeleteUser(email string) error {
 	err := r.cache.DeleteCache(context.Background(), "UserCache:"+email)
 	if err != nil {
-		return
+		return err
 	}
+	return nil
 }
 
 func (r *Service) GetUserStorageUsage(ownerID string) (uint64, error) {

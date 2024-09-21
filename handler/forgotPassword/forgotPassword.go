@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/fossyy/filekeeper/types"
@@ -22,10 +21,8 @@ import (
 )
 
 type ForgotPassword struct {
-	User       *models.User
-	Code       string
-	mu         sync.Mutex
-	CreateTime time.Time
+	User *models.User
+	Code string
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +36,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	return
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
@@ -52,17 +50,22 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	emailForm := r.Form.Get("email")
 
 	user, err := app.Server.Service.GetUser(r.Context(), emailForm)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		component := forgotPasswordView.Main("Filekeeper - Forgot Password Page", types.Message{
-			Code:    0,
-			Message: "Unexpected error has occurred",
-		})
-		err := component.Render(r.Context(), w)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			app.Server.Logger.Error(err.Error())
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			component := forgotPasswordView.Main("Filekeeper - Forgot Password Page", types.Message{
+				Code:    0,
+				Message: "Unexpected error has occurred",
+			})
+			err := component.Render(r.Context(), w)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				app.Server.Logger.Error(err.Error())
+				return
+			}
 			return
 		}
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -99,9 +102,8 @@ func verifyForgot(user *models.User) error {
 		if errors.Is(err, redis.Nil) {
 			code = utils.GenerateRandomString(64)
 			userData = &ForgotPassword{
-				User:       user,
-				Code:       code,
-				CreateTime: time.Now(),
+				User: user,
+				Code: code,
 			}
 
 			newForgotUser, err := json.Marshal(userData)

@@ -15,7 +15,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("id")
 	file, err := app.Server.Database.GetFile(fileID)
 	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
 	}
@@ -30,17 +30,6 @@ func GET(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	//uploadDir := "uploads"
-	//currentDir, _ := os.Getwd()
-	//basePath := filepath.Join(currentDir, uploadDir)
-	//saveFolder := filepath.Join(basePath, file.OwnerID.String(), file.ID.String())
-	//
-	//if filepath.Dir(saveFolder) != filepath.Join(basePath, file.OwnerID.String()) {
-	//	http.Error(w, "Invalid Path", http.StatusInternalServerError)
-	//	app.Server.Logger.Error("invalid path")
-	//	return
-	//}
 
 	rangeHeader := r.Header.Get("Range")
 	if rangeHeader != "" {
@@ -94,7 +83,7 @@ func sendFileChunk(w http.ResponseWriter, file *models.File, start, end int64) {
 		chunkKey := fmt.Sprintf("%s/%s/chunk_%d", file.OwnerID.String(), file.ID.String(), i)
 		chunkData, err := app.Server.Storage.Get(context.TODO(), chunkKey)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error retrieving chunk: %v", err), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			app.Server.Logger.Error(err.Error())
 			return
 		}
@@ -112,7 +101,7 @@ func sendFileChunk(w http.ResponseWriter, file *models.File, start, end int64) {
 
 		_, err = w.Write(dataToSend)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error writing chunk: %v", err), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			app.Server.Logger.Error(err.Error())
 			return
 		}
@@ -120,7 +109,6 @@ func sendFileChunk(w http.ResponseWriter, file *models.File, start, end int64) {
 		if i == int64(file.TotalChunk)-1 {
 			err := app.Server.Database.IncrementDownloadCount(file.ID.String())
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error updating download count: %v", err), http.StatusInternalServerError)
 				app.Server.Logger.Error(err.Error())
 				return
 			}

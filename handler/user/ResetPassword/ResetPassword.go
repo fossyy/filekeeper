@@ -9,19 +9,26 @@ import (
 )
 
 func POST(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 	userSession := r.Context().Value("user").(types.User)
 	currentPassword := r.Form.Get("currentPassword")
 	password := r.Form.Get("password")
 	user, err := app.Server.Service.GetUser(r.Context(), userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
 	hashPassword, err := utils.HashPassword(password)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -33,11 +40,23 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	err = app.Server.Database.UpdateUserPassword(user.Email, hashPassword)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
-	session.RemoveAllSessions(userSession.Email)
-	app.Server.Service.DeleteUser(userSession.Email)
+	err = session.RemoveAllSessions(userSession.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+
+	err = app.Server.Service.DeleteUser(userSession.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 
 	http.Redirect(w, r, "/signin", http.StatusSeeOther)
 	return
