@@ -26,8 +26,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	files, err := app.Server.Database.GetFiles(userSession.UserID.String(), query, fileStatus)
 	if err != nil {
-		app.Server.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -38,8 +38,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 		existingChunks, err := app.Server.Storage.ListObjects(r.Context(), prefix)
 		if err != nil {
-			app.Server.Logger.Error(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 
@@ -61,10 +61,12 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		err := component.Render(r.Context(), w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return
 	}
 
 	w.WriteHeader(http.StatusForbidden)
+	return
 }

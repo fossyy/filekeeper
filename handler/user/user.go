@@ -55,7 +55,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("upgrade") == "websocket" {
 		upgrade, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			panic(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		handlerWS(upgrade, userSession)
@@ -64,18 +65,21 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	sessions, err := session.GetSessions(userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
 	allowance, err := app.Server.Database.GetAllowance(userSession.UserID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
 	usage, err := app.Server.Service.GetUserStorageUsage(userSession.UserID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 

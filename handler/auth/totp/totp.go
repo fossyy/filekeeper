@@ -2,13 +2,13 @@ package totpHandler
 
 import (
 	"errors"
+	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/fossyy/filekeeper/view/client/totp"
 	"github.com/xlzd/gotp"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -31,7 +31,12 @@ func GET(w http.ResponseWriter, r *http.Request) {
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 	code := r.Form.Get("code")
 	_, user, key := session.GetSession(r)
 	totp := gotp.NewDefaultTOTP(user.Totp)
@@ -46,13 +51,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
-		if err != nil {
-			return
-		}
+
 		userAgent := r.Header.Get("User-Agent")
-		browserInfo, osInfo := ParseUserAgent(userAgent)
+		browserInfo, osInfo := utils.ParseUserAgent(userAgent)
 
 		sessionInfo := session.SessionInfo{
 			SessionID: storeSession.ID,
@@ -65,7 +69,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 		storeSession.Save(w)
-		session.AddSessionInfo(user.Email, &sessionInfo)
+		err = session.AddSessionInfo(user.Email, &sessionInfo)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
+			return
+		}
 
 		cookie, err := r.Cookie("redirect")
 		if errors.Is(err, http.ErrNoCookie) {
@@ -90,65 +99,4 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
-}
-
-func ParseUserAgent(userAgent string) (map[string]string, map[string]string) {
-	browserInfo := make(map[string]string)
-	osInfo := make(map[string]string)
-	if strings.Contains(userAgent, "Firefox") {
-		browserInfo["browser"] = "Firefox"
-		parts := strings.Split(userAgent, "Firefox/")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], " ")[0]
-			browserInfo["version"] = version
-		}
-	} else if strings.Contains(userAgent, "Chrome") {
-		browserInfo["browser"] = "Chrome"
-		parts := strings.Split(userAgent, "Chrome/")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], " ")[0]
-			browserInfo["version"] = version
-		}
-	} else {
-		browserInfo["browser"] = "Unknown"
-		browserInfo["version"] = "Unknown"
-	}
-
-	if strings.Contains(userAgent, "Windows") {
-		osInfo["os"] = "Windows"
-		parts := strings.Split(userAgent, "Windows ")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], ";")[0]
-			osInfo["version"] = version
-		}
-	} else if strings.Contains(userAgent, "Macintosh") {
-		osInfo["os"] = "Mac OS"
-		parts := strings.Split(userAgent, "Mac OS X ")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], ";")[0]
-			osInfo["version"] = version
-		}
-	} else if strings.Contains(userAgent, "Linux") {
-		osInfo["os"] = "Linux"
-		osInfo["version"] = "Unknown"
-	} else if strings.Contains(userAgent, "Android") {
-		osInfo["os"] = "Android"
-		parts := strings.Split(userAgent, "Android ")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], ";")[0]
-			osInfo["version"] = version
-		}
-	} else if strings.Contains(userAgent, "iPhone") || strings.Contains(userAgent, "iPad") || strings.Contains(userAgent, "iPod") {
-		osInfo["os"] = "iOS"
-		parts := strings.Split(userAgent, "OS ")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], " ")[0]
-			osInfo["version"] = version
-		}
-	} else {
-		osInfo["os"] = "Unknown"
-		osInfo["version"] = "Unknown"
-	}
-
-	return browserInfo, osInfo
 }

@@ -31,7 +31,6 @@ type SessionInfo struct {
 }
 
 type UserStatus string
-type SessionNotFoundError struct{}
 
 const (
 	Authorized     UserStatus = "authorized"
@@ -39,10 +38,6 @@ const (
 	InvalidSession UserStatus = "invalid_session"
 	Suspicious     UserStatus = "suspicious"
 )
-
-func (e *SessionNotFoundError) Error() string {
-	return "session not found"
-}
 
 func Get(id string) *Session {
 	return &Session{ID: id}

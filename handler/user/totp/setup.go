@@ -37,8 +37,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	uri := totp.ProvisioningUri(userSession.Email, "filekeeper")
 	base64Str, err := generateQRCode(uri)
 	if err != nil {
-		fmt.Printf("%v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -56,6 +56,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := component.Render(r.Context(), w); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }
@@ -63,6 +64,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 func POST(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -74,17 +76,23 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	base64Str, err := generateQRCode(uri)
 	if err != nil {
-		fmt.Printf("%v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	var component templ.Component
 	if totp.Verify(code, time.Now().Unix()) {
 		if err := app.Server.Database.InitializeTotp(userSession.Email, secret); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
-		app.Server.Service.DeleteUser(userSession.Email)
+		err := app.Server.Service.DeleteUser(userSession.Email)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
+			return
+		}
 		if r.Header.Get("hx-request") == "true" {
 			component = userTotpSetupView.MainContent("Filekeeper - 2FA Setup Page", base64Str, secret, userSession, types.Message{
 				Code:    1,
@@ -99,6 +107,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 		if err := component.Render(r.Context(), w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		return
@@ -116,7 +125,9 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := component.Render(r.Context(), w); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
+		return
 	}
 }

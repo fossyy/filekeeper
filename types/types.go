@@ -88,7 +88,7 @@ type CachingServer interface {
 
 type Services interface {
 	GetUser(ctx context.Context, email string) (*models.User, error)
-	DeleteUser(email string)
+	DeleteUser(email string) error
 	GetFile(id string) (*models.File, error)
 	GetUserFile(name, ownerID string) (*FileWithDetail, error)
 	GetUserStorageUsage(ownerID string) (uint64, error)

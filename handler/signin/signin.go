@@ -9,14 +9,9 @@ import (
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/fossyy/filekeeper/view/client/signin"
 	"net/http"
-	"strings"
 )
 
 var errorMessages = make(map[string]string)
-
-func init() {
-
-}
 
 func init() {
 	errorMessages = map[string]string{
@@ -36,7 +31,7 @@ func init() {
 		"login_required":             "You need to log in again to proceed. Please try logging in again.",
 		"account_selection_required": "Please select an account to proceed with the request.",
 		"consent_required":           "Consent is required to proceed. Please provide consent to continue.",
-		"csrf_token_error":           "The CSRF token is missing or invalid. Please refresh the page and try again.",
+		"csrf_token_error":           "The CSRF token is missing or invalid. Please try again.",
 		"suspicious_session":         "We've detected unusual activity on your account. Please log in again to confirm it's you.",
 	}
 }
@@ -49,7 +44,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 			message = "Unknown error occurred. Please contact support at bagas@fossy.my.id for assistance."
 		}
 
-		component = signinView.Main("Sign in Page", types.Message{
+		component = signinView.Main("Filekeeper - Sign in Page", types.Message{
 			Code:    0,
 			Message: message,
 		})
@@ -66,6 +61,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	return
 }
 
 func POST(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +91,6 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	if email == userData.Email && utils.CheckPasswordHash(password, userData.Password) {
 		if userData.Totp != "" {
-
 			storeSession, err := session.Create(types.User{
 				UserID:        userData.UserID,
 				Email:         email,
@@ -105,6 +100,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			})
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
+				app.Server.Logger.Error(err.Error())
 				return
 			}
 			storeSession.Save(w)
@@ -120,10 +116,11 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 		userAgent := r.Header.Get("User-Agent")
-		browserInfo, osInfo := ParseUserAgent(userAgent)
+		browserInfo, osInfo := utils.ParseUserAgent(userAgent)
 
 		sessionInfo := session.SessionInfo{
 			SessionID: storeSession.ID,
@@ -136,7 +133,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 		storeSession.Save(w)
-		session.AddSessionInfo(email, &sessionInfo)
+		err = session.AddSessionInfo(email, &sessionInfo)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
+			return
+		}
 
 		cookie, err := r.Cookie("redirect")
 		if errors.Is(err, http.ErrNoCookie) {
@@ -160,65 +162,5 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
-}
-
-func ParseUserAgent(userAgent string) (map[string]string, map[string]string) {
-	browserInfo := make(map[string]string)
-	osInfo := make(map[string]string)
-	if strings.Contains(userAgent, "Firefox") {
-		browserInfo["browser"] = "Firefox"
-		parts := strings.Split(userAgent, "Firefox/")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], " ")[0]
-			browserInfo["version"] = version
-		}
-	} else if strings.Contains(userAgent, "Chrome") {
-		browserInfo["browser"] = "Chrome"
-		parts := strings.Split(userAgent, "Chrome/")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], " ")[0]
-			browserInfo["version"] = version
-		}
-	} else {
-		browserInfo["browser"] = "Unknown"
-		browserInfo["version"] = "Unknown"
-	}
-
-	if strings.Contains(userAgent, "Windows") {
-		osInfo["os"] = "Windows"
-		parts := strings.Split(userAgent, "Windows ")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], ";")[0]
-			osInfo["version"] = version
-		}
-	} else if strings.Contains(userAgent, "Macintosh") {
-		osInfo["os"] = "Mac OS"
-		parts := strings.Split(userAgent, "Mac OS X ")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], ";")[0]
-			osInfo["version"] = version
-		}
-	} else if strings.Contains(userAgent, "Linux") {
-		osInfo["os"] = "Linux"
-		osInfo["version"] = "Unknown"
-	} else if strings.Contains(userAgent, "Android") {
-		osInfo["os"] = "Android"
-		parts := strings.Split(userAgent, "Android ")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], ";")[0]
-			osInfo["version"] = version
-		}
-	} else if strings.Contains(userAgent, "iPhone") || strings.Contains(userAgent, "iPad") || strings.Contains(userAgent, "iPod") {
-		osInfo["os"] = "iOS"
-		parts := strings.Split(userAgent, "OS ")
-		if len(parts) > 1 {
-			version := strings.Split(parts[1], " ")[0]
-			osInfo["version"] = version
-		}
-	} else {
-		osInfo["os"] = "Unknown"
-		osInfo["version"] = "Unknown"
-	}
-
-	return browserInfo, osInfo
+	return
 }

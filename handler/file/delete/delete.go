@@ -15,6 +15,7 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 	file, err := app.Server.Database.GetFile(fileID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -26,12 +27,14 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 	err = app.Server.Database.DeleteFile(fileID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
 	err = app.Server.Storage.Delete(r.Context(), fmt.Sprintf("%s/%s", file.OwnerID.String(), file.ID.String()))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
-	signinHandler "github.com/fossyy/filekeeper/handler/signin"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
@@ -49,7 +48,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	_, err := app.Server.Cache.GetCache(r.Context(), "CsrfTokens:"+r.URL.Query().Get("state"))
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Redirect(w, r, fmt.Sprintf("/signin?error=%s", "csrf_token_error"), http.StatusFound)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -155,7 +154,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userAgent := r.Header.Get("User-Agent")
-	browserInfo, osInfo := signinHandler.ParseUserAgent(userAgent)
+	browserInfo, osInfo := utils.ParseUserAgent(userAgent)
 
 	sessionInfo := session.SessionInfo{
 		SessionID: storeSession.ID,
@@ -168,17 +167,24 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 
 	storeSession.Save(w)
-	session.AddSessionInfo(oauthUser.Email, &sessionInfo)
+	err = session.AddSessionInfo(oauthUser.Email, &sessionInfo)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 
 	cookie, err := r.Cookie("redirect")
 	if errors.Is(err, http.ErrNoCookie) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:   "redirect",
 		MaxAge: -1,
 	})
+
 	http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 	return
 }

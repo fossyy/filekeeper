@@ -15,8 +15,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
 	files, err := app.Server.Database.GetFiles(userSession.UserID.String(), "", types.All)
 	if err != nil {
-		app.Server.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	var filesData []types.FileData
@@ -46,13 +46,14 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	allowance, err := app.Server.Database.GetAllowance(userSession.UserID)
 	if err != nil {
-		app.Server.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 	usage, err := app.Server.Service.GetUserStorageUsage(userSession.UserID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
@@ -71,8 +72,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		fmt.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 }
