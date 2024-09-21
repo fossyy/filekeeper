@@ -16,9 +16,13 @@ import (
 	"github.com/fossyy/filekeeper/utils"
 )
 
+var ErrorSessionNotFound = errors.New("session not found")
+
 type Session struct {
 	ID string
 }
+
+type UserStatus string
 
 type SessionInfo struct {
 	SessionID string
@@ -29,8 +33,6 @@ type SessionInfo struct {
 	IP        string
 	Location  string
 }
-
-type UserStatus string
 
 const (
 	Authorized     UserStatus = "authorized"
@@ -115,6 +117,9 @@ func RemoveSessionInfo(email string, id string) error {
 	key := "UserSessionInfo:" + email + ":" + id
 	err := app.Server.Cache.DeleteCache(context.Background(), key)
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return ErrorSessionNotFound
+		}
 		return err
 	}
 	return nil
@@ -150,7 +155,7 @@ func GetSessionInfo(email string, id string) (*SessionInfo, error) {
 	sessionInfoData, err := app.Server.Cache.GetCache(context.Background(), key)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return nil, nil
+			return nil, ErrorSessionNotFound
 		}
 		return nil, err
 	}
