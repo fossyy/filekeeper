@@ -87,7 +87,6 @@ func Auth(next http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	case session.Authorized:
 		ctx := context.WithValue(r.Context(), "user", user)
 		req := r.WithContext(ctx)
-		r.Context().Value("user")
 		next.ServeHTTP(w, req)
 		return
 	case session.Unauthorized:
