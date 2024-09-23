@@ -16,7 +16,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, err := app.Server.Service.GetFile(fileID)
+	file, err := app.Server.Service.GetFile(r.Context(), fileID)
 	if err != nil {
 		app.Server.Logger.Error("error getting upload info: " + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -52,7 +52,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error("error copying byte to file dst: " + err.Error())
 		return
 	}
-
+	app.Server.Service.UpdateFileChunk(r.Context(), file.ID, file.OwnerID, rawIndex, file.TotalChunk)
 	w.WriteHeader(http.StatusAccepted)
 	return
 }

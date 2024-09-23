@@ -8,7 +8,6 @@ import (
 	"github.com/fossyy/filekeeper/utils"
 	fileView "github.com/fossyy/filekeeper/view/client/file"
 	"net/http"
-	"strconv"
 )
 
 func GET(w http.ResponseWriter, r *http.Request) {
@@ -22,26 +21,14 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	var filesData []types.FileData
 
 	for _, file := range files {
-		prefix := fmt.Sprintf("%s/%s/chunk_", file.OwnerID.String(), file.ID.String())
-
-		existingChunks, err := app.Server.Storage.ListObjects(r.Context(), prefix)
+		userFile, err := app.Server.Service.GetUserFile(r.Context(), file.Name, file.OwnerID.String())
 		if err != nil {
-			app.Server.Logger.Error(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
 			return
 		}
 
-		missingChunk := len(existingChunks) != int(file.TotalChunk)
-
-		filesData = append(filesData, types.FileData{
-			ID:         file.ID.String(),
-			Name:       file.Name,
-			Size:       utils.ConvertFileSize(file.Size),
-			IsPrivate:  file.IsPrivate,
-			Type:       file.Type,
-			Done:       !missingChunk,
-			Downloaded: strconv.FormatUint(file.Downloaded, 10),
-		})
+		filesData = append(filesData, *userFile)
 	}
 
 	allowance, err := app.Server.Database.GetAllowance(userSession.UserID)
@@ -50,7 +37,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
-	usage, err := app.Server.Service.GetUserStorageUsage(userSession.UserID.String())
+	usage, err := app.Server.Service.GetUserStorageUsage(r.Context(), userSession.UserID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

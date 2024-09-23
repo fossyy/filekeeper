@@ -21,6 +21,10 @@ type Message struct {
 	Message string
 }
 
+type Number interface {
+	int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64
+}
+
 type User struct {
 	UserID        uuid.UUID
 	Email         string
@@ -36,23 +40,23 @@ type Allowance struct {
 }
 
 type FileData struct {
-	ID         string
-	Name       string
-	Size       string
-	IsPrivate  bool
-	Type       string
-	Done       bool
-	Downloaded string
-}
-
-type FileWithDetail struct {
 	ID         uuid.UUID
 	OwnerID    uuid.UUID
 	Name       string
 	Size       uint64
+	TotalChunk uint64
+	StartHash  string
+	EndHash    string
 	Downloaded uint64
-	Chunk      map[string]bool
+	IsPrivate  bool
+	Type       string
 	Done       bool
+	Chunk      map[string]bool
+}
+
+type FileState struct {
+	Done  bool
+	Chunk map[string]bool
 }
 
 type Database interface {
@@ -88,10 +92,12 @@ type CachingServer interface {
 
 type Services interface {
 	GetUser(ctx context.Context, email string) (*models.User, error)
-	DeleteUser(email string) error
-	GetFile(id string) (*models.File, error)
-	GetUserFile(name, ownerID string) (*FileWithDetail, error)
-	GetUserStorageUsage(ownerID string) (uint64, error)
+	DeleteUser(ctx context.Context, email string) error
+	GetFile(ctx context.Context, id string) (*models.File, error)
+	GetUserFile(ctx context.Context, name, ownerID string) (*FileData, error)
+	GetUserStorageUsage(ctx context.Context, ownerID string) (uint64, error)
+	GetFileChunks(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, totalChunk uint64) (*FileState, error)
+	UpdateFileChunk(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, chunk string, totalChunk uint64) error
 }
 
 type Storage interface {

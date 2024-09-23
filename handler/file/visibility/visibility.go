@@ -1,13 +1,10 @@
 package visibilityHandler
 
 import (
-	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
-	"github.com/fossyy/filekeeper/utils"
 	fileView "github.com/fossyy/filekeeper/view/client/file"
 	"net/http"
-	"strconv"
 )
 
 func PUT(w http.ResponseWriter, r *http.Request) {
@@ -32,26 +29,13 @@ func PUT(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prefix := fmt.Sprintf("%s/%s/chunk_", file.OwnerID.String(), file.ID.String())
-
-	existingChunks, err := app.Server.Storage.ListObjects(r.Context(), prefix)
+	userFile, err := app.Server.Service.GetUserFile(r.Context(), file.Name, file.OwnerID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
 	}
-
-	missingChunk := len(existingChunks) != int(file.TotalChunk)
-	fileData := types.FileData{
-		ID:         file.ID.String(),
-		Name:       file.Name,
-		Size:       utils.ConvertFileSize(file.Size),
-		IsPrivate:  !file.IsPrivate,
-		Type:       file.Type,
-		Done:       !missingChunk,
-		Downloaded: strconv.FormatUint(file.Downloaded, 10),
-	}
-	component := fileView.JustFile(fileData)
+	component := fileView.JustFile(*userFile)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

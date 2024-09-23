@@ -10,6 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/fossyy/filekeeper/types"
+	"github.com/fossyy/filekeeper/utils"
 	"github.com/fossyy/filekeeper/view/client/layout"
 	"strconv"
 )
@@ -89,7 +90,7 @@ func MainContent(title string, files []types.FileData, user types.User, allowanc
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 16, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 17, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -205,7 +206,7 @@ func MainContent(title string, files []types.FileData, user types.User, allowanc
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(len(files)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 204, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 205, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -218,7 +219,7 @@ func MainContent(title string, files []types.FileData, user types.User, allowanc
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(allowance.AllowanceUsedByte)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 205, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 206, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -231,7 +232,7 @@ func MainContent(title string, files []types.FileData, user types.User, allowanc
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(allowance.AllowanceByte)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 206, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 207, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -336,9 +337,9 @@ func JustFile(file types.FileData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs("file-" + file.ID)
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs("file-" + file.ID.String())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 292, Col: 27}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 293, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -364,7 +365,7 @@ func JustFile(file types.FileData) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(file.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 297, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 298, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -377,7 +378,7 @@ func JustFile(file types.FileData) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(file.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 298, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 299, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -403,7 +404,7 @@ func JustFile(file types.FileData) templ.Component {
 			var templ_7745c5c3_Var18 string
 			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(file.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 312, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 313, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
@@ -416,7 +417,7 @@ func JustFile(file types.FileData) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(file.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 313, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 314, Col: 17}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -432,9 +433,9 @@ func JustFile(file types.FileData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(file.Size)
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(utils.ConvertFileSize(file.Size))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 318, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 319, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -445,9 +446,9 @@ func JustFile(file types.FileData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(file.Downloaded)
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(utils.IntToString(file.Downloaded))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 326, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 327, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -494,7 +495,7 @@ func JustFile(file types.FileData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var23 templ.SafeURL = templ.SafeURL("/file/" + file.ID)
+			var templ_7745c5c3_Var23 templ.SafeURL = templ.SafeURL("/file/" + file.ID.String())
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var23)))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -509,9 +510,9 @@ func JustFile(file types.FileData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var24 string
-				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs("/file/" + file.ID)
+				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs("/file/" + file.ID.String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 381, Col: 162}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 382, Col: 171}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -522,9 +523,9 @@ func JustFile(file types.FileData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var25 string
-				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs("#file-" + file.ID)
+				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs("#file-" + file.ID.String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 381, Col: 195}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 382, Col: 213}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -540,9 +541,9 @@ func JustFile(file types.FileData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var26 string
-				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs("/file/" + file.ID)
+				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs("/file/" + file.ID.String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 398, Col: 162}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 399, Col: 171}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -553,9 +554,9 @@ func JustFile(file types.FileData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var27 string
-				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs("#file-" + file.ID)
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs("#file-" + file.ID.String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 398, Col: 195}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/file/file.templ`, Line: 399, Col: 213}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -566,7 +567,7 @@ func JustFile(file types.FileData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, showShareModal(file.IsPrivate, file.ID))
+			templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, showShareModal(file.IsPrivate, file.ID.String()))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -574,7 +575,7 @@ func JustFile(file types.FileData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var28 templ.ComponentScript = showShareModal(file.IsPrivate, file.ID)
+			var templ_7745c5c3_Var28 templ.ComponentScript = showShareModal(file.IsPrivate, file.ID.String())
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28.Call)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -588,7 +589,7 @@ func JustFile(file types.FileData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, showRenameModal(file.Name, file.ID))
+		templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, showRenameModal(file.Name, file.ID.String()))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -596,7 +597,7 @@ func JustFile(file types.FileData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var29 templ.ComponentScript = showRenameModal(file.Name, file.ID)
+		var templ_7745c5c3_Var29 templ.ComponentScript = showRenameModal(file.Name, file.ID.String())
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29.Call)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -605,7 +606,7 @@ func JustFile(file types.FileData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, showDeletionModal(file.Name, file.ID))
+		templ_7745c5c3_Err = templ.RenderScriptItems(ctx, templ_7745c5c3_Buffer, showDeletionModal(file.Name, file.ID.String()))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -613,7 +614,7 @@ func JustFile(file types.FileData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var30 templ.ComponentScript = showDeletionModal(file.Name, file.ID)
+		var templ_7745c5c3_Var30 templ.ComponentScript = showDeletionModal(file.Name, file.ID.String())
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30.Call)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
