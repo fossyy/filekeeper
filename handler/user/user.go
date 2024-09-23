@@ -76,7 +76,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usage, err := app.Server.Service.GetUserStorageUsage(userSession.UserID.String())
+	usage, err := app.Server.Service.GetUserStorageUsage(r.Context(), userSession.UserID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
@@ -178,8 +178,9 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
+					fileID := uuid.New()
 					newFile := models.File{
-						ID:         uuid.New(),
+						ID:         fileID,
 						OwnerID:    userSession.UserID,
 						Name:       uploadNewFile.Name,
 						Size:       uploadNewFile.Size,
@@ -189,42 +190,24 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 						TotalChunk: uploadNewFile.Chunk,
 						Downloaded: 0,
 					}
+
 					err := app.Server.Database.CreateFile(&newFile)
 					if err != nil {
 						sendErrorResponse(conn, action.Action, "Error Creating File")
 						continue
 					}
-					fileData := &types.FileWithDetail{
-						ID:         newFile.ID,
-						OwnerID:    newFile.OwnerID,
-						Name:       newFile.Name,
-						Size:       newFile.Size,
-						Downloaded: newFile.Downloaded,
-						Done:       false,
-					}
-					fileData.Chunk = make(map[string]bool)
 
-					prefix := fmt.Sprintf("%s/%s/chunk_", userSession.UserID.String(), newFile.ID.String())
-
-					existingChunks, err := app.Server.Storage.ListObjects(context.TODO(), prefix)
+					userFile, err := app.Server.Service.GetUserFile(context.Background(), uploadNewFile.Name, userSession.UserID.String())
 					if err != nil {
 						app.Server.Logger.Error(err.Error())
 						sendErrorResponse(conn, action.Action, "Unknown error")
 						continue
-					} else {
-						for i := 0; i < int(newFile.TotalChunk); i++ {
-							fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
-						}
-
-						for _, chunkFile := range existingChunks {
-							var chunkIndex int
-							fmt.Sscanf(chunkFile, "chunk_%d", &chunkIndex)
-							fileData.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
-						}
 					}
-					sendSuccessResponseWithID(conn, action.Action, fileData, uploadNewFile.RequestID)
+
+					sendSuccessResponseWithID(conn, action.Action, userFile, uploadNewFile.RequestID)
 					continue
 				} else {
+					app.Server.Logger.Error(err.Error())
 					sendErrorResponse(conn, action.Action, "Unknown error")
 					continue
 				}
@@ -233,40 +216,14 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				sendErrorResponse(conn, action.Action, "File Is Different")
 				continue
 			}
-			fileData := &types.FileWithDetail{
-				ID:         file.ID,
-				OwnerID:    file.OwnerID,
-				Name:       file.Name,
-				Size:       file.Size,
-				Downloaded: file.Downloaded,
-				Chunk:      make(map[string]bool),
-				Done:       true,
-			}
-
-			prefix := fmt.Sprintf("%s/%s/chunk_", userSession.UserID.String(), file.ID.String())
-			existingChunks, err := app.Server.Storage.ListObjects(context.TODO(), prefix)
+			userFile, err := app.Server.Service.GetUserFile(context.Background(), file.Name, userSession.UserID.String())
 			if err != nil {
 				app.Server.Logger.Error(err.Error())
-				fileData.Done = false
-			} else {
-				for i := 0; i < int(file.TotalChunk); i++ {
-					fileData.Chunk[fmt.Sprintf("chunk_%d", i)] = false
-				}
-				for _, chunkFile := range existingChunks {
-					var chunkIndex int
-					fmt.Sscanf(chunkFile, "chunk_%d", &chunkIndex)
-					fileData.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
-				}
-
-				for i := 0; i < int(file.TotalChunk); i++ {
-					if !fileData.Chunk[fmt.Sprintf("chunk_%d", i)] {
-						fileData.Done = false
-						break
-					}
-				}
+				sendErrorResponse(conn, action.Action, "Unknown error")
+				continue
 			}
 
-			sendSuccessResponseWithID(conn, action.Action, fileData, uploadNewFile.RequestID)
+			sendSuccessResponseWithID(conn, action.Action, userFile, uploadNewFile.RequestID)
 			continue
 		case Ping:
 			sendSuccessResponse(conn, action.Action, map[string]string{"message": "received"})

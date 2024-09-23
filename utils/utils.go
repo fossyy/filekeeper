@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
+	"github.com/fossyy/filekeeper/types"
 	mathRand "math/rand"
 	"net/http"
 	"os"
@@ -87,15 +88,17 @@ func ValidatePassword(password string) bool {
 	return hasNumber && hasUppercase
 }
 
-func ConvertFileSize(byte uint64) string {
-	if byte < 1024 {
-		return fmt.Sprintf("%d B", byte)
-	} else if byte < 1024*1024 {
-		return fmt.Sprintf("%d KB", byte/1024)
-	} else if byte < 1024*1024*1024 {
-		return fmt.Sprintf("%d MB", byte/(1024*1024))
+func ConvertFileSize[T types.Number](size T) string {
+	sizeInBytes := int64(size)
+
+	if sizeInBytes < 1024 {
+		return fmt.Sprintf("%d B", sizeInBytes)
+	} else if sizeInBytes < 1024*1024 {
+		return fmt.Sprintf("%.2f KB", float64(sizeInBytes)/1024)
+	} else if sizeInBytes < 1024*1024*1024 {
+		return fmt.Sprintf("%.2f MB", float64(sizeInBytes)/(1024*1024))
 	} else {
-		return fmt.Sprintf("%d GB", byte/(1024*1024*1024))
+		return fmt.Sprintf("%.2f GB", float64(sizeInBytes)/(1024*1024*1024))
 	}
 }
 
@@ -204,4 +207,8 @@ func ParseUserAgent(userAgent string) (map[string]string, map[string]string) {
 	}
 
 	return browserInfo, osInfo
+}
+
+func IntToString[T types.Number](number T) string {
+	return fmt.Sprintf("%d", number)
 }

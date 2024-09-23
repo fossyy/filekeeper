@@ -122,7 +122,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.Server.Service.DeleteUser(userData.User.Email)
+	err = app.Server.Service.DeleteUser(r.Context(), userData.User.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
