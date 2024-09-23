@@ -46,7 +46,7 @@ func content(title string, user types.User) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"bg-gray-100\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -54,37 +54,37 @@ func content(title string, user types.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<main class=\"container mx-auto px-4 py-16\"><div class=\"text-center mb-16\"><h1 class=\"text-5xl font-bold mb-6 text-primary\">Your files, always within reach</h1><p class=\"text-xl mb-8 text-gray-600\">Store, access, and manage your files with ease. Filekeeper offers generous storage and seamless access from any device, completely free.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if user.Authenticated {
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"px-8 py-4 bg-black text-white text-lg font-semibold rounded-full hover:bg-black/90 transition-colors\" href=\"/user\" hx-get=\"/user\" hx-swap=\"innerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Open Dashboard</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"px-8 py-4 bg-black text-white text-lg font-semibold rounded-full hover:bg-black/90 transition-colors\" href=\"/signup\" hx-get=\"/signup\" hx-swap=\"innerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Sign up for free</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 5)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"grid grid-cols-1 md:grid-cols-2 gap-8 mb-16\"><div class=\"p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-12 w-12 text-primary mx-auto mb-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z\"></path></svg><h2 class=\"text-xl font-semibold mb-2\">Easy Access</h2><p class=\"text-gray-600\">Access your files with just a few clicks, anytime you need them.</p></div><div class=\"p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-12 w-12 text-primary mx-auto mb-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4\"></path></svg><h2 class=\"text-xl font-semibold mb-2\">Generous Storage</h2><p class=\"text-gray-600\">Store all your important files with our spacious free storage.</p></div><div class=\"p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-12 w-12 text-primary mx-auto mb-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z\"></path></svg><h2 class=\"text-xl font-semibold mb-2\">Access Anywhere</h2><p class=\"text-gray-600\">Use Filekeeper on any device - computer, tablet, or smartphone.</p></div><div class=\"p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-12 w-12 text-primary mx-auto mb-4\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z\"></path></svg><h2 class=\"text-xl font-semibold mb-2\">Secure Storage</h2><p class=\"text-gray-600\">Rest easy knowing your files are stored securely in the cloud.</p></div></div><div class=\"bg-zinc-800 text-white rounded-lg p-8 mb-16\"><h2 class=\"text-3xl font-bold mb-4\">Why choose Filekeeper?</h2><ul class=\"list-disc list-inside space-y-2\"><li>Completely free to use</li><li>Intuitive and user-friendly interface</li><li>Generous storage space for all your files</li><li>Access your files from any device, anywhere</li><li>Robust file organization and search capabilities</li><li>Dedicated customer support team</li></ul></div><div class=\"bg-white rounded-lg p-8 shadow-lg\"><h2 class=\"text-3xl font-bold mb-4 text-center\">Get Started with Filekeeper</h2><p class=\"text-center mb-6\">Join Filekeeper today and experience hassle-free file management - no credit card required!</p><div class=\"flex justify-center space-x-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if user.Authenticated {
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 6)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-black/90 transition-colors\" href=\"/user\" hx-get=\"/user\" hx-swap=\"innerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Open Dashboard</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 7)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-black/90 transition-colors\" href=\"/signup\" hx-get=\"/signup\" hx-swap=\"innerHTML\" hx-push-url=\"true\" hx-target=\"#content\">Create your free account</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 8)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -92,7 +92,7 @@ func content(title string, user types.User) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 9)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

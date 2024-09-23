@@ -182,7 +182,7 @@ templ MainContent(title string, files []types.FileData, user types.User, allowan
 					<div class="overflow-x-auto">
 						<div class="inline-block min-w-full align-middle">
 							<div class="overflow-hidden">
-								<table id="file-table" class="w-full text-sm text-left text-gray-500">
+								<table  class="w-full text-sm text-left text-gray-500">
 									<thead class="text-xs text-gray-700 uppercase bg-gray-50">
 										<tr>
 											<th scope="col" class="px-6 py-3 w-[40%]">File Name</th>
@@ -192,10 +192,43 @@ templ MainContent(title string, files []types.FileData, user types.User, allowan
 											<th scope="col" class="px-6 py-3 w-[20%]">Action</th>
 										</tr>
 									</thead>
-									<tbody>
-										for _, file := range files {
-											@JustFile(file)
-										}
+									<tbody id="file-table" hx-get="/file/table" hx-trigger="load">
+										<tr class="border-b border-gray-200 hover:bg-gray-100">
+                                            <td class="py-3 px-6">
+                                                <div class="flex items-center space-x-2">
+                                                    <div class="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                                                    <div class="h-4 w-40 bg-gray-200 rounded animate-pulse"></div>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6"><div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-4 w-8 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div></td>
+                                        </tr>
+                                        <tr class="border-b border-gray-200 hover:bg-gray-100">
+                                            <td class="py-3 px-6">
+                                                <div class="flex items-center space-x-2">
+                                                    <div class="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                                                    <div class="h-4 w-40 bg-gray-200 rounded animate-pulse"></div>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6"><div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-4 w-8 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div></td>
+                                        </tr>
+                                        <tr class="border-b border-gray-200 hover:bg-gray-100">
+                                            <td class="py-3 px-6">
+                                                <div class="flex items-center space-x-2">
+                                                    <div class="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                                                    <div class="h-4 w-40 bg-gray-200 rounded animate-pulse"></div>
+                                                </div>
+                                            </td>
+                                            <td class="py-3 px-6"><div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-4 w-8 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-4 w-16 bg-gray-200 rounded animate-pulse"></div></td>
+                                            <td class="py-3 px-6"><div class="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div></td>
+                                        </tr>
 									</tbody>
 								</table>
 								<div class="bg-gray-50 px-10 py-10 border-t border-gray-200">
@@ -271,22 +304,9 @@ script toggleDropDown() {
 }
 
 templ FileTable(files []types.FileData) {
-	<table id="file-table" class="w-full text-sm text-left text-gray-500">
-		<thead class="text-xs text-gray-700 uppercase bg-gray-50">
-			<tr>
-				<th scope="col" class="px-6 py-3 w-[40%]">File Name</th>
-				<th scope="col" class="px-6 py-3 w-[10%]">File Size</th>
-				<th scope="col" class="px-6 py-3 w-[10%]">Downloads</th>
-				<th scope="col" class="px-6 py-3 w-[20%]">Status</th>
-				<th scope="col" class="px-6 py-3 w-[20%]">Action</th>
-			</tr>
-		</thead>
-		<tbody>
-			for _, file := range files {
-				@JustFile(file)
-			}
-		</tbody>
-	</table>
+    for _, file := range files {
+    	@JustFile(file)
+    }
 }
 
 templ JustFile(file types.FileData) {
