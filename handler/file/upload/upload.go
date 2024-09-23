@@ -52,7 +52,14 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error("error copying byte to file dst: " + err.Error())
 		return
 	}
-	app.Server.Service.UpdateFileChunk(r.Context(), file.ID, file.OwnerID, rawIndex, file.TotalChunk)
+	err = app.Server.Service.UpdateFileChunk(r.Context(), file.ID, file.OwnerID, rawIndex, file.TotalChunk)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+		return
+	}
+
 	w.WriteHeader(http.StatusAccepted)
 	return
 }

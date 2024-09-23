@@ -16,8 +16,8 @@ templ Base(title string){
         <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     </head>
     <body>
+        @modal()
         <div id="content">
-            @modal()
             { children... }
         </div>
         @uploadBox()
@@ -41,8 +41,8 @@ templ BaseAuth(title string){
         <script src="/public/main.js"></script>
     </head>
     <body>
+        @modal()
         <div id="content">
-            @modal()
             { children... }
         </div>
         @uploadBox()
