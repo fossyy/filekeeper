@@ -94,7 +94,8 @@ type Services interface {
 	GetUser(ctx context.Context, email string) (*models.User, error)
 	DeleteUser(ctx context.Context, email string) error
 	GetFile(ctx context.Context, id string) (*models.File, error)
-	GetUserFile(ctx context.Context, name, ownerID string) (*FileData, error)
+	DeleteFileCache(ctx context.Context, id string) error
+	GetUserFile(ctx context.Context, fileID uuid.UUID) (*FileData, error)
 	GetUserStorageUsage(ctx context.Context, ownerID string) (uint64, error)
 	GetFileChunks(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, totalChunk uint64) (*FileState, error)
 	UpdateFileChunk(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, chunk string, totalChunk uint64) error

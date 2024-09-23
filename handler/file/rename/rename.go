@@ -36,7 +36,14 @@ func PATCH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userFile, err := app.Server.Service.GetUserFile(r.Context(), newFile.Name, newFile.OwnerID.String())
+	err = app.Server.Service.DeleteFileCache(r.Context(), fileID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+
+	userFile, err := app.Server.Service.GetUserFile(r.Context(), newFile.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

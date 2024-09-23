@@ -110,6 +110,14 @@ func (r *Service) GetFile(ctx context.Context, id string) (*models.File, error) 
 	return &fileCache, nil
 }
 
+func (r *Service) DeleteFileCache(ctx context.Context, id string) error {
+	err := r.cache.DeleteCache(ctx, "FileCache:"+id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *Service) GetFileChunks(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, totalChunk uint64) (*types.FileState, error) {
 	fileJSON, err := r.cache.GetCache(ctx, "FileChunkCache:"+fileID.String())
 	if err != nil {
@@ -185,66 +193,31 @@ func (r *Service) UpdateFileChunk(ctx context.Context, fileID uuid.UUID, ownerID
 	return nil
 }
 
-func (r *Service) GetUserFile(ctx context.Context, name, ownerID string) (*types.FileData, error) {
-	cacheKey := "UserFileCache:" + ownerID + ":" + name
-	cachedFileData, err := r.cache.GetCache(ctx, cacheKey)
-	if err != nil {
-		if errors.Is(err, redis.Nil) {
-			fileData, err := r.db.GetUserFile(name, ownerID)
-			if err != nil {
-				return nil, err
-			}
-
-			chunks, err := r.GetFileChunks(ctx, fileData.ID, fileData.OwnerID, fileData.TotalChunk)
-			if err != nil {
-				return nil, err
-			}
-
-			data := &types.FileData{
-				ID:         fileData.ID,
-				OwnerID:    fileData.OwnerID,
-				Name:       fileData.Name,
-				Size:       fileData.Size,
-				TotalChunk: fileData.TotalChunk,
-				StartHash:  fileData.StartHash,
-				EndHash:    fileData.EndHash,
-				Downloaded: fileData.Downloaded,
-				IsPrivate:  fileData.IsPrivate,
-				Type:       fileData.Type,
-				Done:       chunks.Done,
-				Chunk:      chunks.Chunk,
-			}
-
-			fileDataToCache := &types.FileData{
-				ID:         fileData.ID,
-				OwnerID:    fileData.OwnerID,
-				Name:       fileData.Name,
-				Size:       fileData.Size,
-				TotalChunk: fileData.TotalChunk,
-				StartHash:  fileData.StartHash,
-				EndHash:    fileData.EndHash,
-				Downloaded: fileData.Downloaded,
-				IsPrivate:  fileData.IsPrivate,
-				Type:       fileData.Type,
-			}
-			cachedFileDataJSON, err := json.Marshal(fileDataToCache)
-			if err == nil {
-				_ = r.cache.SetCache(ctx, cacheKey, cachedFileDataJSON, time.Minute*30)
-			}
-			return data, nil
-		}
-		return nil, err
-	}
-	var fileData types.FileData
-	err = json.Unmarshal([]byte(cachedFileData), &fileData)
+func (r *Service) GetUserFile(ctx context.Context, fileID uuid.UUID) (*types.FileData, error) {
+	fileData, err := r.GetFile(ctx, fileID.String())
 	if err != nil {
 		return nil, err
 	}
+
 	chunks, err := r.GetFileChunks(ctx, fileData.ID, fileData.OwnerID, fileData.TotalChunk)
 	if err != nil {
 		return nil, err
 	}
-	fileData.Done = chunks.Done
-	fileData.Chunk = chunks.Chunk
-	return &fileData, nil
+
+	data := &types.FileData{
+		ID:         fileData.ID,
+		OwnerID:    fileData.OwnerID,
+		Name:       fileData.Name,
+		Size:       fileData.Size,
+		TotalChunk: fileData.TotalChunk,
+		StartHash:  fileData.StartHash,
+		EndHash:    fileData.EndHash,
+		Downloaded: fileData.Downloaded,
+		IsPrivate:  fileData.IsPrivate,
+		Type:       fileData.Type,
+		Done:       chunks.Done,
+		Chunk:      chunks.Chunk,
+	}
+
+	return data, nil
 }

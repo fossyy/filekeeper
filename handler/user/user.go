@@ -197,7 +197,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 						continue
 					}
 
-					userFile, err := app.Server.Service.GetUserFile(context.Background(), uploadNewFile.Name, userSession.UserID.String())
+					userFile, err := app.Server.Service.GetUserFile(context.Background(), fileID)
 					if err != nil {
 						app.Server.Logger.Error(err.Error())
 						sendErrorResponse(conn, action.Action, "Unknown error")
@@ -216,7 +216,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				sendErrorResponse(conn, action.Action, "File Is Different")
 				continue
 			}
-			userFile, err := app.Server.Service.GetUserFile(context.Background(), file.Name, userSession.UserID.String())
+			userFile, err := app.Server.Service.GetUserFile(context.Background(), file.ID)
 			if err != nil {
 				app.Server.Logger.Error(err.Error())
 				sendErrorResponse(conn, action.Action, "Unknown error")
