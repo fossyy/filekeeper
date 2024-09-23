@@ -31,7 +31,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	var filesData []types.FileData
 
 	for _, file := range files {
-		userFile, err := app.Server.Service.GetUserFile(r.Context(), file.ID)
+		userFile, err := app.Server.Service.GetFileDetail(r.Context(), file.ID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			app.Server.Logger.Error(err.Error())

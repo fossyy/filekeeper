@@ -36,14 +36,21 @@ func PATCH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.Server.Service.DeleteFileCache(r.Context(), fileID)
+	err = app.Server.Service.RemoveFileCache(r.Context(), fileID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
 	}
 
-	userFile, err := app.Server.Service.GetUserFile(r.Context(), newFile.ID)
+	err = app.Server.Service.RemoveUserFilesCache(r.Context(), userSession.UserID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+
+	userFile, err := app.Server.Service.GetFileDetail(r.Context(), newFile.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

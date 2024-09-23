@@ -5,12 +5,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
-	"time"
+)
+
+const (
+	UserCacheKey      = "UserCache:%s"
+	UserFilesCacheKey = "UserFilesCache:%s"
+	FileCacheKey      = "FileCache:%s"
+	FileChunkCacheKey = "FileChunkCache:%s"
 )
 
 type Service struct {
@@ -26,7 +34,8 @@ func NewService(db types.Database, cache types.CachingServer) *Service {
 }
 
 func (r *Service) GetUser(ctx context.Context, email string) (*models.User, error) {
-	userJSON, err := app.Server.Cache.GetCache(ctx, "UserCache:"+email)
+	cacheKey := fmt.Sprintf(UserCacheKey, email)
+	userJSON, err := r.cache.GetCache(ctx, cacheKey)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			userData, err := r.db.GetUser(email)
@@ -43,7 +52,7 @@ func (r *Service) GetUser(ctx context.Context, email string) (*models.User, erro
 			}
 
 			newUserJSON, _ := json.Marshal(user)
-			err = r.cache.SetCache(ctx, "UserCache:"+email, newUserJSON, time.Hour*12)
+			err = r.cache.SetCache(ctx, cacheKey, newUserJSON, time.Hour*12)
 			if err != nil {
 				return nil, err
 			}
@@ -62,96 +71,132 @@ func (r *Service) GetUser(ctx context.Context, email string) (*models.User, erro
 	return &user, nil
 }
 
-func (r *Service) DeleteUser(ctx context.Context, email string) error {
-	err := r.cache.DeleteCache(ctx, "UserCache:"+email)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *Service) GetUserStorageUsage(ctx context.Context, ownerID string) (uint64, error) {
-	// TODO: Implement GetUserStorageUsage Cache
-	files, err := app.Server.Database.GetFiles(ownerID, "", types.All)
-	if err != nil {
-		return 0, err
-	}
-	var total uint64 = 0
-	for _, file := range files {
-		total += file.Size
-	}
-	return total, nil
+func (r *Service) RemoveUserCache(ctx context.Context, email string) error {
+	cacheKey := fmt.Sprintf(UserCacheKey, email)
+	return r.cache.DeleteCache(ctx, cacheKey)
 }
 
 func (r *Service) GetFile(ctx context.Context, id string) (*models.File, error) {
-	fileJSON, err := r.cache.GetCache(ctx, "FileCache:"+id)
+	cacheKey := fmt.Sprintf(FileCacheKey, id)
+	fileJSON, err := r.cache.GetCache(ctx, cacheKey)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			uploadData, err := r.db.GetFile(id)
+			fileData, err := r.db.GetFile(id)
 			if err != nil {
 				return nil, err
 			}
 
-			newFileJSON, _ := json.Marshal(uploadData)
-			err = r.cache.SetCache(ctx, "FileCache:"+id, newFileJSON, time.Hour*24)
+			newFileJSON, _ := json.Marshal(fileData)
+			err = r.cache.SetCache(ctx, cacheKey, newFileJSON, time.Hour*24)
 			if err != nil {
 				return nil, err
 			}
-			return uploadData, nil
+			return fileData, nil
 		}
 		return nil, err
 	}
 
-	var fileCache models.File
-	err = json.Unmarshal([]byte(fileJSON), &fileCache)
+	var file models.File
+	err = json.Unmarshal([]byte(fileJSON), &file)
 	if err != nil {
 		return nil, err
 	}
-	return &fileCache, nil
+	return &file, nil
 }
 
-func (r *Service) DeleteFileCache(ctx context.Context, id string) error {
-	err := r.cache.DeleteCache(ctx, "FileCache:"+id)
+func (r *Service) RemoveFileCache(ctx context.Context, id string) error {
+	cacheKey := fmt.Sprintf(FileCacheKey, id)
+	return r.cache.DeleteCache(ctx, cacheKey)
+}
+
+func (r *Service) GetUserFiles(ctx context.Context, ownerID uuid.UUID) ([]*models.File, error) {
+	cacheKey := fmt.Sprintf(UserFilesCacheKey, ownerID.String())
+	filesJSON, err := r.cache.GetCache(ctx, cacheKey)
 	if err != nil {
-		return err
+		if errors.Is(err, redis.Nil) {
+			files, err := r.db.GetFiles(ownerID.String(), "", types.All)
+			if err != nil {
+				return nil, err
+			}
+
+			filesJSON, err := json.Marshal(files)
+			if err != nil {
+				return nil, err
+			}
+
+			err = r.cache.SetCache(ctx, cacheKey, filesJSON, time.Hour*6)
+			if err != nil {
+				return nil, err
+			}
+			return files, nil
+		}
+		return nil, err
 	}
-	return nil
+
+	var files []*models.File
+	err = json.Unmarshal([]byte(filesJSON), &files)
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
 }
 
-func (r *Service) GetFileChunks(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, totalChunk uint64) (*types.FileState, error) {
-	fileJSON, err := r.cache.GetCache(ctx, "FileChunkCache:"+fileID.String())
+func (r *Service) RemoveUserFilesCache(ctx context.Context, ownerID uuid.UUID) error {
+	cacheKey := fmt.Sprintf(UserFilesCacheKey, ownerID.String())
+	return r.cache.DeleteCache(ctx, cacheKey)
+}
+
+func (r *Service) CalculateUserStorageUsage(ctx context.Context, ownerID string) (uint64, error) {
+	files, err := r.db.GetFiles(ownerID, "", types.All)
+	if err != nil {
+		return 0, err
+	}
+
+	var total uint64
+	for _, file := range files {
+		total += file.Size
+	}
+
+	return total, nil
+}
+
+func (r *Service) GetFileChunks(ctx context.Context, fileID, ownerID uuid.UUID, totalChunk uint64) (*types.FileState, error) {
+	cacheKey := fmt.Sprintf(FileChunkCacheKey, fileID.String())
+	fileJSON, err := r.cache.GetCache(ctx, cacheKey)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			prefix := fmt.Sprintf("%s/%s/chunk_", ownerID.String(), fileID.String())
-
 			existingChunks, err := app.Server.Storage.ListObjects(ctx, prefix)
 			if err != nil {
 				return nil, err
 			}
-			missingChunk := len(existingChunks) != int(totalChunk)
 
-			newChunkCache := types.FileState{
-				Done:  !missingChunk,
+			fileState := types.FileState{
+				Done:  len(existingChunks) == int(totalChunk),
 				Chunk: make(map[string]bool),
 			}
+
 			for i := 0; i < int(totalChunk); i++ {
-				newChunkCache.Chunk[fmt.Sprintf("chunk_%d", i)] = false
+				fileState.Chunk[fmt.Sprintf("chunk_%d", i)] = false
 			}
 
 			for _, chunkFile := range existingChunks {
 				var chunkIndex int
 				fmt.Sscanf(chunkFile, "chunk_%d", &chunkIndex)
-				newChunkCache.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
+				fileState.Chunk[fmt.Sprintf("chunk_%d", chunkIndex)] = true
 			}
-			newChunkCacheJSON, err := json.Marshal(newChunkCache)
+
+			newChunkCacheJSON, err := json.Marshal(fileState)
 			if err != nil {
 				return nil, err
 			}
-			err = r.cache.SetCache(ctx, "FileChunkCache:"+fileID.String(), newChunkCacheJSON, time.Minute*30)
+			err = r.cache.SetCache(ctx, cacheKey, newChunkCacheJSON, time.Minute*30)
 			if err != nil {
 				return nil, err
 			}
-			return &newChunkCache, nil
+
+			return &fileState, nil
 		}
 		return nil, err
 	}
@@ -161,10 +206,11 @@ func (r *Service) GetFileChunks(ctx context.Context, fileID uuid.UUID, ownerID u
 	if err != nil {
 		return nil, err
 	}
+
 	return &existingCache, nil
 }
 
-func (r *Service) UpdateFileChunk(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, chunk string, totalChunk uint64) error {
+func (r *Service) UpdateFileChunk(ctx context.Context, fileID, ownerID uuid.UUID, chunk string, totalChunk uint64) error {
 	chunks, err := r.GetFileChunks(ctx, fileID, ownerID, totalChunk)
 	if err != nil {
 		return err
@@ -175,7 +221,6 @@ func (r *Service) UpdateFileChunk(ctx context.Context, fileID uuid.UUID, ownerID
 
 	for i := 0; i < int(totalChunk); i++ {
 		if !chunks.Chunk[fmt.Sprintf("chunk_%d", i)] {
-			fmt.Println("chunk", i, " ", chunks.Chunk[fmt.Sprintf("chunk_%d", i)])
 			chunks.Done = false
 			break
 		}
@@ -185,7 +230,9 @@ func (r *Service) UpdateFileChunk(ctx context.Context, fileID uuid.UUID, ownerID
 	if err != nil {
 		return err
 	}
-	err = r.cache.SetCache(ctx, "FileChunkCache:"+fileID.String(), updatedChunkCacheJSON, time.Minute*30)
+
+	cacheKey := fmt.Sprintf(FileChunkCacheKey, fileID.String())
+	err = r.cache.SetCache(ctx, cacheKey, updatedChunkCacheJSON, time.Minute*30)
 	if err != nil {
 		return err
 	}
@@ -193,7 +240,7 @@ func (r *Service) UpdateFileChunk(ctx context.Context, fileID uuid.UUID, ownerID
 	return nil
 }
 
-func (r *Service) GetUserFile(ctx context.Context, fileID uuid.UUID) (*types.FileData, error) {
+func (r *Service) GetFileDetail(ctx context.Context, fileID uuid.UUID) (*types.FileData, error) {
 	fileData, err := r.GetFile(ctx, fileID.String())
 	if err != nil {
 		return nil, err
@@ -204,7 +251,7 @@ func (r *Service) GetUserFile(ctx context.Context, fileID uuid.UUID) (*types.Fil
 		return nil, err
 	}
 
-	data := &types.FileData{
+	return &types.FileData{
 		ID:         fileData.ID,
 		OwnerID:    fileData.OwnerID,
 		Name:       fileData.Name,
@@ -217,7 +264,5 @@ func (r *Service) GetUserFile(ctx context.Context, fileID uuid.UUID) (*types.Fil
 		Type:       fileData.Type,
 		Done:       chunks.Done,
 		Chunk:      chunks.Chunk,
-	}
-
-	return data, nil
+	}, nil
 }

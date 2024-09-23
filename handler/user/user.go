@@ -76,7 +76,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usage, err := app.Server.Service.GetUserStorageUsage(r.Context(), userSession.UserID.String())
+	usage, err := app.Server.Service.CalculateUserStorageUsage(r.Context(), userSession.UserID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
@@ -193,11 +193,19 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 
 					err := app.Server.Database.CreateFile(&newFile)
 					if err != nil {
+						app.Server.Logger.Error(err.Error())
 						sendErrorResponse(conn, action.Action, "Error Creating File")
 						continue
 					}
 
-					userFile, err := app.Server.Service.GetUserFile(context.Background(), fileID)
+					err = app.Server.Service.RemoveUserFilesCache(context.Background(), userSession.UserID)
+					if err != nil {
+						app.Server.Logger.Error(err.Error())
+						sendErrorResponse(conn, action.Action, "Error Creating File")
+						return
+					}
+
+					userFile, err := app.Server.Service.GetFileDetail(context.Background(), fileID)
 					if err != nil {
 						app.Server.Logger.Error(err.Error())
 						sendErrorResponse(conn, action.Action, "Unknown error")
@@ -216,7 +224,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				sendErrorResponse(conn, action.Action, "File Is Different")
 				continue
 			}
-			userFile, err := app.Server.Service.GetUserFile(context.Background(), file.ID)
+			userFile, err := app.Server.Service.GetFileDetail(context.Background(), file.ID)
 			if err != nil {
 				app.Server.Logger.Error(err.Error())
 				sendErrorResponse(conn, action.Action, "Unknown error")

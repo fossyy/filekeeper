@@ -12,7 +12,7 @@ import (
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
-	files, err := app.Server.Database.GetFiles(userSession.UserID.String(), "", types.All)
+	files, err := app.Server.Service.GetUserFiles(r.Context(), userSession.UserID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
@@ -21,7 +21,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	var filesData []types.FileData
 
 	for _, file := range files {
-		userFile, err := app.Server.Service.GetUserFile(r.Context(), file.ID)
+		userFile, err := app.Server.Service.GetFileDetail(r.Context(), file.ID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			app.Server.Logger.Error(err.Error())
@@ -37,7 +37,8 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
-	usage, err := app.Server.Service.GetUserStorageUsage(r.Context(), userSession.UserID.String())
+
+	usage, err := app.Server.Service.CalculateUserStorageUsage(r.Context(), userSession.UserID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
@@ -63,4 +64,5 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	return
 }

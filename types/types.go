@@ -92,11 +92,13 @@ type CachingServer interface {
 
 type Services interface {
 	GetUser(ctx context.Context, email string) (*models.User, error)
-	DeleteUser(ctx context.Context, email string) error
+	RemoveUserCache(ctx context.Context, email string) error
 	GetFile(ctx context.Context, id string) (*models.File, error)
-	DeleteFileCache(ctx context.Context, id string) error
-	GetUserFile(ctx context.Context, fileID uuid.UUID) (*FileData, error)
-	GetUserStorageUsage(ctx context.Context, ownerID string) (uint64, error)
+	GetUserFiles(ctx context.Context, ownerID uuid.UUID) ([]*models.File, error)
+	RemoveUserFilesCache(ctx context.Context, ownerID uuid.UUID) error
+	RemoveFileCache(ctx context.Context, id string) error
+	GetFileDetail(ctx context.Context, fileID uuid.UUID) (*FileData, error)
+	CalculateUserStorageUsage(ctx context.Context, ownerID string) (uint64, error)
 	GetFileChunks(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, totalChunk uint64) (*FileState, error)
 	UpdateFileChunk(ctx context.Context, fileID uuid.UUID, ownerID uuid.UUID, chunk string, totalChunk uint64) error
 }
