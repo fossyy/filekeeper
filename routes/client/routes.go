@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-	"github.com/fossyy/filekeeper/app"
 	googleOauthHandler "github.com/fossyy/filekeeper/handler/auth/google"
 	googleOauthCallbackHandler "github.com/fossyy/filekeeper/handler/auth/google/callback"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
@@ -33,154 +31,55 @@ import (
 func SetupRoutes() *http.ServeMux {
 	handler := http.NewServeMux()
 
-	handler.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
-		indexHandler.GET(w, r)
-	})
+	// Index
+	handler.HandleFunc("GET /{$}", indexHandler.GET)
 
-	handler.HandleFunc("GET /auth/google", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(googleOauthHandler.GET, w, r)
-	})
+	// Auth Routes
+	handler.Handle("GET /auth/google", middleware.Guest(googleOauthHandler.GET))
+	handler.Handle("GET /auth/totp", middleware.Guest(totpHandler.GET))
+	handler.Handle("POST /auth/totp", middleware.Guest(totpHandler.POST))
+	handler.Handle("GET /auth/google/callback", middleware.Guest(googleOauthCallbackHandler.GET))
+	handler.Handle("GET /auth/google/setup/{code}", middleware.Guest(googleOauthSetupHandler.GET))
+	handler.Handle("POST /auth/google/setup/{code}", middleware.Guest(googleOauthSetupHandler.POST))
 
-	handler.HandleFunc("GET /auth/totp", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(totpHandler.GET, w, r)
-	})
+	// Signin/Signup/Forgot Password
+	handler.Handle("GET /signin", middleware.Guest(signinHandler.GET))
+	handler.Handle("POST /signin", middleware.Guest(signinHandler.POST))
+	handler.Handle("GET /signup", middleware.Guest(signupHandler.GET))
+	handler.Handle("POST /signup", middleware.Guest(signupHandler.POST))
+	handler.Handle("GET /signup/verify/{code}", middleware.Guest(signupVerifyHandler.GET))
+	handler.Handle("GET /forgot-password", middleware.Guest(forgotPasswordHandler.GET))
+	handler.Handle("POST /forgot-password", middleware.Guest(forgotPasswordHandler.POST))
+	handler.Handle("GET /forgot-password/verify/{code}", middleware.Guest(forgotPasswordVerifyHandler.GET))
+	handler.Handle("POST /forgot-password/verify/{code}", middleware.Guest(forgotPasswordVerifyHandler.POST))
 
-	handler.HandleFunc("POST /auth/totp", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(totpHandler.POST, w, r)
-	})
+	// User Routes
+	handler.Handle("GET /user", middleware.Auth(userHandler.GET))
+	handler.Handle("POST /user/reset-password", middleware.Auth(userHandlerResetPassword.POST))
+	handler.Handle("DELETE /user/session/terminate/{id}", middleware.Auth(userSessionTerminateHandler.DELETE))
+	handler.Handle("GET /user/totp/setup", middleware.Auth(userHandlerTotpSetup.GET))
+	handler.Handle("POST /user/totp/setup", middleware.Auth(userHandlerTotpSetup.POST))
 
-	handler.HandleFunc("GET /auth/google/callback", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(googleOauthCallbackHandler.GET, w, r)
-	})
+	// File Routes
+	handler.Handle("GET /file", middleware.Auth(fileHandler.GET))
+	handler.Handle("GET /file/table", middleware.Auth(fileTableHandler.GET))
+	handler.Handle("GET /file/query", middleware.Auth(queryHandler.GET))
+	handler.Handle("POST /file/{id}", middleware.Auth(uploadHandler.POST))
+	handler.Handle("DELETE /file/{id}", middleware.Auth(deleteHandler.DELETE))
+	handler.HandleFunc("GET /file/{id}", downloadHandler.GET)
+	handler.Handle("PUT /file/{id}", middleware.Auth(visibilityHandler.PUT))
+	handler.Handle("PATCH /file/{id}", middleware.Auth(renameFileHandler.PATCH))
 
-	handler.HandleFunc("GET /auth/google/setup/{code}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(googleOauthSetupHandler.GET, w, r)
-	})
-	handler.HandleFunc("POST /auth/google/setup/{code}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(googleOauthSetupHandler.POST, w, r)
-	})
-
-	handler.HandleFunc("GET /signin", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(signinHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("POST /signin", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(signinHandler.POST, w, r)
-	})
-
-	handler.HandleFunc("GET /signup", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(signupHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("POST /signup", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(signupHandler.POST, w, r)
-	})
-
-	handler.HandleFunc("GET /signup/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(signupVerifyHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("GET /forgot-password", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(forgotPasswordHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("POST /forgot-password", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(forgotPasswordHandler.POST, w, r)
-	})
-
-	handler.HandleFunc("GET /forgot-password/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(forgotPasswordVerifyHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("POST /forgot-password/verify/{code}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Guest(forgotPasswordVerifyHandler.POST, w, r)
-	})
-
-	handler.HandleFunc("GET /user", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(userHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("POST /user/reset-password", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(userHandlerResetPassword.POST, w, r)
-	})
-
-	handler.HandleFunc("DELETE /user/session/terminate/{id}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(userSessionTerminateHandler.DELETE, w, r)
-	})
-
-	handler.HandleFunc("GET /user/totp/setup", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(userHandlerTotpSetup.GET, w, r)
-	})
-
-	handler.HandleFunc("POST /user/totp/setup", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(userHandlerTotpSetup.POST, w, r)
-	})
-
-	handler.HandleFunc("GET /file", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(fileHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("GET /file/table", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(fileTableHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("GET /file/query", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(queryHandler.GET, w, r)
-	})
-
-	handler.HandleFunc("POST /file/{id}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(uploadHandler.POST, w, r)
-	})
-
-	handler.HandleFunc("DELETE /file/{id}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(deleteHandler.DELETE, w, r)
-	})
-
-	handler.HandleFunc("GET /file/{id}", func(w http.ResponseWriter, r *http.Request) {
-		downloadHandler.GET(w, r)
-	})
-
-	handler.HandleFunc("PUT /file/{id}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(visibilityHandler.PUT, w, r)
-	})
-
-	handler.HandleFunc("PATCH /file/{id}", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(renameFileHandler.PATCH, w, r)
-	})
-
-	handler.HandleFunc("GET /logout", func(w http.ResponseWriter, r *http.Request) {
-		middleware.Auth(logoutHandler.GET, w, r)
-	})
+	handler.Handle("GET /logout", middleware.Auth(logoutHandler.GET))
 
 	handler.HandleFunc("GET /robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/robots.txt")
 	})
-
 	handler.HandleFunc("GET /sitemap.xml", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/sitemap.xml")
 	})
-
 	handler.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/favicon.ico")
-	})
-
-	handler.HandleFunc("GET /test", func(w http.ResponseWriter, r *http.Request) {
-		objects, err := app.Server.Storage.ListObjects(r.Context(), "test/")
-		fmt.Println(objects)
-		if err != nil {
-			return
-		}
-		if r.URL.Query().Get("new") != "" {
-			app.Server.Storage.Add(r.Context(), "test.txt", []byte(r.URL.Query().Get("new")))
-			w.Write([]byte("succes"))
-			return
-		}
-		get, err := app.Server.Storage.Get(r.Context(), "test.txt")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		w.Write(get)
 	})
 
 	fileServer := http.FileServer(http.Dir("./public"))
