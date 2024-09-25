@@ -99,6 +99,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	err = app.Server.Database.CreateUser(&newUser)
 	if err != nil {
+		app.Server.Logger.Error(err.Error())
 		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
 			Message: "Email or Username has been registered",
