@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/utils"
+	signupView "github.com/fossyy/filekeeper/view/client/auth/signup"
 	"github.com/fossyy/filekeeper/view/client/email"
-	signupView "github.com/fossyy/filekeeper/view/client/signup"
 	"github.com/redis/go-redis/v9"
 	"net/http"
 	"time"
@@ -117,7 +117,7 @@ func verifyEmail(user *models.User) error {
 		code = storedCode
 	}
 
-	err = emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://%s/signup/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
+	err = emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://%s/auth/signup/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
 	if err != nil {
 		return err
 	}

@@ -4,21 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/fossyy/filekeeper/app"
-	forgotPasswordHandler "github.com/fossyy/filekeeper/handler/forgotPassword"
+	"github.com/fossyy/filekeeper/handler/auth/forgotPassword"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
-	"github.com/fossyy/filekeeper/view/client/forgotPassword"
-	signupView "github.com/fossyy/filekeeper/view/client/signup"
+	"github.com/fossyy/filekeeper/view/client/auth/forgotPassword"
+	signupView "github.com/fossyy/filekeeper/view/client/auth/signup"
 	"github.com/redis/go-redis/v9"
 	"net/http"
 )
-
-func init() {
-
-	//TESTING
-
-}
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")

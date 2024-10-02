@@ -22,7 +22,7 @@ templ content(title string, user types.User) {
                     </a>
                     } else {
                     <a class="px-8 py-4 bg-black text-white text-lg font-semibold rounded-full hover:bg-black/90 transition-colors"
-                        href="/signup" hx-get="/signup" hx-swap="innerHTML" hx-push-url="true" hx-target="#content">
+                        href="/auth/signup" hx-get="/auth/signup" hx-swap="innerHTML" hx-push-url="true" hx-target="#content">
                         Sign up for free
                     </a>
                     }
@@ -82,7 +82,7 @@ templ content(title string, user types.User) {
                         </a>
                         } else {
                         <a class="px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-black/90 transition-colors"
-                            href="/signup" hx-get="/signup" hx-swap="innerHTML" hx-push-url="true" hx-target="#content">
+                            href="/auth/signup" hx-get="/auth/signup" hx-swap="innerHTML" hx-push-url="true" hx-target="#content">
                             Create your free account
                         </a>
                         }

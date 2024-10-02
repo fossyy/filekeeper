@@ -48,21 +48,22 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	_, err := app.Server.Cache.GetCache(r.Context(), "CsrfTokens:"+r.URL.Query().Get("state"))
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			http.Redirect(w, r, fmt.Sprintf("/signin?error=%s", "csrf_token_error"), http.StatusFound)
+			http.Redirect(w, r, fmt.Sprintf("/auth/signin?error=%s", "csrf_token_error"), http.StatusFound)
 			return
 		}
+		app.Server.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	err = app.Server.Cache.DeleteCache(r.Context(), "CsrfTokens:"+r.URL.Query().Get("state"))
 	if err != nil {
-		http.Redirect(w, r, fmt.Sprintf("/signin?error=%s", "csrf_token_error"), http.StatusFound)
+		http.Redirect(w, r, fmt.Sprintf("/auth/signin?error=%s", "csrf_token_error"), http.StatusFound)
 		return
 	}
 
 	if err := r.URL.Query().Get("error"); err != "" {
-		http.Redirect(w, r, fmt.Sprintf("/signin?error=%s", err), http.StatusFound)
+		http.Redirect(w, r, fmt.Sprintf("/auth/signin?error=%s", err), http.StatusFound)
 		return
 	}
 

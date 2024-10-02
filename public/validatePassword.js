@@ -3,6 +3,7 @@ var isValid = false;
 var hasUppercase = false;
 
 function validatePasswords() {
+    var checkContainer = document.getElementById('checkContainer')
     var password = document.getElementById('password').value;
     var confirmPassword = document.getElementById('confirmPassword').value;
     var matchGoodPath = document.getElementById('matchGoodPath');
@@ -17,7 +18,12 @@ function validatePasswords() {
     var matchStatusText = document.getElementById('matchStatusText');
     var lengthStatusText = document.getElementById('lengthStatusText');
     var uppercaseStatusText = document.getElementById('uppercaseStatusText');
-
+    console.log("jalan")
+    if (password.length > 0) {
+        checkContainer.classList.remove("hidden")
+    } else {
+        checkContainer.classList.add("hidden")
+    }
     if (password === confirmPassword && password.length > 0 && confirmPassword.length > 0 && password.length === confirmPassword.length) {
         matchSvgContainer.classList.remove('bg-red-200');
         matchSvgContainer.classList.add('bg-green-200');

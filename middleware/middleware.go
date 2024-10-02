@@ -109,7 +109,7 @@ func Auth(next http.HandlerFunc) http.Handler {
 					Path:  "/",
 				})
 			}
-			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
 		case session.InvalidSession:
 			http.SetCookie(w, &http.Cookie{
@@ -118,7 +118,7 @@ func Auth(next http.HandlerFunc) http.Handler {
 				Path:   "/",
 				MaxAge: -1,
 			})
-			http.Redirect(w, r, "/signin", http.StatusSeeOther)
+			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
 		case session.Suspicious:
 			userSession := session.Get(sessionID)
@@ -137,7 +137,7 @@ func Auth(next http.HandlerFunc) http.Handler {
 				Path:   "/",
 				MaxAge: -1,
 			})
-			http.Redirect(w, r, "/signin?error=suspicious_session", http.StatusSeeOther)
+			http.Redirect(w, r, "/auth/signin?error=suspicious_session", http.StatusSeeOther)
 			return
 		default:
 			http.Redirect(w, r, "/", http.StatusSeeOther)
