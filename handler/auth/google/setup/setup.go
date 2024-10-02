@@ -9,7 +9,7 @@ import (
 	"github.com/fossyy/filekeeper/types/models"
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/fossyy/filekeeper/view/client/auth"
-	signupView "github.com/fossyy/filekeeper/view/client/signup"
+	signupView "github.com/fossyy/filekeeper/view/client/auth/signup"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"net/http"
@@ -27,7 +27,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	_, err := app.Server.Cache.GetCache(r.Context(), "GoogleSetup:"+code)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			http.Redirect(w, r, "/signup", http.StatusSeeOther)
+			http.Redirect(w, r, "/auth/signup", http.StatusSeeOther)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)

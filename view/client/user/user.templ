@@ -181,7 +181,7 @@ templ MainContent(title string, user types.User, allowance *types.Allowance, Lis
                                     class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     type="password" id="confirmPassword" placeholder="New password confirmation" />
                             </div>
-                            <div id="validationBox" class="justify-start mt-3 ml-4 p-1 hidden">
+                            <div id="checkContainer" class="justify-start mt-3 ml-4 p-1 hidden">
                                 <ul>
                                     <li class="flex items-center py-1">
                                         <div id="matchSvgContainer" class="rounded-full p-1 fill-current bg-red-200 text-green-700">
@@ -292,15 +292,6 @@ templ MainContent(title string, user types.User, allowance *types.Allowance, Lis
     @layout.Footer()
     @templ.JSONScript("AllowanceUsedPercent", allowance.AllowanceUsedPercent)
     <script type="text/javascript">
-        document.getElementById('currentPassword').addEventListener('input', function() {
-            var validationBox = document.getElementById('validationBox');
-            if (this.value.length > 0) {
-                validationBox.classList.remove('hidden');
-            } else {
-                validationBox.classList.add('hidden');
-            }
-        });
-
         window.allowanceProgress = document.getElementById(`allowanceProgress`);
         window.AllowanceUsedPercent = JSON.parse(document.getElementById('AllowanceUsedPercent').textContent);
         allowanceProgress.style.width = `${AllowanceUsedPercent}%`;

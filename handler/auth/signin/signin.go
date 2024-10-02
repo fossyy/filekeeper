@@ -7,7 +7,7 @@ import (
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
 	"github.com/fossyy/filekeeper/utils"
-	"github.com/fossyy/filekeeper/view/client/signin"
+	"github.com/fossyy/filekeeper/view/client/auth/signin"
 	"net/http"
 )
 

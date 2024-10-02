@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
+	"github.com/fossyy/filekeeper/view/client/auth/forgotPassword"
 	"github.com/fossyy/filekeeper/view/client/email"
-	"github.com/fossyy/filekeeper/view/client/forgotPassword"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"net/http"
@@ -130,7 +130,7 @@ func verifyForgot(user *models.User) error {
 	}
 
 	var buffer bytes.Buffer
-	err = emailView.ForgotPassword(user.Username, fmt.Sprintf("https://%s/forgot-password/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
+	err = emailView.ForgotPassword(user.Username, fmt.Sprintf("https://%s/auth/forgot-password/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)
 	if err != nil {
 		return err
 	}

@@ -39,6 +39,6 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		MaxAge: -1,
 	})
 
-	http.Redirect(w, r, "/signin", http.StatusSeeOther)
+	http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 	return
 }

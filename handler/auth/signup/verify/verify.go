@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/fossyy/filekeeper/app"
-	signupHandler "github.com/fossyy/filekeeper/handler/signup"
-	signupView "github.com/fossyy/filekeeper/view/client/signup"
+	"github.com/fossyy/filekeeper/handler/auth/signup"
+	signupView "github.com/fossyy/filekeeper/view/client/auth/signup"
 	"github.com/redis/go-redis/v9"
 	"net/http"
 

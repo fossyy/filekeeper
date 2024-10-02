@@ -180,10 +180,10 @@ templ Navbar(user types.User) {
                 </div>
             </div>
             } else {
-            <a href="/signup" class="text-gray-600 hover:text-gray-800" hx-get="/signup" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
+            <a href="/auth/signup" class="text-gray-600 hover:text-gray-800" hx-get="/auth/signup" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
                 Sign up
             </a>
-            <a href="/signin" class="text-gray-600 hover:text-gray-800" hx-get="/signin" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
+            <a href="/auth/signin" class="text-gray-600 hover:text-gray-800" hx-get="/auth/signin" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
                 Sign in
             </a>
             }

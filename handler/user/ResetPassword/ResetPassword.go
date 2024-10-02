@@ -58,6 +58,6 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/signin", http.StatusSeeOther)
+	http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 	return
 }
