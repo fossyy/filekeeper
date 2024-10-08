@@ -32,6 +32,9 @@ import (
 func SetupRoutes() *http.ServeMux {
 	handler := http.NewServeMux()
 	handler.HandleFunc("GET /{$}", indexHandler.GET)
+	handler.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
 
 	authRoute := http.NewServeMux()
 	handler.Handle("/auth/", http.StripPrefix("/auth", authRoute))
