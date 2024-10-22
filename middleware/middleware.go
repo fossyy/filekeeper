@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"compress/gzip"
 	"context"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
@@ -16,6 +17,15 @@ type wrapper struct {
 	http.ResponseWriter
 	request    *http.Request
 	statusCode int
+}
+
+type gzipResponseWriter struct {
+	http.ResponseWriter
+	Writer *gzip.Writer
+}
+
+func (w gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
 }
 
 func (w *wrapper) WriteHeader(code int) {
@@ -85,6 +95,17 @@ func Handler(next http.Handler) http.Handler {
 
 		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
 		writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if strings.Contains(request.Header.Get("Accept-Encoding"), "gzip") {
+			writer.Header().Set("Content-Encoding", "gzip")
+			gz := gzip.NewWriter(writer)
+			defer gz.Close()
+
+			gzWriter := gzipResponseWriter{Writer: gz, ResponseWriter: writer}
+			next.ServeHTTP(gzWriter, request)
+			return
+		}
+
 		next.ServeHTTP(wrappedWriter, request)
 		app.Server.Logger.Info(fmt.Sprintf("%s %s %s %v", utils.ClientIP(request), request.Method, request.RequestURI, wrappedWriter.statusCode))
 	})
