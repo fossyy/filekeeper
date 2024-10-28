@@ -31,7 +31,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usage, err := app.Server.Service.CalculateUserStorageUsage(r.Context(), userSession.UserID.String())
+	usage, err := app.Server.Cache.CalculateUserStorageUsage(r.Context(), userSession.UserID.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

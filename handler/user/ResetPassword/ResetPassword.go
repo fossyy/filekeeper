@@ -18,7 +18,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
 	currentPassword := r.Form.Get("currentPassword")
 	password := r.Form.Get("password")
-	user, err := app.Server.Service.GetUser(r.Context(), userSession.Email)
+	user, err := app.Server.Cache.GetUser(r.Context(), userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
@@ -51,7 +51,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.Server.Service.RemoveUserCache(r.Context(), userSession.Email)
+	err = app.Server.Cache.RemoveUserCache(r.Context(), userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

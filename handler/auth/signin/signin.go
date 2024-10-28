@@ -73,7 +73,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
-	userData, err := app.Server.Service.GetUser(r.Context(), email)
+	userData, err := app.Server.Cache.GetUser(r.Context(), email)
 	if err != nil {
 		component := signinView.Main("Filekeeper - Sign in Page", types.Message{
 			Code:    0,

@@ -49,7 +49,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 
 	emailForm := r.Form.Get("email")
 
-	user, err := app.Server.Service.GetUser(r.Context(), emailForm)
+	user, err := app.Server.Cache.GetUser(r.Context(), emailForm)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			component := forgotPasswordView.Main("Filekeeper - Forgot Password Page", types.Message{
