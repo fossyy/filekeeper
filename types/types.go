@@ -88,9 +88,6 @@ type CachingServer interface {
 	SetCache(ctx context.Context, key string, value interface{}, expiration time.Duration) error
 	DeleteCache(ctx context.Context, key string) error
 	GetKeys(ctx context.Context, pattern string) ([]string, error)
-}
-
-type Services interface {
 	GetUser(ctx context.Context, email string) (*models.User, error)
 	RemoveUserCache(ctx context.Context, email string) error
 	GetFile(ctx context.Context, id string) (*models.File, error)
@@ -106,6 +103,7 @@ type Services interface {
 type Storage interface {
 	Get(ctx context.Context, key string) ([]byte, error)
 	Add(ctx context.Context, key string, data []byte) error
+	DeleteRecursive(ctx context.Context, key string) error
 	Delete(ctx context.Context, key string) error
 	ListObjects(ctx context.Context, prefix string) ([]string, error)
 }

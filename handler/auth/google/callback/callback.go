@@ -135,7 +135,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := app.Server.Service.GetUser(r.Context(), oauthUser.Email)
+	user, err := app.Server.Cache.GetUser(r.Context(), oauthUser.Email)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

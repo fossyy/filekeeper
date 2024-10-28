@@ -13,7 +13,6 @@ import (
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/routes/admin"
 	"github.com/fossyy/filekeeper/routes/client"
-	"github.com/fossyy/filekeeper/service"
 	"github.com/fossyy/filekeeper/utils"
 )
 
@@ -32,7 +31,6 @@ func main() {
 
 	database := db.NewPostgresDB(dbUser, dbPass, dbHost, dbPort, dbName, db.DisableSSL)
 	cacheServer := cache.NewRedisServer(redisHost, redisPort, redisPassword, database)
-	services := service.NewService(database, cacheServer)
 
 	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
 	mailServer := email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
@@ -44,7 +42,7 @@ func main() {
 	secretKey := utils.Getenv("S3_SECRET_KEY")
 	S3 := storage.NewS3(bucket, region, endpoint, accessKey, secretKey)
 
-	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, S3, services, mailServer)
+	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, S3, mailServer)
 	app.Admin = app.NewAdminServer(adminAddr, middleware.Handler(admin.SetupRoutes()), database)
 
 	go func() {

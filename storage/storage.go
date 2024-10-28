@@ -7,7 +7,9 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"io"
+	"path"
 	"path/filepath"
+	"sync"
 )
 
 type S3 struct {
@@ -52,6 +54,37 @@ func (storage *S3) Add(ctx context.Context, key string, data []byte) error {
 		return err
 	}
 	return nil
+}
+
+func (storage *S3) DeleteRecursive(ctx context.Context, key string) error {
+	if key[len(key)-1] != '/' {
+		key += "/"
+	}
+
+	objects, err := storage.ListObjects(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+	var deleteErr error
+	var mu sync.Mutex
+
+	for _, object := range objects {
+		wg.Add(1)
+		go func(object string) {
+			defer wg.Done()
+			err := storage.Delete(ctx, path.Join(key, object))
+			if err != nil {
+				mu.Lock()
+				deleteErr = fmt.Errorf("failed to delete object %s: %w", object, err)
+				mu.Unlock()
+			}
+		}(object)
+	}
+
+	wg.Wait()
+	return deleteErr
 }
 
 func (storage *S3) Delete(ctx context.Context, key string) error {
