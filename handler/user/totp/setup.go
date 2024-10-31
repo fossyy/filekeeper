@@ -82,12 +82,18 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	var component templ.Component
 	if totp.Verify(code, time.Now().Unix()) {
-		if err := app.Server.Database.InitializeTotp(userSession.Email, secret); err != nil {
+		encryptedSecret, err := app.Server.Encryption.Encrypt(secret)
+		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			app.Server.Logger.Error(err.Error())
 			return
 		}
-		err := app.Server.Cache.RemoveUserCache(r.Context(), userSession.Email)
+		if err := app.Server.Database.InitializeTotp(userSession.Email, encryptedSecret); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			app.Server.Logger.Error(err.Error())
+			return
+		}
+		err = app.Server.Cache.RemoveUserCache(r.Context(), userSession.Email)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			app.Server.Logger.Error(err.Error())

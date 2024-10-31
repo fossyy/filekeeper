@@ -46,13 +46,13 @@ func content(title string, msg types.Message) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<main class=\"bg-gray-100 flex items-center justify-center min-h-screen\"><div class=\"bg-white shadow-md rounded-lg p-8 max-w-sm w-full\">")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			switch msg.Code {
 			case 0:
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50\" role=\"alert\"><svg class=\"flex-shrink-0 inline w-4 h-4 me-3\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z\"></path></svg> <span class=\"sr-only\">Info</span><div><span class=\"font-medium\">Error!</span> ")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -65,12 +65,12 @@ func content(title string, msg types.Message) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h1 class=\"text-2xl font-bold mb-2\">Two-Factor Authentication</h1><p class=\"text-gray-600 mb-6\">Enter the 6-digit code from your authenticator app</p><div class=\"flex justify-between mb-4\" id=\"otpInputs\"><input type=\"text\" inputmode=\"numeric\" pattern=\"\\d{1}\" maxlength=\"1\" class=\"w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none\" required> <input type=\"text\" inputmode=\"numeric\" pattern=\"\\d{1}\" maxlength=\"1\" class=\"w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none\" required> <input type=\"text\" inputmode=\"numeric\" pattern=\"\\d{1}\" maxlength=\"1\" class=\"w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none\" required> <input type=\"text\" inputmode=\"numeric\" pattern=\"\\d{1}\" maxlength=\"1\" class=\"w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none\" required> <input type=\"text\" inputmode=\"numeric\" pattern=\"\\d{1}\" maxlength=\"1\" class=\"w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none\" required> <input type=\"text\" inputmode=\"numeric\" pattern=\"\\d{1}\" maxlength=\"1\" class=\"w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none\" required></div><form id=\"otpForm\" class=\"space-y-6\" method=\"POST\"><input type=\"hidden\" id=\"otpValue\" name=\"code\"> <button type=\"submit\" class=\"w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed\" id=\"submitButton\" disabled>Verify</button></form></div></main><script>\n      const otpInputs = document.getElementById('otpInputs');\n      const inputs = otpInputs.querySelectorAll('input[type=\"text\"]');\n      const form = document.getElementById('otpForm');\n      const otpValue = document.getElementById('otpValue');\n      const submitButton = document.getElementById('submitButton');\n\n      function updateOtpValue() {\n        otpValue.value = Array.from(inputs).map(input => input.value).join('');\n        submitButton.disabled = otpValue.value.length !== 6;\n      }\n\n      inputs.forEach((input, index) => {\n        input.addEventListener('input', function (e) {\n          if (this.value.length === 1) {\n            if (index < inputs.length - 1) {\n              inputs[index + 1].focus();\n            }\n          } else if (this.value.length > 1) {\n            this.value = this.value.slice(0, 1);\n          }\n          updateOtpValue();\n        });\n\n        input.addEventListener('keydown', function (e) {\n          if (e.key === 'Backspace' && this.value === '' && index > 0) {\n            inputs[index - 1].focus();\n            inputs[index - 1].value = '';\n            updateOtpValue();\n          }\n        });\n\n        input.addEventListener('paste', function (e) {\n          e.preventDefault();\n          const pastedData = e.clipboardData.getData('text').slice(0, 6);\n          for (let i = 0; i < pastedData.length; i++) {\n            if (i + index < inputs.length) {\n              inputs[i + index].value = pastedData[i];\n            }\n          }\n          updateOtpValue();\n          if (pastedData.length + index < inputs.length) {\n            inputs[pastedData.length + index].focus();\n          }\n        });\n      });\n    </script>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
