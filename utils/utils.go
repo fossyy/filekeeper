@@ -119,6 +119,10 @@ func Getenv(key string) string {
 	val := os.Getenv(key)
 	env.value[key] = val
 
+	if val == "" {
+		panic("Asking for env: " + key + " but got nothing, please set your environment first")
+	}
+
 	return val
 }
 

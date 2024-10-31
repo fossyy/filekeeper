@@ -107,3 +107,8 @@ type Storage interface {
 	Delete(ctx context.Context, key string) error
 	ListObjects(ctx context.Context, prefix string) ([]string, error)
 }
+
+type Encryption interface {
+	Encrypt(enc string) (string, error)
+	Decrypt(dec string) (string, error)
+}

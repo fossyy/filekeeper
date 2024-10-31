@@ -39,7 +39,12 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 	code := r.Form.Get("code")
 	_, user, key := session.GetSession(r)
-	totp := gotp.NewDefaultTOTP(user.Totp)
+	decryptedSecret, err := app.Server.Encryption.Decrypt(user.Totp)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+	}
+	totp := gotp.NewDefaultTOTP(decryptedSecret)
 
 	if totp.Verify(code, time.Now().Unix()) {
 		storeSession := session.Get(key)

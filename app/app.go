@@ -12,24 +12,26 @@ var Admin App
 
 type App struct {
 	http.Server
-	Database types.Database
-	Cache    types.CachingServer
-	Storage  types.Storage
-	Logger   *logger.AggregatedLogger
-	Mail     *email.SmtpServer
+	Database   types.Database
+	Cache      types.CachingServer
+	Storage    types.Storage
+	Encryption types.Encryption
+	Logger     *logger.AggregatedLogger
+	Mail       *email.SmtpServer
 }
 
-func NewClientServer(addr string, handler http.Handler, logger logger.AggregatedLogger, database types.Database, cache types.CachingServer, storage types.Storage, mail email.SmtpServer) App {
+func NewClientServer(addr string, handler http.Handler, logger logger.AggregatedLogger, database types.Database, cache types.CachingServer, encryption types.Encryption, storage types.Storage, mail email.SmtpServer) App {
 	return App{
 		Server: http.Server{
 			Addr:    addr,
 			Handler: handler,
 		},
-		Storage:  storage,
-		Logger:   &logger,
-		Database: database,
-		Cache:    cache,
-		Mail:     &mail,
+		Storage:    storage,
+		Logger:     &logger,
+		Database:   database,
+		Encryption: encryption,
+		Cache:      cache,
+		Mail:       &mail,
 	}
 }
 

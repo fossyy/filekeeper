@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/fossyy/filekeeper/encryption"
+	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/storage"
 	"strconv"
 
@@ -9,7 +11,6 @@ import (
 	"github.com/fossyy/filekeeper/cache"
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
-	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/middleware"
 	"github.com/fossyy/filekeeper/routes/admin"
 	"github.com/fossyy/filekeeper/routes/client"
@@ -42,7 +43,7 @@ func main() {
 	secretKey := utils.Getenv("S3_SECRET_KEY")
 	S3 := storage.NewS3(bucket, region, endpoint, accessKey, secretKey)
 
-	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, S3, mailServer)
+	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, encryption.NewAesEncryption(), S3, mailServer)
 	app.Admin = app.NewAdminServer(adminAddr, middleware.Handler(admin.SetupRoutes()), database)
 
 	go func() {
