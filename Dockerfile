@@ -5,7 +5,7 @@ COPY /public /src/public
 COPY tailwind.config.js .
 COPY /view /src/view
 
-RUN npm install -g tailwindcss
+RUN npm install -g tailwindcss@v3.4.17
 RUN npm install -g javascript-obfuscator
 RUN npm install -g clean-css-cli
 RUN npx tailwindcss -i ./public/input.css -o ./tmp/output.css
