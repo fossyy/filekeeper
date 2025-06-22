@@ -1,6 +1,6 @@
 module github.com/fossyy/filekeeper
 
-go 1.23.1
+go 1.24.4
 
 require (
 	github.com/a-h/templ v0.3.819
