@@ -1,0 +1,22 @@
+{
+  "extends": [
+    "config:recommended"
+  ],
+  "prConcurrentLimit": 1,
+  "prHourlyLimit": 1,
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "groupName": "all-dependencies",
+      "automerge": true,
+      "matchPackageNames": [
+        "*"
+      ]
+    }
+  ]
+}
