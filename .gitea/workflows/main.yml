@@ -5,6 +5,14 @@ on:
     branches:
       - main
       - staging
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Dockerfile'
+      - 'Dockerfile.*'
+      - '.dockerignore'
+      - '.gitea/workflows/build.yml'
 
 jobs:
   build-and-push:
