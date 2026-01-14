@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres-server:
-    image: postgres:16.0
+    image: postgres:16.11
     container_name: postgres-filekeeper
     environment:
       POSTGRES_PASSWORD: VerySecretPassword
@@ -12,7 +12,7 @@ services:
       - filekeeper
 
   redis:
-    image: redis:7.4.0
+    image: redis:7.4.7
     container_name: redis-filekeeper
     command: ["redis-server", "--requirepass", "VerySecretPassword"]
     networks:
@@ -59,7 +59,7 @@ services:
     restart: on-failure
 
   traefik:
-    image: traefik:v2.8
+    image: traefik:v2.11
     container_name: traefik
     command:
       - "--api.insecure=true"
