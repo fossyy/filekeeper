@@ -7,7 +7,7 @@ import (
 )
 
 templ content(message types.Message, title string, user types.User, allowance *types.Allowance, ListSession []*session.SessionInfo) {
-    @layout.BaseAuth(title){
+    @layout.BaseAuth(title) {
         @MainContent(title, user, allowance, ListSession, message)
     }
 }
@@ -297,7 +297,7 @@ templ MainContent(title string, user types.User, allowance *types.Allowance, Lis
         allowanceProgress.style.width = `${AllowanceUsedPercent}%`;
     </script>
     @layout.MainScript()
-    <script src="/public/validatePassword.js" />
+    <script src="/public/validatePassword.js"></script>
 }
 
 templ Main(title string, user types.User, allowance *types.Allowance, ListSession []*session.SessionInfo, message types.Message) {

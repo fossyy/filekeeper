@@ -6,7 +6,7 @@ import (
 )
 
 templ form(err types.Message, title string) {
-    @layout.Base(title){
+    @layout.Base(title) {
         <div class="bg-gray-100 flex items-center justify-center min-h-screen">
           <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
             <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Sign Up</h1>
@@ -69,14 +69,13 @@ templ form(err types.Message, title string) {
             <div class="mt-6 text-center">
               <p class="text-sm text-gray-600">
                 Already have an account?
-                <a class="underline" href="/auth/signin" rel="ugc" hx-get="/auth/signin" hx-swap="outerHTML" hx-push-url="true"
-                  hx-target="#content" class="font-medium text-indigo-600 hover:text-indigo-500">
+                <a class="underline font-medium text-indigo-600 hover:text-indigo-500" href="/auth/signin" rel="ugc" hx-get="/auth/signin" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
                   Log in
                 </a>
               </p>
             </div>
           </div>
-          <script src="/public/validatePassword.js" />
+          <script src="/public/validatePassword.js"></script>
         </div>
     }
 }

@@ -44,7 +44,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://unpkg.com/htmx.org@1.9.12\"></script></head><body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://unpkg.com/htmx.org@2.0.8\"></script></head><body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -361,7 +361,7 @@ func Footer() templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<footer class=\"bg-white p-6 md:p-8 w-full bottom-0 border-t border-gray-200 w-full py-8\"><div class=\"container mx-auto flex flex-col items-center justify-between gap-6 md:flex-row\"><div class=\"flex items-center gap-2\"><img src=\"/public/brand.svg\" width=\"48\" height=\"48\" alt=\"Filekeeper Logo\"> <span class=\"text-lg font-semibold\">Filekeeper</span></div><nav class=\"flex flex-wrap items-center justify-center gap-4 text-sm font-medium\"><a class=\"hover:underline\" href=\"#\">Pricing</a> <a class=\"hover:underline\" href=\"#\">About</a> <a class=\"hover:underline\" href=\"#\">Contact</a> <a class=\"hover:underline\" href=\"#\">Terms</a> <a class=\"hover:underline\" href=\"#\">Privacy</a></nav><p class=\"text-sm text-gray-500\">© 2025 Filekeeper. All rights reserved.</p></div></footer>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<footer class=\"bg-white p-6 md:p-8 w-full bottom-0 border-t border-gray-200 w-full py-8\"><div class=\"container mx-auto flex flex-col items-center justify-between gap-6 md:flex-row\"><div class=\"flex items-center gap-2\"><img src=\"/public/brand.svg\" width=\"48\" height=\"48\" alt=\"Filekeeper Logo\"> <span class=\"text-lg font-semibold\">Filekeeper</span></div><nav class=\"flex flex-wrap items-center justify-center gap-4 text-sm font-medium\"><a class=\"hover:underline\" href=\"#\">Pricing</a> <a class=\"hover:underline\" href=\"#\">About</a> <a class=\"hover:underline\" href=\"#\">Contact</a> <a class=\"hover:underline\" href=\"#\">Terms</a> <a class=\"hover:underline\" href=\"#\">Privacy</a></nav><p class=\"text-sm text-gray-500\">© 2026 Filekeeper. All rights reserved.</p></div></footer>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

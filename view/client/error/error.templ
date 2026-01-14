@@ -2,8 +2,8 @@ package errorView
 
 import "github.com/fossyy/filekeeper/view/client/layout"
 
-templ NotFound(title string){
-    @layout.Base(title){
+templ NotFound(title string) {
+    @layout.Base(title) {
         <div class="flex flex-col items-center justify-center w-full min-h-[calc(100vh-1rem)] py-10 text-center gap-4 md:gap-8">
            <div class="space-y-2">
               <h1 class="text-4xl font-bold tracking-tighter sm:text-5xl">404 Not Found</h1>
@@ -34,8 +34,8 @@ templ NotFound(title string){
     }
 }
 
-templ InternalServerError(title string){
-    @layout.Base(title){
+templ InternalServerError(title string) {
+    @layout.Base(title) {
     <main class="container mx-auto px-4 md:px-6">
         <div class="flex h-screen w-full flex-col items-center justify-center bg-white">
         <image class="w-32 md:w-64 lg:w-128" src="/public/InternalServerErrorIcon.svg" alt="Cute Icon" />
