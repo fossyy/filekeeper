@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres-server:
-    image: postgres:16.11
+    image: postgres:18.1
     container_name: postgres-filekeeper
     environment:
       POSTGRES_PASSWORD: VerySecretPassword
