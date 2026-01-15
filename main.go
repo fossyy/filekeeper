@@ -12,14 +12,12 @@ import (
 	"github.com/fossyy/filekeeper/db"
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/middleware"
-	"github.com/fossyy/filekeeper/routes/admin"
 	"github.com/fossyy/filekeeper/routes/client"
 	"github.com/fossyy/filekeeper/utils"
 )
 
 func main() {
 	clientAddr := fmt.Sprintf("%s:%s", utils.Getenv("SERVER_HOST"), utils.Getenv("SERVER_PORT"))
-	adminAddr := fmt.Sprintf("%s:%s", utils.Getenv("SERVER_HOST"), "27000")
 
 	dbUser := utils.Getenv("DB_USERNAME")
 	dbPass := utils.Getenv("DB_PASSWORD")
@@ -44,16 +42,6 @@ func main() {
 	S3 := storage.NewS3(bucket, region, endpoint, accessKey, secretKey)
 
 	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, encryption.NewAesEncryption(), S3, mailServer)
-	app.Admin = app.NewAdminServer(adminAddr, middleware.Handler(admin.SetupRoutes()), database)
-
-	go func() {
-		fmt.Printf("Admin Web App Listening on http://%s\n", app.Admin.Addr)
-		err := app.Admin.ListenAndServe()
-		if err != nil {
-			panic(err)
-			return
-		}
-	}()
 
 	fmt.Printf("Client Web App Listening on http://%s\n", app.Server.Addr)
 	err := app.Server.ListenAndServe()

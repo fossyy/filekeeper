@@ -1,14 +1,14 @@
 package app
 
 import (
+	"net/http"
+
 	"github.com/fossyy/filekeeper/email"
 	"github.com/fossyy/filekeeper/logger"
 	"github.com/fossyy/filekeeper/types"
-	"net/http"
 )
 
 var Server App
-var Admin App
 
 type App struct {
 	http.Server
@@ -32,18 +32,5 @@ func NewClientServer(addr string, handler http.Handler, logger logger.Aggregated
 		Encryption: encryption,
 		Cache:      cache,
 		Mail:       &mail,
-	}
-}
-
-func NewAdminServer(addr string, handler http.Handler, database types.Database) App {
-	return App{
-		Server: http.Server{
-			Addr:    addr,
-			Handler: handler,
-		},
-		// TODO: Remove the dummy struct
-		Logger:   &logger.AggregatedLogger{},
-		Database: database,
-		Mail:     &email.SmtpServer{},
 	}
 }
