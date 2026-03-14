@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image for main
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -43,7 +43,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
 
       - name: Build and push Docker image for staging
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
