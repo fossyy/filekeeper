@@ -83,6 +83,12 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error("Error token endpoint returned status: ", resp.Status)
+		return
+	}
+
 	var oauthData OauthToken
 	if err := json.NewDecoder(resp.Body).Decode(&oauthData); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -92,16 +98,27 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest("GET", "https://www.googleapis.com/oauth2/v1/userinfo?alt=json", nil)
-	req.Header.Set("Authorization", "Bearer "+oauthData.AccessToken)
+	req, err := http.NewRequestWithContext(r.Context(), "GET", "https://www.googleapis.com/oauth2/v1/userinfo?alt=json", nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error("Error creating user info request:", err)
 		return
 	}
+	req.Header.Set("Authorization", "Bearer "+oauthData.AccessToken)
 
 	userInfoResp, err := client.Do(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error("Error sending user info request:", err)
+		return
+	}
 	defer userInfoResp.Body.Close()
+
+	if userInfoResp.StatusCode != http.StatusOK {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error("Error user info endpoint returned status: ", userInfoResp.Status)
+		return
+	}
 
 	var oauthUser OauthUser
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&oauthUser); err != nil {
@@ -110,9 +127,9 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if oauthUser.Email == "" {
+	if oauthUser.Email == "" || !oauthUser.VerifiedEmail {
 		w.WriteHeader(http.StatusInternalServerError)
-		app.Server.Logger.Error("Error reading user info response body: email not found")
+		app.Server.Logger.Error("Google account has no verified email")
 		return
 	}
 
@@ -167,7 +184,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		Location:  "Indonesia",
 	}
 
-	storeSession.Save(w)
+	storeSession.Save(r, w)
 	err = session.AddSessionInfo(oauthUser.Email, &sessionInfo)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

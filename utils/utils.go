@@ -7,12 +7,10 @@ import (
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
-	mathRand "math/rand"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
-	"time"
 	"unicode"
 
 	"github.com/joho/godotenv"
@@ -112,7 +110,7 @@ func Getenv(key string) string {
 	if os.Getenv("HOSTNAME") == "" {
 		err := godotenv.Load(".env")
 		if err != nil {
-			app.Server.Logger.Error("Error loading .env file: %s", err)
+			app.Server.Logger.Error("Error loading .env file:", err)
 		}
 	}
 
@@ -126,13 +124,24 @@ func Getenv(key string) string {
 	return val
 }
 
+const alphanumericCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
 func GenerateRandomString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	seededRand := mathRand.New(mathRand.NewSource(time.Now().UnixNano() + int64(mathRand.Intn(9999))))
 	var result strings.Builder
+	result.Grow(length)
+	limit := 256 - (256 % len(alphanumericCharset))
+	b := make([]byte, 1)
 	for i := 0; i < length; i++ {
-		randomIndex := seededRand.Intn(len(charset))
-		result.WriteString(string(charset[randomIndex]))
+		// Rejection sampling avoids modulo bias over the charset.
+		for {
+			if _, err := cryptoRand.Read(b); err != nil {
+				panic("crypto/rand failed: " + err.Error())
+			}
+			if int(b[0]) < limit {
+				break
+			}
+		}
+		result.WriteByte(alphanumericCharset[int(b[0])%len(alphanumericCharset)])
 	}
 	return result.String()
 }

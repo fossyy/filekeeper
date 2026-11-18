@@ -22,7 +22,7 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	status, userSession, _ := session.GetSession(r)
 	if file.IsPrivate {
-		if status == session.Unauthorized || status == session.InvalidSession {
+		if status == session.Unauthorized || status == session.InvalidSession || status == session.Suspicious {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		} else if file.OwnerID != userSession.UserID {
@@ -33,32 +33,17 @@ func GET(w http.ResponseWriter, r *http.Request) {
 
 	rangeHeader := r.Header.Get("Range")
 	if rangeHeader != "" {
-		rangeParts := strings.Split(strings.TrimPrefix(rangeHeader, "bytes="), "-")
-		if len(rangeParts) == 2 {
-			start, err := strconv.ParseInt(rangeParts[0], 10, 64)
-			if err != nil {
-				http.Error(w, "Invalid Range", http.StatusRequestedRangeNotSatisfiable)
-				return
-			}
-			end := int64(file.Size - 1)
-			if rangeParts[1] != "" {
-				end, err = strconv.ParseInt(rangeParts[1], 10, 64)
-				if err != nil {
-					http.Error(w, "Invalid Range", http.StatusRequestedRangeNotSatisfiable)
-					return
-				}
-			}
-
-			if end >= int64(file.Size) {
-				end = int64(file.Size - 1)
-			}
-
-			w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, file.Size))
-			w.Header().Set("Content-Length", fmt.Sprintf("%d", end-start+1))
-			w.WriteHeader(http.StatusPartialContent)
-			sendFileChunk(w, file, start, end)
+		start, end, valid := parseRange(rangeHeader, file.Size)
+		if !valid {
+			http.Error(w, "Invalid Range", http.StatusRequestedRangeNotSatisfiable)
 			return
 		}
+
+		w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, file.Size))
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", end-start+1))
+		w.WriteHeader(http.StatusPartialContent)
+		sendFileChunk(r.Context(), w, file, start, end)
+		return
 	}
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+file.Name)
@@ -66,27 +51,65 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", file.Size))
 
-	sendFileChunk(w, file, 0, int64(file.Size-1))
+	if file.Size > uint64(^uint64(0)>>1) {
+		http.Error(w, "File is too large", http.StatusRequestedRangeNotSatisfiable)
+		return
+	}
+	sendFileChunk(r.Context(), w, file, 0, int64(file.Size)-1)
 	return
 }
 
-func sendFileChunk(w http.ResponseWriter, file *models.File, start, end int64) {
+func parseRange(header string, size uint64) (start int64, end int64, valid bool) {
+	if size == 0 || size > uint64(^uint64(0)>>1) {
+		return 0, 0, false
+	}
+	rangeParts := strings.SplitN(strings.TrimPrefix(header, "bytes="), "-", 2)
+	if len(rangeParts) != 2 {
+		return 0, 0, false
+	}
+
+	start, err := strconv.ParseInt(rangeParts[0], 10, 64)
+	if err != nil || start < 0 || start >= int64(size) {
+		return 0, 0, false
+	}
+
+	end = int64(size) - 1
+	if rangeParts[1] != "" {
+		end, err = strconv.ParseInt(rangeParts[1], 10, 64)
+		if err != nil || end < start {
+			return 0, 0, false
+		}
+		if end >= int64(size) {
+			end = int64(size) - 1
+		}
+	}
+
+	return start, end, true
+}
+
+func sendFileChunk(ctx context.Context, w http.ResponseWriter, file *models.File, start, end int64) {
 	chunkSize := int64(2 * 1024 * 1024)
 
 	startChunk := start / chunkSize
 	endChunk := end / chunkSize
 
-	startOffset := start % chunkSize
-	endOffset := end % chunkSize
-
 	for i := startChunk; i <= endChunk; i++ {
 		chunkKey := fmt.Sprintf("%s/%s/chunk_%d", file.OwnerID.String(), file.ID.String(), i)
-		chunkData, err := app.Server.Storage.Get(context.TODO(), chunkKey)
+		chunkData, err := app.Server.Storage.Get(ctx, chunkKey)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			app.Server.Logger.Error(err.Error())
 			return
 		}
+
+		chunkLen := int64(len(chunkData))
+		chunkStart := i * chunkSize
+		startOffset := max(start-chunkStart, int64(0))
+		endOffset := min(end-chunkStart, chunkSize-1)
+		if chunkLen == 0 || startOffset >= chunkLen || endOffset < startOffset {
+			continue
+		}
+		endOffset = min(endOffset, chunkLen-1)
 
 		var dataToSend []byte
 		if i == startChunk && i == endChunk {

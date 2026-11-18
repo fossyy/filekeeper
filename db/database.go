@@ -73,17 +73,14 @@ func NewMYSQLdb(username, password, host, port, dbName string) types.Database {
 	err = DB.AutoMigrate(&models.MysqlUser{})
 	if err != nil {
 		panic(err.Error())
-		return nil
 	}
 	err = DB.AutoMigrate(&models.MysqlFile{})
 	if err != nil {
 		panic(err.Error())
-		return nil
 	}
 	err = DB.AutoMigrate(&models.MysqlAllowance{})
 	if err != nil {
 		panic(err.Error())
-		return nil
 	}
 	return &mySQLdb{DB}
 }
@@ -124,17 +121,14 @@ func NewPostgresDB(username, password, host, port, dbName string, mode SSLMode) 
 	err = DB.AutoMigrate(&models.User{})
 	if err != nil {
 		panic(err.Error())
-		return nil
 	}
 	err = DB.AutoMigrate(&models.File{})
 	if err != nil {
 		panic(err.Error())
-		return nil
 	}
 	err = DB.AutoMigrate(&models.Allowance{})
 	if err != nil {
 		panic(err.Error())
-		return nil
 	}
 	return &postgresDB{DB}
 }
@@ -496,8 +490,7 @@ func (db *postgresDB) UpdateUserPassword(email string, password string) error {
 		return err
 	}
 	user.Password = password
-	db.Save(&user)
-	return nil
+	return db.DB.Save(&user).Error
 }
 
 func (db *postgresDB) CreateAllowance(userID uuid.UUID) error {

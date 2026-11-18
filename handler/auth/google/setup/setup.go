@@ -138,7 +138,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		Location:  "Indonesia",
 	}
 
-	storeSession.Save(w)
+	storeSession.Save(r, w)
 	err = session.AddSessionInfo(unregisteredUser.Email, &sessionInfo)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

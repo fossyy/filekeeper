@@ -20,22 +20,22 @@ templ form(err types.Message, title string) {
             <form action="" method="POST" class="space-y-4">
               <div>
                 <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="email" name="email" required
+                        <input type="email" id="email" name="email" autocomplete="email" required
                   class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
               </div>
               <div>
                 <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-                <input type="text" id="username" name="username" required
+                        <input type="text" id="username" name="username" autocomplete="username" required
                   class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
               </div>
               <div>
                 <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="password" name="password" required
+                        <input type="password" id="password" name="password" autocomplete="new-password" required
                   class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
               </div>
               <div>
                 <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" required
+                        <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required
                   class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
               </div>
               <div>
@@ -109,7 +109,7 @@ templ form(err types.Message, title string) {
             <div class="mt-6 text-center">
               <p class="text-sm text-gray-600">
                 Already have an account?
-                <a class="underline font-medium text-indigo-600 hover:text-indigo-500" href="/auth/signin" rel="ugc" hx-get="/auth/signin" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
+                <a class="underline font-medium text-indigo-600 hover:text-indigo-500" href="/auth/signin">
                   Log in
                 </a>
               </p>

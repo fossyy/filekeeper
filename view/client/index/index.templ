@@ -17,12 +17,12 @@ templ content(title string, user types.User) {
                     </p>
                     if user.Authenticated {
                     <a class="px-8 py-4 bg-black text-white text-lg font-semibold rounded-full hover:bg-black/90 transition-colors"
-                        href="/user" hx-get="/user" hx-swap="innerHTML" hx-push-url="true" hx-target="#content">
+                        href="/user">
                         Open Dashboard
                     </a>
                     } else {
                     <a class="px-8 py-4 bg-black text-white text-lg font-semibold rounded-full hover:bg-black/90 transition-colors"
-                        href="/auth/signup" hx-get="/auth/signup" hx-swap="innerHTML" hx-push-url="true" hx-target="#content">
+                        href="/auth/signup">
                         Sign up for free
                     </a>
                     }
@@ -77,12 +77,12 @@ templ content(title string, user types.User) {
                     <div class="flex justify-center space-x-4">
                         if user.Authenticated {
                         <a class="px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-black/90 transition-colors"
-                            href="/user" hx-get="/user" hx-swap="innerHTML" hx-push-url="true" hx-target="#content">
+                            href="/user">
                             Open Dashboard
                         </a>
                         } else {
                         <a class="px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-black/90 transition-colors"
-                            href="/auth/signup" hx-get="/auth/signup" hx-swap="innerHTML" hx-push-url="true" hx-target="#content">
+                            href="/auth/signup">
                             Create your free account
                         </a>
                         }

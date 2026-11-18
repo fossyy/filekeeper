@@ -20,7 +20,8 @@ if (!window.mySocket) {
             } else {
                 if (data.action === "UploadNewFile") {
                     if (data.response.Done === false) {
-                        const file = window.fileIdMap[data.responseID];
+                        const file = window.fileIdMap?.[data.responseID];
+                        if (!(file instanceof File)) return;
                         addNewUploadElement(file);
                         const fileChunks = await splitFile(file, file.chunkSize);
                         await uploadChunks(file.name, file.size, fileChunks, data.response.Chunk, data.response.ID);
@@ -52,6 +53,7 @@ function generateUniqueId() {
 }
 
 async function handleFile(file){
+    if (!(file instanceof File)) return;
     const chunkSize = 2 * 1024 * 1024;
     const chunks = Math.ceil(file.size / chunkSize);
     const fileId = generateUniqueId();
@@ -76,6 +78,7 @@ async function handleFile(file){
 }
 
 function addNewUploadElement(file){
+    if (!(file instanceof File)) return;
     const newDiv = document.createElement('div');
     newDiv.innerHTML = `
       <div class="space-y-4">
@@ -98,7 +101,7 @@ function addNewUploadElement(file){
                     <div id="progress-${ file.name }-3" class="text-sm text-gray-500">Starting...</div>
                   </div>
               </div>
-              <button class="text-blue-500 text-base font-medium">Batal</button>
+              <button type="button" class="text-blue-500 text-base font-medium" aria-label="Dismiss upload" onclick="this.closest('.space-y-4').remove()">Dismiss</button>
           </div>
       </div>
       `;
@@ -197,6 +200,7 @@ async function uploadChunks(name, size, chunks, chunkArray, FileID) {
         progress3.innerText = `Upload Failed`;
     } else {
         progress3.innerText = `Done`;
+        document.getElementById('file-table')?.dispatchEvent(new Event('load'));
     }
 }
 

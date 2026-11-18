@@ -81,22 +81,33 @@ func (s *Session) Delete() error {
 	return nil
 }
 
-func (s *Session) Save(w http.ResponseWriter) {
+func (s *Session) Save(r *http.Request, w http.ResponseWriter) {
 	maxAge, _ := strconv.Atoi(utils.Getenv("SESSION_MAX_AGE"))
 	http.SetCookie(w, &http.Cookie{
-		Name:   utils.Getenv("SESSION_NAME"),
-		Value:  s.ID,
-		MaxAge: maxAge,
-		Path:   "/",
+		Name:     utils.Getenv("SESSION_NAME"),
+		Value:    s.ID,
+		MaxAge:   maxAge,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   IsHTTPS(r),
+		SameSite: http.SameSiteLaxMode,
 	})
 }
 
-func (s *Session) Destroy(w http.ResponseWriter) {
+func (s *Session) Destroy(r *http.Request, w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:   utils.Getenv("SESSION_NAME"),
-		Value:  "",
-		MaxAge: -1,
+		Name:     utils.Getenv("SESSION_NAME"),
+		Value:    "",
+		MaxAge:   -1,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   IsHTTPS(r),
+		SameSite: http.SameSiteLaxMode,
 	})
+}
+
+func IsHTTPS(r *http.Request) bool {
+	return r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https")
 }
 
 func AddSessionInfo(email string, sessionInfo *SessionInfo) error {

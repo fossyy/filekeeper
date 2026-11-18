@@ -34,9 +34,13 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:   utils.Getenv("SESSION_NAME"),
-		Value:  "",
-		MaxAge: -1,
+		Name:     utils.Getenv("SESSION_NAME"),
+		Value:    "",
+		MaxAge:   -1,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   session.IsHTTPS(r),
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)

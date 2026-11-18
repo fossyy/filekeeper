@@ -31,7 +31,10 @@ func main() {
 	database := db.NewPostgresDB(dbUser, dbPass, dbHost, dbPort, dbName, db.DisableSSL)
 	cacheServer := cache.NewRedisServer(redisHost, redisPort, redisPassword, database)
 
-	smtpPort, _ := strconv.Atoi(utils.Getenv("SMTP_PORT"))
+	smtpPort, err := strconv.Atoi(utils.Getenv("SMTP_PORT"))
+	if err != nil {
+		panic(fmt.Errorf("invalid SMTP_PORT: %w", err))
+	}
 	mailServer := email.NewSmtpServer(utils.Getenv("SMTP_HOST"), smtpPort, utils.Getenv("SMTP_USER"), utils.Getenv("SMTP_PASSWORD"))
 
 	bucket := utils.Getenv("S3_BUCKET_NAME")
@@ -44,9 +47,8 @@ func main() {
 	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, encryption.NewAesEncryption(), S3, mailServer)
 
 	fmt.Printf("Client Web App Listening on http://%s\n", app.Server.Addr)
-	err := app.Server.ListenAndServe()
+	err = app.Server.ListenAndServe()
 	if err != nil {
 		panic(err)
-		return
 	}
 }

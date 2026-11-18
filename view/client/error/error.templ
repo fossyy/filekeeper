@@ -13,7 +13,7 @@ templ NotFound(title string) {
            </div>
            <a
               class="inline-flex h-10 items-center rounded-md border border-gray-200 border-gray-200 bg-white px-8 text-sm font-medium shadow-sm gap-2 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950"
-              href="/" hx-get="/" hx-swap="outerHTML" hx-push-url="true" hx-target="#content"
+              href="/" aria-label="Go to homepage"
               >
               <svg
                  xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +38,7 @@ templ InternalServerError(title string) {
     @layout.Base(title) {
     <main class="container mx-auto px-4 md:px-6">
         <div class="flex h-screen w-full flex-col items-center justify-center bg-white">
-        <image class="w-32 md:w-64 lg:w-128" src="/public/InternalServerErrorIcon.svg" alt="Cute Icon" />
+        <img class="w-32 md:w-64 lg:w-128" src="/public/InternalServerErrorIcon.svg" alt="" />
           <div class="mx-auto max-w-md space-y-4 text-center">
             <h1 class="text-4xl font-bold tracking-tight text-gray-900">Oops! Something went wrong.</h1>
             <p class="text-gray-500">
@@ -47,7 +47,7 @@ templ InternalServerError(title string) {
             <div class="grid gap-2">
               <a
                 class="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 px-6 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50"
-                href="/" hx-get="/" hx-swap="outerHTML" hx-push-url="true" hx-target="#content"
+                href="/"
               >
                 Go back to homepage
               </a>

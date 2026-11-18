@@ -17,7 +17,7 @@ templ MainContent(title string, qrcode string, code string, user types.User, msg
     <main class="container mx-auto px-4 py-12 md:px-6 md:py-16 lg:py-10">
         <a
           class="inline-flex items-center space-x-2 rounded-md bg-muted px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          href="/user" hx-get="/user" hx-swap="innerHTML" hx-push-url="true" hx-target="#content"
+          href="/user"
           rel="ugc"
         >
           <svg
@@ -54,7 +54,7 @@ templ MainContent(title string, qrcode string, code string, user types.User, msg
                 </ol>
             </div>
           </div>
-          <div class="rounded-lg border rounded-lg bg-muted p-6bg-card text-card-foreground shadow-sm mt-5" data-v0-t="card">
+          <div class="rounded-lg border bg-card p-6 text-card-foreground shadow-sm mt-5" data-v0-t="card">
             <div class="p-6 space-y-6">
             switch msg.Code {
                 case 0:

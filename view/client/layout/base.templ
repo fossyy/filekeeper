@@ -15,7 +15,7 @@ templ Base(title string) {
         <title>{ title }</title>
         <script src="https://unpkg.com/htmx.org@2.0.8"></script>
     </head>
-    <body>
+    <body class="min-h-screen bg-background text-foreground antialiased">
         @modal()
         <div id="content">
             { children... }
@@ -37,10 +37,9 @@ templ BaseAuth(title string) {
         <meta name="author" content="Filekeeper" />
         <link href="/public/output.css" rel="stylesheet"/>
         <title>{ title }</title>
-        <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-        <script src="/public/main.js"></script>
+        <script src="https://unpkg.com/htmx.org@2.0.8"></script>
     </head>
-    <body>
+    <body class="min-h-screen bg-background text-foreground antialiased">
         @modal()
         <div id="content">
             { children... }
@@ -48,11 +47,6 @@ templ BaseAuth(title string) {
         @uploadBox()
         @MainScript()
         @modalScript()
-            <script type="text/javascript">
-                function showFileUploadBox() {
-                    document.getElementById('FileUploadBox').classList.remove('hidden');
-                }
-            </script>
     </body>
     </html>
 }
@@ -60,12 +54,12 @@ templ BaseAuth(title string) {
 templ modal() {
     <div id="modalContainer" class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 sm:p-6 md:p-8">
       <div class="fixed inset-0 bg-black opacity-50 transition-opacity duration-300"></div>
-      <div id="modal" class="bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl p-4 sm:p-6 md:p-8 relative z-10 overflow-y-auto max-h-[90vh]">
+          <div id="modal" class="bg-white rounded-lg shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl p-4 sm:p-6 md:p-8 relative z-10 overflow-y-auto max-h-[90vh]">
         <h2 class="text-xl sm:text-2xl font-bold mb-4">Modal Title</h2>
         <div class="prose prose-sm sm:prose lg:prose-lg">
             <p class="mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
         </div>
-        <button id="closeModal" class="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200 ease-in-out">
+          <button type="button" id="closeModal" class="mt-6 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-200 ease-in-out">
           Close
         </button>
       </div>
@@ -74,15 +68,15 @@ templ modal() {
 
 templ uploadBox() {
     <div class="hidden" id="uploadBox">
-        <div class="fixed bottom-6 right-6 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+        <div class="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
         	<div class="p-4 bg-gray-100 flex justify-between items-center">
         		<div class="flex items-center">
-        			<span class="font-medium text-base">Mengupload 1 item</span>
+          <span class="font-medium text-base">Uploading files</span>
         			<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
         			</svg>
         		</div>
-        		<button class="text-gray-500 hover:text-gray-700">
+          <button type="button" aria-label="Dismiss uploads" onclick="document.getElementById('uploadBox').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
         			<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         			</svg>
@@ -131,11 +125,11 @@ templ modalScript() {
 
 
 templ Navbar(user types.User) {
-    <header class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+    <header class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 shadow-sm sm:px-6">
         <div class="flex items-center gap-4">
-            <a class="flex items-center gap-2" href="#">
-                <img src="/public/brand.svg" width="48" height="48" alt="Filekeeper Logo" />
-                <span class="text-lg font-semibold">Filekeeper</span>
+            <a class="flex items-center gap-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" href="/" aria-label="Filekeeper home">
+                <img src="/public/brand.svg" width="40" height="40" alt="" />
+                <span class="text-lg font-semibold tracking-tight">Filekeeper</span>
             </a>
         </div>
         <div class="flex space-x-4">
@@ -180,10 +174,10 @@ templ Navbar(user types.User) {
                 </div>
             </div>
             } else {
-            <a href="/auth/signup" class="text-gray-600 hover:text-gray-800" hx-get="/auth/signup" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
+            <a href="/auth/signup" class="text-gray-600 hover:text-gray-800">
                 Sign up
             </a>
-            <a href="/auth/signin" class="text-gray-600 hover:text-gray-800" hx-get="/auth/signin" hx-swap="outerHTML" hx-push-url="true" hx-target="#content">
+            <a href="/auth/signin" class="text-gray-600 hover:text-gray-800">
                 Sign in
             </a>
             }
@@ -192,29 +186,13 @@ templ Navbar(user types.User) {
 }
 
 templ Footer() {
-    <footer class="bg-white p-6 md:p-8 w-full bottom-0 border-t border-gray-200 w-full py-8">
+    <footer class="bg-white border-t border-gray-200 px-6 py-8 md:px-8">
       <div class="container mx-auto flex flex-col items-center justify-between gap-6 md:flex-row">
         <div class="flex items-center gap-2">
           <img src="/public/brand.svg" width="48" height="48" alt="Filekeeper Logo" />
           <span class="text-lg font-semibold">Filekeeper</span>
         </div>
-        <nav class="flex flex-wrap items-center justify-center gap-4 text-sm font-medium">
-          <a class="hover:underline" href="#">
-            Pricing
-          </a>
-          <a class="hover:underline" href="#">
-            About
-          </a>
-          <a class="hover:underline" href="#">
-            Contact
-          </a>
-          <a class="hover:underline" href="#">
-            Terms
-          </a>
-          <a class="hover:underline" href="#">
-            Privacy
-          </a>
-        </nav>
+        <p class="text-sm text-gray-500">Simple, secure file storage.</p>
         <p class="text-sm text-gray-500">© 2026 Filekeeper. All rights reserved.</p>
       </div>
     </footer>

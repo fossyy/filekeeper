@@ -23,7 +23,6 @@ type AggregatedLogger struct {
 
 func init() {
 	logFlag = flag.Bool("log", false, "Enable logging")
-	flag.Parse()
 
 	if _, err := os.Stat("log"); os.IsNotExist(err) {
 		os.Mkdir("log", os.ModePerm)
@@ -31,6 +30,7 @@ func init() {
 }
 
 func Logger() *AggregatedLogger {
+	flag.Parse()
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("2006-01-02-15-04")
 	file, err := os.OpenFile(fmt.Sprintf("log/log-%s.log", formattedTime), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)

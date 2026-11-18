@@ -134,10 +134,13 @@ func Auth(next http.HandlerFunc) http.Handler {
 			return
 		case session.InvalidSession:
 			http.SetCookie(w, &http.Cookie{
-				Name:   "Session",
-				Value:  "",
-				Path:   "/",
-				MaxAge: -1,
+				Name:     "Session",
+				Value:    "",
+				Path:     "/",
+				MaxAge:   -1,
+				HttpOnly: true,
+				Secure:   session.IsHTTPS(r),
+				SameSite: http.SameSiteLaxMode,
 			})
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
@@ -153,10 +156,13 @@ func Auth(next http.HandlerFunc) http.Handler {
 				return
 			}
 			http.SetCookie(w, &http.Cookie{
-				Name:   "Session",
-				Value:  "",
-				Path:   "/",
-				MaxAge: -1,
+				Name:     "Session",
+				Value:    "",
+				Path:     "/",
+				MaxAge:   -1,
+				HttpOnly: true,
+				Secure:   session.IsHTTPS(r),
+				SameSite: http.SameSiteLaxMode,
 			})
 			http.Redirect(w, r, "/auth/signin?error=suspicious_session", http.StatusSeeOther)
 			return
@@ -180,10 +186,13 @@ func Guest(next http.HandlerFunc) http.Handler {
 			return
 		case session.InvalidSession:
 			http.SetCookie(w, &http.Cookie{
-				Name:   "Session",
-				Value:  "",
-				Path:   "/",
-				MaxAge: -1,
+				Name:     "Session",
+				Value:    "",
+				Path:     "/",
+				MaxAge:   -1,
+				HttpOnly: true,
+				Secure:   session.IsHTTPS(r),
+				SameSite: http.SameSiteLaxMode,
 			})
 			next.ServeHTTP(w, r)
 			return

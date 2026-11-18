@@ -103,7 +103,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 				app.Server.Logger.Error(err.Error())
 				return
 			}
-			storeSession.Save(w)
+			storeSession.Save(r, w)
 			http.Redirect(w, r, "/auth/totp", http.StatusSeeOther)
 			return
 		}
@@ -132,7 +132,7 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			Location:  "Indonesia",
 		}
 
-		storeSession.Save(w)
+		storeSession.Save(r, w)
 		err = session.AddSessionInfo(email, &sessionInfo)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
