@@ -31,13 +31,16 @@ func init() {
 
 func Logger() *AggregatedLogger {
 	flag.Parse()
+	if err := os.MkdirAll("log", 0755); err != nil {
+		return fallbackLogger()
+	}
 	currentTime := time.Now()
 	formattedTime := currentTime.Format("2006-01-02-15-04")
 	file, err := os.OpenFile(fmt.Sprintf("log/log-%s.log", formattedTime), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	multiLogger := io.MultiWriter(os.Stdout, file)
 
 	if err != nil {
-		return &AggregatedLogger{}
+		return fallbackLogger()
 	}
 
 	if *logFlag {
@@ -54,6 +57,15 @@ func Logger() *AggregatedLogger {
 		warnLogger:  log.New(multiLogger, "WARN: ", slug),
 		errorLogger: log.New(multiLogger, "ERROR: ", slug),
 		panicLogger: log.New(multiLogger, "PANIC: ", slug),
+	}
+}
+
+func fallbackLogger() *AggregatedLogger {
+	return &AggregatedLogger{
+		infoLogger:  log.New(os.Stderr, "INFO: ", log.Ldate|log.Ltime),
+		warnLogger:  log.New(os.Stderr, "WARN: ", log.Ldate|log.Ltime),
+		errorLogger: log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime),
+		panicLogger: log.New(os.Stderr, "PANIC: ", log.Ldate|log.Ltime),
 	}
 }
 

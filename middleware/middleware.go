@@ -96,13 +96,15 @@ func Handler(next http.Handler) http.Handler {
 		writer.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, OPTIONS", utils.Getenv("CORS_METHODS")))
 		writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-		if strings.Contains(request.Header.Get("Accept-Encoding"), "gzip") {
+		if strings.Contains(request.Header.Get("Accept-Encoding"), "gzip") && request.URL.Path != "/ws" && !strings.HasPrefix(request.URL.Path, "/file/") && !strings.HasPrefix(request.URL.Path, "/public/") && request.Header.Get("Range") == "" {
+			writer.Header().Add("Vary", "Accept-Encoding")
 			writer.Header().Set("Content-Encoding", "gzip")
 			gz := gzip.NewWriter(writer)
 			defer gz.Close()
 
 			gzWriter := gzipResponseWriter{Writer: gz, ResponseWriter: writer}
-			next.ServeHTTP(gzWriter, request)
+			wrappedGzipWriter := &wrapper{ResponseWriter: gzWriter, request: request, statusCode: http.StatusOK}
+			next.ServeHTTP(wrappedGzipWriter, request)
 			return
 		}
 
@@ -125,16 +127,19 @@ func Auth(next http.HandlerFunc) http.Handler {
 		case session.Unauthorized:
 			if r.RequestURI != "/logout" {
 				http.SetCookie(w, &http.Cookie{
-					Name:  "redirect",
-					Value: r.RequestURI,
-					Path:  "/",
+					Name:     "redirect",
+					Value:    safeReturnPath(r.URL.RequestURI()),
+					Path:     "/",
+					HttpOnly: true,
+					Secure:   session.IsHTTPS(r),
+					SameSite: http.SameSiteLaxMode,
 				})
 			}
 			http.Redirect(w, r, "/auth/signin", http.StatusSeeOther)
 			return
 		case session.InvalidSession:
 			http.SetCookie(w, &http.Cookie{
-				Name:     "Session",
+				Name:     utils.Getenv("SESSION_NAME"),
 				Value:    "",
 				Path:     "/",
 				MaxAge:   -1,
@@ -156,7 +161,7 @@ func Auth(next http.HandlerFunc) http.Handler {
 				return
 			}
 			http.SetCookie(w, &http.Cookie{
-				Name:     "Session",
+				Name:     utils.Getenv("SESSION_NAME"),
 				Value:    "",
 				Path:     "/",
 				MaxAge:   -1,
@@ -173,6 +178,13 @@ func Auth(next http.HandlerFunc) http.Handler {
 	})
 }
 
+func safeReturnPath(path string) string {
+	if !strings.HasPrefix(path, "/") || strings.HasPrefix(path, "//") {
+		return "/"
+	}
+	return path
+}
+
 func Guest(next http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		status, _, _ := session.GetSession(r)
@@ -184,9 +196,9 @@ func Guest(next http.HandlerFunc) http.Handler {
 		case session.Unauthorized:
 			next.ServeHTTP(w, r)
 			return
-		case session.InvalidSession:
+		case session.InvalidSession, session.Suspicious:
 			http.SetCookie(w, &http.Cookie{
-				Name:     "Session",
+				Name:     utils.Getenv("SESSION_NAME"),
 				Value:    "",
 				Path:     "/",
 				MaxAge:   -1,
