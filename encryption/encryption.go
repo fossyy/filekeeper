@@ -65,6 +65,9 @@ func (e *aesEncryption) Decrypt(dec string) (string, error) {
 	}
 
 	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize+gcm.Overhead() {
+		return "", fmt.Errorf("ciphertext is too short")
+	}
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)

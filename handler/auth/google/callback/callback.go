@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
+	googleOauthHandler "github.com/fossyy/filekeeper/handler/auth/google"
 	googleOauthSetupHandler "github.com/fossyy/filekeeper/handler/auth/google/setup"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
@@ -13,6 +14,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -45,9 +47,16 @@ type OauthUser struct {
 }
 
 func GET(w http.ResponseWriter, r *http.Request) {
-	_, err := app.Server.Cache.GetCache(r.Context(), "CsrfTokens:"+r.URL.Query().Get("state"))
+	state := r.URL.Query().Get("state")
+	if state == "" {
+		http.Redirect(w, r, "/auth/signin?error=csrf_token_error", http.StatusFound)
+		return
+	}
+	secureStateCookie := session.IsHTTPS(r)
+	stateJSON, err := app.Server.Cache.GetCache(r.Context(), "CsrfTokens:"+state)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
+			http.SetCookie(w, &http.Cookie{Name: "oauth_state", Value: "", Path: "/auth/google/callback", MaxAge: -1, HttpOnly: true, Secure: r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https"), SameSite: http.SameSiteLaxMode})
 			http.Redirect(w, r, fmt.Sprintf("/auth/signin?error=%s", "csrf_token_error"), http.StatusFound)
 			return
 		}
@@ -55,14 +64,28 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	var csrf googleOauthHandler.CsrfToken
+	if err := json.Unmarshal([]byte(stateJSON), &csrf); err != nil {
+		http.Redirect(w, r, "/auth/signin?error=csrf_token_error", http.StatusFound)
+		return
+	}
+	if cookie, cookieErr := r.Cookie("oauth_state"); cookieErr != nil || cookie.Value != state {
+		http.Redirect(w, r, "/auth/signin?error=csrf_token_error", http.StatusFound)
+		return
+	}
+	if csrf.Token != state {
+		http.Redirect(w, r, "/auth/signin?error=csrf_token_error", http.StatusFound)
+		return
+	}
 
-	err = app.Server.Cache.DeleteCache(r.Context(), "CsrfTokens:"+r.URL.Query().Get("state"))
+	err = app.Server.Cache.DeleteCache(r.Context(), "CsrfTokens:"+state)
 	if err != nil {
 		http.Redirect(w, r, fmt.Sprintf("/auth/signin?error=%s", "csrf_token_error"), http.StatusFound)
 		return
 	}
 
 	if err := r.URL.Query().Get("error"); err != "" {
+		http.SetCookie(w, &http.Cookie{Name: "oauth_state", Value: "", Path: "/auth/google/callback", MaxAge: -1, HttpOnly: true, Secure: secureStateCookie, SameSite: http.SameSiteLaxMode})
 		http.Redirect(w, r, fmt.Sprintf("/auth/signin?error=%s", err), http.StatusFound)
 		return
 	}
@@ -75,10 +98,18 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		"redirect_uri":  {utils.Getenv("GOOGLE_CALLBACK")},
 	}
 
-	resp, err := http.Post("https://oauth2.googleapis.com/token", "application/x-www-form-urlencoded", bytes.NewBufferString(formData.Encode()))
+	tokenRequest, err := http.NewRequestWithContext(r.Context(), http.MethodPost, "https://oauth2.googleapis.com/token", bytes.NewBufferString(formData.Encode()))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		app.Server.Logger.Error("Error:", err)
+		app.Server.Logger.Error("Error creating token request:", err)
+		return
+	}
+	tokenRequest.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(tokenRequest)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error("Error requesting token:", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -95,8 +126,10 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error("Error reading token response body:", err)
 		return
 	}
-
-	client := &http.Client{}
+	if oauthData.AccessToken == "" {
+		http.Error(w, "Invalid token response", http.StatusBadGateway)
+		return
+	}
 
 	req, err := http.NewRequestWithContext(r.Context(), "GET", "https://www.googleapis.com/oauth2/v1/userinfo?alt=json", nil)
 	if err != nil {
@@ -119,7 +152,6 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error("Error user info endpoint returned status: ", userInfoResp.Status)
 		return
 	}
-
 	var oauthUser OauthUser
 	if err := json.NewDecoder(userInfoResp.Body).Decode(&oauthUser); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -167,9 +199,10 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		Authenticated: true,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, fmt.Sprintf("/auth/signin?error=%s", "csrf_token_error"), http.StatusFound)
 		return
 	}
+	http.SetCookie(w, &http.Cookie{Name: "oauth_state", Value: "", Path: "/auth/google/callback", MaxAge: -1, HttpOnly: true, Secure: r.TLS != nil, SameSite: http.SameSiteLaxMode})
 
 	userAgent := r.Header.Get("User-Agent")
 	browserInfo, osInfo := utils.ParseUserAgent(userAgent)
@@ -193,16 +226,24 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie, err := r.Cookie("redirect")
-	if errors.Is(err, http.ErrNoCookie) {
+	if err != nil || !validRedirect(cookie.Value) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:   "redirect",
-		MaxAge: -1,
+		Name:     "redirect",
+		MaxAge:   -1,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   session.IsHTTPS(r),
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 	return
+}
+
+func validRedirect(value string) bool {
+	return strings.HasPrefix(value, "/") && !strings.HasPrefix(value, "//") && !strings.Contains(value, `\`)
 }

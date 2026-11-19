@@ -1,7 +1,7 @@
 package totpHandler
 
 import (
-	"errors"
+	"crypto/subtle"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types"
@@ -9,6 +9,7 @@ import (
 	"github.com/fossyy/filekeeper/view/client/totp"
 	"github.com/xlzd/gotp"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -38,15 +39,30 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	code := r.Form.Get("code")
+	if len(code) != 6 || !isNumericCode(code) {
+		http.Error(w, "Invalid code", http.StatusBadRequest)
+		return
+	}
 	_, user, key := session.GetSession(r)
+	if key == "" || user.Totp == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	decryptedSecret, err := app.Server.Encryption.Decrypt(user.Totp)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "Unable to verify code", http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
+		return
 	}
 	totp := gotp.NewDefaultTOTP(decryptedSecret)
 
-	if totp.Verify(code, time.Now().Unix()) {
+	validCode := false
+	for _, timestamp := range []int64{time.Now().Unix() - 30, time.Now().Unix(), time.Now().Unix() + 30} {
+		if subtle.ConstantTimeCompare([]byte(totp.At(timestamp)), []byte(code)) == 1 {
+			validCode = true
+		}
+	}
+	if validCode {
 		storeSession := session.Get(key)
 		err := storeSession.Change(types.User{
 			UserID:        user.UserID,
@@ -82,13 +98,17 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 		cookie, err := r.Cookie("redirect")
-		if errors.Is(err, http.ErrNoCookie) {
+		if err != nil || !validRedirect(cookie.Value) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
 		http.SetCookie(w, &http.Cookie{
-			Name:   "redirect",
-			MaxAge: -1,
+			Name:     "redirect",
+			MaxAge:   -1,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   session.IsHTTPS(r),
+			SameSite: http.SameSiteLaxMode,
 		})
 		http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 		return
@@ -104,4 +124,17 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
+}
+
+func validRedirect(value string) bool {
+	return strings.HasPrefix(value, "/") && !strings.HasPrefix(value, "//") && !strings.Contains(value, `\`)
+}
+
+func isNumericCode(value string) bool {
+	for _, digit := range value {
+		if digit < '0' || digit > '9' {
+			return false
+		}
+	}
+	return true
 }

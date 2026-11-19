@@ -11,7 +11,7 @@ import (
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
-	cookie, err := r.Cookie("Session")
+	cookie, err := r.Cookie(utils.Getenv("SESSION_NAME"))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())

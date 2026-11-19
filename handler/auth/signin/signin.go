@@ -1,7 +1,6 @@
 package signinHandler
 
 import (
-	"errors"
 	"github.com/a-h/templ"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/session"
@@ -9,6 +8,7 @@ import (
 	"github.com/fossyy/filekeeper/utils"
 	"github.com/fossyy/filekeeper/view/client/auth/signin"
 	"net/http"
+	"strings"
 )
 
 var errorMessages = make(map[string]string)
@@ -141,13 +141,17 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		}
 
 		cookie, err := r.Cookie("redirect")
-		if errors.Is(err, http.ErrNoCookie) {
+		if err != nil || !validRedirect(cookie.Value) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
 		http.SetCookie(w, &http.Cookie{
-			Name:   "redirect",
-			MaxAge: -1,
+			Name:     "redirect",
+			MaxAge:   -1,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   session.IsHTTPS(r),
+			SameSite: http.SameSiteLaxMode,
 		})
 		http.Redirect(w, r, cookie.Value, http.StatusSeeOther)
 		return
@@ -163,4 +167,8 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	return
+}
+
+func validRedirect(value string) bool {
+	return strings.HasPrefix(value, "/") && !strings.HasPrefix(value, "//") && !strings.Contains(value, `\`)
 }

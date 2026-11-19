@@ -82,7 +82,10 @@ func (s *Session) Delete() error {
 }
 
 func (s *Session) Save(r *http.Request, w http.ResponseWriter) {
-	maxAge, _ := strconv.Atoi(utils.Getenv("SESSION_MAX_AGE"))
+	maxAge, err := strconv.Atoi(utils.Getenv("SESSION_MAX_AGE"))
+	if err != nil {
+		maxAge = 0
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     utils.Getenv("SESSION_NAME"),
 		Value:    s.ID,
@@ -137,21 +140,16 @@ func RemoveSessionInfo(email string, id string) error {
 }
 
 func RemoveAllSessions(email string) error {
-	pattern := "UserSessionInfo:" + email + ":*"
-	keys, err := app.Server.Cache.GetKeys(context.Background(), pattern)
+	sessions, err := GetSessions(email)
 	if err != nil {
 		return err
 	}
-
-	for _, key := range keys {
-		parts := strings.Split(key, ":")
-		sessionID := parts[2]
-
-		err = app.Server.Cache.DeleteCache(context.Background(), "Session:"+sessionID)
+	for _, sessionInfo := range sessions {
+		err = app.Server.Cache.DeleteCache(context.Background(), "Session:"+sessionInfo.SessionID)
 		if err != nil {
 			return err
 		}
-		err = app.Server.Cache.DeleteCache(context.Background(), key)
+		err = app.Server.Cache.DeleteCache(context.Background(), "UserSessionInfo:"+email+":"+sessionInfo.SessionID)
 		if err != nil {
 			return err
 		}
@@ -181,7 +179,8 @@ func GetSessionInfo(email string, id string) (*SessionInfo, error) {
 }
 
 func GetSession(r *http.Request) (UserStatus, types.User, string) {
-	cookie, err := r.Cookie("Session")
+	cookieName := utils.Getenv("SESSION_NAME")
+	cookie, err := r.Cookie(cookieName)
 	if err != nil {
 		return Unauthorized, types.User{}, ""
 	}

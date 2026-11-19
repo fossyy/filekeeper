@@ -12,6 +12,15 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	mySession := r.Context().Value("user").(types.User)
 	mySessionID := r.Context().Value("sessionID").(string)
+	otherSessionInfo, err := session.GetSessionInfo(mySession.Email, id)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	if otherSessionInfo.SessionID != id {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
 
 	if id == mySessionID {
 		w.Header().Set("HX-Redirect", "/logout")
@@ -20,7 +29,7 @@ func DELETE(w http.ResponseWriter, r *http.Request) {
 	}
 
 	otherSession := session.Get(id)
-	err := session.RemoveSessionInfo(mySession.Email, otherSession.ID)
+	err = session.RemoveSessionInfo(mySession.Email, otherSession.ID)
 	if err != nil {
 		if errors.Is(err, session.ErrorSessionNotFound) {
 			w.WriteHeader(http.StatusUnauthorized)

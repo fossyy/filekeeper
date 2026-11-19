@@ -55,12 +55,21 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized Action", http.StatusUnauthorized)
 		return
 	}
+	if err != nil {
+		http.Error(w, "Unable to load setup", http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 
 	var unregisteredUser UnregisteredUser
 	err = json.Unmarshal([]byte(cache), &unregisteredUser)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
+		return
+	}
+	if unregisteredUser.Email == "" || unregisteredUser.Code != code {
+		http.Error(w, "Unauthorized Action", http.StatusUnauthorized)
 		return
 	}
 
@@ -89,6 +98,11 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		http.Error(w, "Unable to create account", http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 	userID := uuid.New()
 	newUser := models.User{
 		UserID:   userID,
@@ -110,6 +124,11 @@ func POST(w http.ResponseWriter, r *http.Request) {
 			app.Server.Logger.Error(err.Error())
 			return
 		}
+		return
+	}
+	if err := app.Server.Cache.DeleteCache(r.Context(), "GoogleSetup:"+code); err != nil {
+		http.Error(w, "Unable to complete setup", http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 
