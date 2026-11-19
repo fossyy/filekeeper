@@ -2,10 +2,13 @@ package downloadHandler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/session"
 	"github.com/fossyy/filekeeper/types/models"
+	"gorm.io/gorm"
+	"mime"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,7 +18,11 @@ func GET(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("id")
 	file, err := app.Server.Database.GetFile(fileID)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, "Unable to load file", http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
 	}
@@ -42,20 +49,32 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, file.Size))
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", end-start+1))
 		w.WriteHeader(http.StatusPartialContent)
-		sendFileChunk(r.Context(), w, file, start, end)
+		if err := streamFileRange(r.Context(), w, file, start, end); err != nil {
+			app.Server.Logger.Error(err.Error())
+		}
 		return
 	}
 
-	w.Header().Set("Content-Disposition", "attachment; filename="+file.Name)
+	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": file.Name}))
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Accept-Ranges", "bytes")
-	w.Header().Set("Content-Length", fmt.Sprintf("%d", file.Size))
-
 	if file.Size > uint64(^uint64(0)>>1) {
 		http.Error(w, "File is too large", http.StatusRequestedRangeNotSatisfiable)
 		return
 	}
-	sendFileChunk(r.Context(), w, file, 0, int64(file.Size)-1)
+	if file.Size == 0 {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	w.Header().Set("Content-Length", strconv.FormatUint(file.Size, 10))
+	w.WriteHeader(http.StatusOK)
+	if err := streamFileRange(r.Context(), w, file, 0, int64(file.Size)-1); err != nil {
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+	if err := app.Server.Database.IncrementDownloadCount(file.ID.String()); err != nil {
+		app.Server.Logger.Error(err.Error())
+	}
 	return
 }
 
@@ -87,7 +106,7 @@ func parseRange(header string, size uint64) (start int64, end int64, valid bool)
 	return start, end, true
 }
 
-func sendFileChunk(ctx context.Context, w http.ResponseWriter, file *models.File, start, end int64) {
+func streamFileRange(ctx context.Context, w http.ResponseWriter, file *models.File, start, end int64) error {
 	chunkSize := int64(2 * 1024 * 1024)
 
 	startChunk := start / chunkSize
@@ -97,9 +116,7 @@ func sendFileChunk(ctx context.Context, w http.ResponseWriter, file *models.File
 		chunkKey := fmt.Sprintf("%s/%s/chunk_%d", file.OwnerID.String(), file.ID.String(), i)
 		chunkData, err := app.Server.Storage.Get(ctx, chunkKey)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			app.Server.Logger.Error(err.Error())
-			return
+			return err
 		}
 
 		chunkLen := int64(len(chunkData))
@@ -107,7 +124,7 @@ func sendFileChunk(ctx context.Context, w http.ResponseWriter, file *models.File
 		startOffset := max(start-chunkStart, int64(0))
 		endOffset := min(end-chunkStart, chunkSize-1)
 		if chunkLen == 0 || startOffset >= chunkLen || endOffset < startOffset {
-			continue
+			return fmt.Errorf("missing file bytes in chunk %d", i)
 		}
 		endOffset = min(endOffset, chunkLen-1)
 
@@ -122,19 +139,9 @@ func sendFileChunk(ctx context.Context, w http.ResponseWriter, file *models.File
 			dataToSend = chunkData
 		}
 
-		_, err = w.Write(dataToSend)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			app.Server.Logger.Error(err.Error())
-			return
-		}
-
-		if i == int64(file.TotalChunk)-1 {
-			err := app.Server.Database.IncrementDownloadCount(file.ID.String())
-			if err != nil {
-				app.Server.Logger.Error(err.Error())
-				return
-			}
+		if _, err := w.Write(dataToSend); err != nil {
+			return err
 		}
 	}
+	return nil
 }

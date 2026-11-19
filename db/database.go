@@ -245,6 +245,12 @@ func (db *mySQLdb) GetAllowance(userID uuid.UUID) (*models.Allowance, error) {
 	return &allowance, nil
 }
 
+func (db *mySQLdb) CountUserFiles(ownerID string) (uint64, error) {
+	var count int64
+	err := db.DB.Model(&models.MysqlFile{}).Where("owner_id = ?", ownerID).Count(&count).Error
+	return uint64(count), err
+}
+
 func (db *mySQLdb) CreateFile(file *models.File) error {
 	mysqlFile := models.MysqlFile{
 		ID:         UUIDToString(file.ID),
@@ -401,13 +407,7 @@ func (db *mySQLdb) GetFiles(ownerID string, query string, status types.FileStatu
 }
 
 func (db *mySQLdb) IncrementDownloadCount(fileID string) error {
-	var mysqlFile models.MysqlFile
-	err := db.DB.Table("files").Where("id = ?", fileID).First(&mysqlFile).Error
-	if err != nil {
-		return err
-	}
-	mysqlFile.Downloaded++
-	return db.DB.Save(&mysqlFile).Error
+	return db.DB.Model(&models.MysqlFile{}).Where("id = ?", fileID).UpdateColumn("downloaded", gorm.Expr("downloaded + 1")).Error
 }
 
 func (db *mySQLdb) ChangeFileVisibility(fileID string) error {
@@ -515,6 +515,12 @@ func (db *postgresDB) GetAllowance(userID uuid.UUID) (*models.Allowance, error) 
 	return &allowance, nil
 }
 
+func (db *postgresDB) CountUserFiles(ownerID string) (uint64, error) {
+	var count int64
+	err := db.DB.Model(&models.File{}).Where("owner_id = $1", ownerID).Count(&count).Error
+	return uint64(count), err
+}
+
 func (db *postgresDB) CreateFile(file *models.File) error {
 	err := db.DB.Create(file).Error
 	if err != nil {
@@ -535,6 +541,9 @@ func (db *postgresDB) GetFile(fileID string) (*models.File, error) {
 func (db *postgresDB) RenameFile(fileID string, name string) (*models.File, error) {
 	var file models.File
 	err := db.DB.Table("files").Where("id = $1", fileID).First(&file).Error
+	if err != nil {
+		return nil, err
+	}
 	file.Name = name
 	err = db.DB.Save(&file).Error
 	if err != nil {
@@ -595,17 +604,7 @@ func (db *postgresDB) GetFiles(ownerID string, query string, status types.FileSt
 }
 
 func (db *postgresDB) IncrementDownloadCount(fileID string) error {
-	var file models.File
-	err := db.DB.Table("files").Where("id = $1", fileID).First(&file).Error
-	if err != nil {
-		return err
-	}
-	file.Downloaded = file.Downloaded + 1
-	err = db.DB.Updates(file).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.DB.Model(&models.File{}).Where("id = $1", fileID).UpdateColumn("downloaded", gorm.Expr("downloaded + 1")).Error
 }
 
 func (db *postgresDB) ChangeFileVisibility(fileID string) error {

@@ -17,7 +17,8 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileID := r.PathValue("id")
-	if err := r.ParseMultipartForm(32 << 20); err != nil {
+	r.Body = http.MaxBytesReader(w, r.Body, 3<<20)
+	if err := r.ParseMultipartForm(1 << 20); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		app.Server.Logger.Error(err.Error())
 		return
@@ -34,7 +35,6 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-
 	index, err := strconv.Atoi(r.FormValue("index"))
 	if err != nil || index < 0 || uint64(index) >= file.TotalChunk {
 		w.WriteHeader(http.StatusBadRequest)
@@ -55,7 +55,13 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error("error copying byte to file dst: " + err.Error())
 		return
 	}
-	if len(buffer) > 2*1024*1024 || (index < int(file.TotalChunk)-1 && len(buffer) != 2*1024*1024) {
+	chunkStart := uint64(index) * (2 * 1024 * 1024)
+	if file.Size <= chunkStart {
+		http.Error(w, "Invalid chunk index", http.StatusBadRequest)
+		return
+	}
+	expectedSize := min(uint64(2*1024*1024), file.Size-chunkStart)
+	if uint64(len(buffer)) != expectedSize {
 		http.Error(w, "Invalid chunk size", http.StatusBadRequest)
 		return
 	}
