@@ -109,17 +109,21 @@ templ modalScript() {
         window.closeModalBtn = document.getElementById('closeModal');
         window.content = document.getElementById('content');
         function toggleModal() {
+            if (!window.modalContainer) return;
             window.modalContainer.classList.contains('hidden')
                 ? modalContainer.classList.remove('hidden')
                 : modalContainer.classList.add('hidden');
         }
 
-        window.closeModalBtn.addEventListener('click', toggleModal);
-        window.modalContainer.addEventListener('click', function(event) {
+        window.closeModalBtn?.addEventListener('click', toggleModal);
+        window.modalContainer?.addEventListener('click', function(event) {
             if (event.target === modalContainer) {
                 toggleModal();
             }
-        })
+        });
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') toggleModal();
+        });
     </script>
 }
 

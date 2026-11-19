@@ -50,7 +50,7 @@ templ MainContent(title string, files []types.FileData, user types.User, allowan
 							Click to upload or drag and drop
 						</p>
 					</label>
-					<input id="file-upload" name="file-upload" type="file" class="hidden"/>
+					<input id="file-upload" name="file-upload" type="file" class="hidden" multiple/>
 				</div>
 				<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden opacity-0 transition-opacity duration-300 z-50">
 					<div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white transform transition-all duration-300 -translate-y-full scale-95 opacity-0 z-50">
@@ -90,7 +90,7 @@ templ MainContent(title string, files []types.FileData, user types.User, allowan
 								</div>
 							</div>
 							<div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-								<button type="button" hx-swap="outerHTML" onClick={ hideRenameModal() } id="confirmRenameFile" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+								<button type="button" hx-swap="outerHTML" id="confirmRenameFile" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
 									Rename
 								</button>
 								<button type="button" onClick={ hideRenameModal() } class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
@@ -245,37 +245,45 @@ templ MainContent(title string, files []types.FileData, user types.User, allowan
 		</div>
 	</main>
 	<script type="text/javascript">
-        document.addEventListener("dragover", function (event) {
-            event.preventDefault();
-            document.getElementById('dropzone-file').classList.add('bg-gray-100', 'border-blue-500');
-        });
+        const dropzone = document.getElementById('dropzone-file');
+        const fileUpload = document.getElementById('file-upload');
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            document.getElementById('dropzone-file').addEventListener(eventName,  highlight, false);
-        });
+        if (dropzone && fileUpload) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, function(event) {
+                    if (isFileDrag(event)) highlight(event);
+                }, false);
+            });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            document.getElementById('dropzone-file').addEventListener(eventName, unhighlight, false);
-        });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, unhighlight, false);
+            });
 
-        function highlight(e) {
-            document.getElementById('dropzone-file').classList.add('bg-gray-100', 'border-blue-500');
+            function isFileDrag(e) {
+                return e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files');
+            }
+
+            function highlight(e) {
+                if (!isFileDrag(e)) return;
+                e.preventDefault();
+                dropzone.classList.add('bg-gray-100', 'border-blue-500');
+            }
+
+            function unhighlight(e) {
+                dropzone.classList.remove('bg-gray-100', 'border-blue-500');
+            }
+            dropzone.addEventListener("drop", async function (event) {
+                if (!isFileDrag(event)) return;
+                event.preventDefault();
+                const files = Array.from(event.dataTransfer?.files ?? []);
+                for (const file of files) await handleFile(file);
+            });
+
+            fileUpload.addEventListener('change', async function(event) {
+                for (const file of Array.from(event.target.files ?? [])) await handleFile(file);
+                event.target.value = '';
+            });
         }
-
-        function unhighlight(e) {
-            document.getElementById('dropzone-file').classList.remove('bg-gray-100', 'border-blue-500');
-        }
-        document.addEventListener("drop", async function (event) {
-            event.preventDefault();
-            const file = event.dataTransfer.files[0]
-            await handleFile(file)
-        });
-
-        document.getElementById('dropzone-file').addEventListener('change', async function(event) {
-            event.preventDefault();
-            const file = event.target.files[0]
-            await handleFile(file)
-        });
     </script>
 }
 
@@ -502,24 +510,25 @@ script hideDeletionModal() {
 
 script showRenameModal(name string, id string) {
     const rename = document.getElementById('renameModal');
-    const renameModalContent = rename.querySelector('div');
+            const renameModalContent = rename.querySelector('div');
     const fileName = document.getElementById("newFileName");
     const confirmRenameFile = document.getElementById("confirmRenameFile");
 
     confirmRenameFile.setAttribute("hx-target", "#file-" + id);
+    confirmRenameFile.setAttribute("hx-patch", "/file/" + encodeURIComponent(id) + "?name=" + encodeURIComponent(name));
     htmx.process(confirmRenameFile);
-
-    fileName.addEventListener("change", function (event) {
-        event.preventDefault();
-        confirmRenameFile.setAttribute("hx-patch", "/file/" + id + "?name=" + event.target.value);
-        htmx.process(confirmRenameFile);
-    });
     rename.classList.remove('hidden');
     setTimeout(() => {
         rename.classList.remove('opacity-0');
         renameModalContent.classList.remove('-translate-y-full', 'scale-95', 'opacity-0');
     }, 50);
     fileName.value = name
+    confirmRenameFile.onclick = function(event) {
+        event.preventDefault();
+        confirmRenameFile.setAttribute("hx-patch", "/file/" + encodeURIComponent(id) + "?name=" + encodeURIComponent(fileName.value));
+        htmx.process(confirmRenameFile);
+        htmx.ajax('PATCH', confirmRenameFile.getAttribute("hx-patch"), {target: "#file-" + id, swap: "outerHTML"});
+    };
 }
 
 script hideRenameModal() {
@@ -548,7 +557,7 @@ script showShareModal(isPrivate bool, fileID string) {
 		lockDiv.classList.remove('hidden');
 	}
 
-	shareLink.value = window.location + "/" + fileID
+    shareLink.value = `${window.location.origin}/file/${encodeURIComponent(fileID)}`
 
     const twitterLink = document.getElementById('twitterShare');
     const facebookLink = document.getElementById('facebookShare');
@@ -565,7 +574,7 @@ script showShareModal(isPrivate bool, fileID string) {
 
     copyButton.addEventListener('click', function() {
         shareLink.select();
-        document.execCommand('copy');
+        navigator.clipboard?.writeText(shareLink.value).catch(() => shareLink.select());
         this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>';
         setTimeout(() => {
             this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';

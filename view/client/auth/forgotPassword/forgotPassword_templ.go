@@ -46,7 +46,7 @@ func content(title string, err types.Message) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"bg-gray-100 flex items-center justify-center min-h-screen\"><div class=\"bg-white p-8 rounded-lg shadow-md w-full max-w-md\"><h1 class=\"text-2xl font-bold mb-6 text-center text-gray-800\">Forgot Password</h1><p class=\"text-gray-600 text-sm mb-6 text-center\">Enter your email address and we'll send you instructions to reset your password.</p><form action=\"#\" method=\"POST\" class=\"space-y-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"bg-gray-100 flex items-center justify-center min-h-screen\"><div class=\"bg-white p-8 rounded-lg shadow-md w-full max-w-md\"><h1 class=\"text-2xl font-bold mb-6 text-center text-gray-800\">Forgot Password</h1><p class=\"text-gray-600 text-sm mb-6 text-center\">Enter your email address and we'll send you instructions to reset your password.</p><form action=\"/auth/forgot-password\" method=\"POST\" class=\"space-y-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -217,7 +217,7 @@ func EmailSend(title string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<style>h1, h2, h3, h4, h5, h6 { font-family: 'Arimo', sans-serif; --font-sans: 'Arimo'; }</style> <style>body { font-family: 'Libre Franklin', sans-serif; --font-sans: 'Libre Franklin'; }</style> <div class=\"flex flex-col items-center justify-center min-h-[80vh] gap-6\"><div class=\"flex items-center justify-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"h-16 w-16 text-gray-500 dark:text-gray-400\"><rect width=\"20\" height=\"16\" x=\"2\" y=\"4\" rx=\"2\"></rect> <path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"></path></svg></div><div class=\"space-y-2 text-center\"><h1 class=\"text-3xl font-bold\">Email Verification Sent</h1><p class=\"text-gray-500 dark:text-gray-400\">We've sent a verification email to your inbox. Please check your email and follow the instructions to change your password.</p></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<style>h1, h2, h3, h4, h5, h6 { font-family: 'Arimo', sans-serif; --font-sans: 'Arimo'; }</style> <style>body { font-family: 'Libre Franklin', sans-serif; --font-sans: 'Libre Franklin'; }</style> <div class=\"flex flex-col items-center justify-center min-h-[80vh] gap-6\"><div class=\"flex items-center justify-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"h-16 w-16 text-gray-500 dark:text-gray-400\"><rect width=\"20\" height=\"16\" x=\"2\" y=\"4\" rx=\"2\"></rect> <path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"></path></svg></div><div class=\"space-y-2 text-center\"><h1 class=\"text-3xl font-bold\">Email Verification Sent</h1><p class=\"text-gray-500 dark:text-gray-400\">If your account exists, password reset instructions have been sent.</p></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

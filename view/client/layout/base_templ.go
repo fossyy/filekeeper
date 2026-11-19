@@ -262,7 +262,7 @@ func modalScript() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<script type=\"text/javascript\">\n        window.modalContainer = document.getElementById('modalContainer');\n        window.closeModalBtn = document.getElementById('closeModal');\n        window.content = document.getElementById('content');\n        function toggleModal() {\n            window.modalContainer.classList.contains('hidden')\n                ? modalContainer.classList.remove('hidden')\n                : modalContainer.classList.add('hidden');\n        }\n\n        window.closeModalBtn.addEventListener('click', toggleModal);\n        window.modalContainer.addEventListener('click', function(event) {\n            if (event.target === modalContainer) {\n                toggleModal();\n            }\n        })\n    </script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<script type=\"text/javascript\">\n        window.modalContainer = document.getElementById('modalContainer');\n        window.closeModalBtn = document.getElementById('closeModal');\n        window.content = document.getElementById('content');\n        function toggleModal() {\n            if (!window.modalContainer) return;\n            window.modalContainer.classList.contains('hidden')\n                ? modalContainer.classList.remove('hidden')\n                : modalContainer.classList.add('hidden');\n        }\n\n        window.closeModalBtn?.addEventListener('click', toggleModal);\n        window.modalContainer?.addEventListener('click', function(event) {\n            if (event.target === modalContainer) {\n                toggleModal();\n            }\n        });\n        document.addEventListener('keydown', function(event) {\n            if (event.key === 'Escape') toggleModal();\n        });\n    </script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -303,7 +303,7 @@ func Navbar(user types.User) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(user.Username)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/layout/base.templ`, Line: 172, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/layout/base.templ`, Line: 176, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -316,7 +316,7 @@ func Navbar(user types.User) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(user.Email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/layout/base.templ`, Line: 173, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/client/layout/base.templ`, Line: 177, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
