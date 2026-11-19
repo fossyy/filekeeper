@@ -1,11 +1,12 @@
 var isMatch = false;
 var isValid = false;
 var hasUppercase = false;
+var hasNumber = false;
 
 function validatePasswords() {
     var checkContainer = document.getElementById('checkContainer')
-    var password = document.getElementById('password').value;
-    var confirmPassword = document.getElementById('confirmPassword').value;
+    var passwordInput = document.getElementById('password');
+    var confirmPasswordInput = document.getElementById('confirmPassword');
     var matchGoodPath = document.getElementById('matchGoodPath');
     var matchBadPath = document.getElementById('matchBadPath');
     var lengthGoodPath = document.getElementById('lengthGoodPath');
@@ -18,7 +19,21 @@ function validatePasswords() {
     var matchStatusText = document.getElementById('matchStatusText');
     var lengthStatusText = document.getElementById('lengthStatusText');
     var uppercaseStatusText = document.getElementById('uppercaseStatusText');
-    console.log("jalan")
+    var numberSvgContainer = document.getElementById('numberSvgContainer');
+    var numberGoodPath = document.getElementById('numberGoodPath');
+    var numberBadPath = document.getElementById('numberBadPath');
+    var numberStatusText = document.getElementById('numberStatusText');
+    var submitButton = document.getElementById('submit');
+    if (!checkContainer || !passwordInput || !confirmPasswordInput ||
+        !matchGoodPath || !matchBadPath || !lengthGoodPath || !lengthBadPath ||
+        !uppercaseGoodPath || !uppercaseBadPath || !matchSvgContainer ||
+        !lengthSvgContainer || !uppercaseSvgContainer || !matchStatusText ||
+        !lengthStatusText || !uppercaseStatusText || !numberSvgContainer ||
+        !numberGoodPath || !numberBadPath || !numberStatusText || !submitButton) {
+        return;
+    }
+    var password = passwordInput.value;
+    var confirmPassword = confirmPasswordInput.value;
     if (password.length > 0) {
         checkContainer.classList.remove("hidden")
     } else {
@@ -84,12 +99,36 @@ function validatePasswords() {
         hasUppercase = false;
     }
 
-    if (isValid && isMatch && hasUppercase) {
-        document.getElementById("submit").disabled = false;
+    if (/[0-9]/.test(password)) {
+        numberSvgContainer.classList.remove('bg-red-200');
+        numberSvgContainer.classList.add('bg-green-200');
+        numberStatusText.classList.remove('text-red-700');
+        numberStatusText.classList.add('text-green-700');
+        numberGoodPath.style.display = 'inline';
+        numberBadPath.style.display = 'none';
+        numberStatusText.textContent = 'Password contains a number';
+        hasNumber = true;
     } else {
-        document.getElementById("submit").disabled = true;
+        numberSvgContainer.classList.remove('bg-green-200');
+        numberSvgContainer.classList.add('bg-red-200');
+        numberStatusText.classList.remove('text-green-700');
+        numberStatusText.classList.add('text-red-700');
+        numberGoodPath.style.display = 'none';
+        numberBadPath.style.display = 'inline';
+        numberStatusText.textContent = 'Password must contain a number';
+        hasNumber = false;
+    }
+
+    if (isValid && isMatch && hasUppercase && hasNumber) {
+        submitButton.disabled = false;
+    } else {
+        submitButton.disabled = true;
     }
 }
 
-document.getElementById('password').addEventListener('input', validatePasswords);
-document.getElementById('confirmPassword').addEventListener('input', validatePasswords);
+const passwordInput = document.getElementById('password');
+const confirmationInput = document.getElementById('confirmPassword');
+if (passwordInput && confirmationInput) {
+    passwordInput.addEventListener('input', validatePasswords);
+    confirmationInput.addEventListener('input', validatePasswords);
+}

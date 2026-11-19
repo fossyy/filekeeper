@@ -1,7 +1,14 @@
 if (!window.mySocket) {
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    window.mySocket = new WebSocket(`${wsProtocol}//${window.location.host}/ws`);
+    try {
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        window.mySocket = new WebSocket(`${wsProtocol}//${window.location.host}/ws`);
+    } catch (error) {
+        console.error('WebSocket unavailable:', error);
+        window.mySocket = null;
+    }
+}
 
+if (window.mySocket) {
     window.mySocket.onopen = function(event) {
         console.log('WebSocket is open now.');
     };
@@ -19,12 +26,12 @@ if (!window.mySocket) {
                 }
             } else {
                 if (data.action === "UploadNewFile") {
-                    if (data.response.Done === false) {
+                    if (data.response && data.response.Done === false) {
                         const file = window.fileIdMap?.[data.responseID];
                         if (!(file instanceof File)) return;
-                        addNewUploadElement(file);
+                        addNewUploadElement(file, data.responseID);
                         const fileChunks = await splitFile(file, file.chunkSize);
-                        await uploadChunks(file.name, file.size, fileChunks, data.response.Chunk, data.response.ID);
+                        await uploadChunks(data.responseID, file, fileChunks, data.response.Chunk, data.response.ID);
                     } else {
                         ChangeModal("Error", "File already uploaded.")
                         toggleModal();
@@ -54,6 +61,16 @@ function generateUniqueId() {
 
 async function handleFile(file){
     if (!(file instanceof File)) return;
+    if (window.mySocket?.readyState !== WebSocket.OPEN) {
+        ChangeModal("Upload unavailable", "The upload connection is not ready. Refresh the page and try again.");
+        toggleModal();
+        return;
+    }
+    if (file.size === 0) {
+        ChangeModal("Empty file", "Zero-byte files are not supported. Choose a file with content.");
+        toggleModal();
+        return;
+    }
     const chunkSize = 2 * 1024 * 1024;
     const chunks = Math.ceil(file.size / chunkSize);
     const fileId = generateUniqueId();
@@ -74,11 +91,20 @@ async function handleFile(file){
     window.fileIdMap = window.fileIdMap || {};
     window.fileIdMap[fileId] = file;
 
-    window.mySocket.send(data)
+    try {
+        window.mySocket.send(data);
+    } catch (error) {
+        delete window.fileIdMap[fileId];
+        ChangeModal("Upload unavailable", "The upload could not be started. Refresh the page and try again.");
+        toggleModal();
+    }
 }
 
-function addNewUploadElement(file){
+function addNewUploadElement(file, fileId){
     if (!(file instanceof File)) return;
+    const uploadList = document.getElementById('FileUploadBoxItem');
+    const uploadBox = document.getElementById('uploadBox');
+    if (!uploadList || !uploadBox) return;
     const newDiv = document.createElement('div');
     newDiv.innerHTML = `
       <div class="space-y-4">
@@ -87,26 +113,27 @@ function addNewUploadElement(file){
                   <div class="relative">
                       <svg class="w-12 h-12" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
                           <circle cx="18" cy="18" r="16" fill="none" class="stroke-current text-gray-200" stroke-width="2"></circle>
-                          <circle id="progress-${ file.name }-1" cx="18" cy="18" r="16" fill="none" class="stroke-current text-blue-600" stroke-width="2" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 18 18)"></circle>
+                          <circle id="progress-${ fileId }-1" cx="18" cy="18" r="16" fill="none" class="stroke-current text-blue-600" stroke-width="2" stroke-dasharray="100" stroke-dashoffset="100" transform="rotate(-90 18 18)"></circle>
                       </svg>
                       <div class="absolute inset-0 flex items-center justify-center">
-                          <span id="progress-${ file.name }-2" class="text-xs font-medium">0%</span>
+                          <span id="progress-${ fileId }-2" class="text-xs font-medium">0%</span>
                       </div>
                   </div>
                   <div class="flex flex-col">
-                      <span class="text-base font-medium truncate w-48">${ file.name }</span>
+                      <span class="upload-file-name text-base font-medium truncate w-48"></span>
                       <div class="flex items-center gap-x-3 whitespace-nowrap">
 
                     </div>
-                    <div id="progress-${ file.name }-3" class="text-sm text-gray-500">Starting...</div>
+                    <div id="progress-${ fileId }-3" class="text-sm text-gray-500">Starting...</div>
                   </div>
               </div>
               <button type="button" class="text-blue-500 text-base font-medium" aria-label="Dismiss upload" onclick="this.closest('.space-y-4').remove()">Dismiss</button>
           </div>
       </div>
       `;
-    document.getElementById('FileUploadBoxItem').appendChild(newDiv);
-    document.getElementById('uploadBox').classList.remove('hidden');
+    newDiv.querySelector('.upload-file-name').textContent = file.name;
+    uploadList.appendChild(newDiv);
+    uploadBox.classList.remove('hidden');
 }
 
 function convertFileSize(sizeInBytes) {
@@ -145,18 +172,18 @@ async function hash(arrayBuffer) {
     return hashHex;
 }
 
-async function uploadChunks(name, size, chunks, chunkArray, FileID) {
-    let byteUploaded = 0
-    let progress1 = document.getElementById(`progress-${name}-1`);
-    let progress2 = document.getElementById(`progress-${name}-2`);
-    let progress3 = document.getElementById(`progress-${name}-3`);
+async function uploadChunks(fileId, file, chunks, chunkArray, FileID) {
+    let progress1 = document.getElementById(`progress-${fileId}-1`);
+    let progress2 = document.getElementById(`progress-${fileId}-2`);
+    let progress3 = document.getElementById(`progress-${fileId}-3`);
+    if (!progress1 || !progress2 || !progress3) return;
     let isFailed = false
     for (let index = 0; index < chunks.length; index++) {
         const percentComplete = Math.round((index + 1) / chunks.length * 100);
         const chunk = chunks[index];
-        if (!(chunkArray["chunk_"+index])) {
+        if (!(chunkArray?.["chunk_"+index])) {
             const formData = new FormData();
-            formData.append('name', name);
+            formData.append('name', file.name);
             formData.append('chunk', chunk);
             formData.append('index', index);
             formData.append('done', false);
@@ -187,28 +214,34 @@ async function uploadChunks(name, size, chunks, chunkArray, FileID) {
             const endTime = performance.now();
             const totalTime = (endTime - startTime) / 1000;
             const uploadSpeed = chunk.size / totalTime / 1024 / 1024;
-            byteUploaded += chunk.size
             progress3.innerText = `Uploading... ${uploadSpeed.toFixed(2)} MB/s`;
         } else {
             progress1.style.strokeDashoffset = 100 - percentComplete;
             progress2.innerText = `${percentComplete}%`;
             progress3.innerText = `Fixing Missing Byte`;
-            byteUploaded += chunk.size
         }
     }
     if (isFailed) {
         progress3.innerText = `Upload Failed`;
     } else {
         progress3.innerText = `Done`;
-        document.getElementById('file-table')?.dispatchEvent(new Event('load'));
+        const fileTable = document.getElementById('file-table');
+        if (fileTable) {
+            if (window.htmx?.trigger) {
+                window.htmx.trigger(fileTable, 'load');
+            } else {
+                fileTable.dispatchEvent(new Event('load'));
+            }
+        }
     }
 }
 
 function ChangeModal(title, content) {
     const modalContainer = document.getElementById('modalContainer');
+    if (!modalContainer) return;
     const modalTitle = modalContainer.querySelector('#modal h2');
     const modalContent = modalContainer.querySelector('.prose');
 
-    modalTitle.textContent = title;
-    modalContent.innerHTML = content;
+    if (modalTitle) modalTitle.textContent = title;
+    if (modalContent) modalContent.textContent = content;
 }
