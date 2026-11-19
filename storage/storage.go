@@ -7,6 +7,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"io"
+	"net/url"
 	"path"
 	"path/filepath"
 	"sync"
@@ -17,16 +18,20 @@ type S3 struct {
 	Bucket string
 }
 
-func NewS3(bucket string, region string, endpoint string, accessKey string, secretKey string) *S3 {
+func NewS3(bucket string, region string, endpoint string, accessKey string, secretKey string) (*S3, error) {
+	parsedEndpoint, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: true,
+		Secure: parsedEndpoint.Scheme != "http",
 		Region: region,
 	})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return &S3{Client: minioClient, Bucket: bucket}
+	return &S3{Client: minioClient, Bucket: bucket}, nil
 }
 
 func (storage *S3) Get(ctx context.Context, key string) ([]byte, error) {
@@ -57,6 +62,9 @@ func (storage *S3) Add(ctx context.Context, key string, data []byte) error {
 }
 
 func (storage *S3) DeleteRecursive(ctx context.Context, key string) error {
+	if key == "" {
+		return fmt.Errorf("object prefix is required")
+	}
 	if key[len(key)-1] != '/' {
 		key += "/"
 	}

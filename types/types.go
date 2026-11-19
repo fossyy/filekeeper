@@ -70,6 +70,7 @@ type Database interface {
 
 	CreateAllowance(userID uuid.UUID) error
 	GetAllowance(userID uuid.UUID) (*models.Allowance, error)
+	CountUserFiles(ownerID string) (uint64, error)
 
 	CreateFile(file *models.File) error
 	GetFile(fileID string) (*models.File, error)

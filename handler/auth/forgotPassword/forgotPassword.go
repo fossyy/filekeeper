@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"net/http"
+	"net/mail"
 	"time"
 
 	"github.com/fossyy/filekeeper/types"
@@ -48,19 +49,18 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	emailForm := r.Form.Get("email")
+	parsedEmail, parseErr := mail.ParseAddress(emailForm)
+	if parseErr != nil || parsedEmail.Address != emailForm || len(emailForm) > 254 {
+		http.Error(w, "Invalid email address", http.StatusBadRequest)
+		return
+	}
 
 	user, err := app.Server.Cache.GetUser(r.Context(), emailForm)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			component := forgotPasswordView.Main("Filekeeper - Forgot Password Page", types.Message{
-				Code:    0,
-				Message: "Unexpected error has occurred",
-			})
-			err := component.Render(r.Context(), w)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				app.Server.Logger.Error(err.Error())
-				return
+		if errors.Is(err, gorm.ErrRecordNotFound) || errors.Is(err, redis.Nil) {
+			component := forgotPasswordView.EmailSend("Filekeeper - Forgot Password Page")
+			if renderErr := component.Render(r.Context(), w); renderErr != nil {
+				app.Server.Logger.Error(renderErr.Error())
 			}
 			return
 		}
@@ -68,7 +68,6 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
-
 	userData := &models.User{
 		UserID:   uuid.UUID{},
 		Username: user.Username,
@@ -123,10 +122,32 @@ func verifyForgot(user *models.User) error {
 		}
 	} else {
 		storedCode, err := app.Server.Cache.GetCache(context.Background(), "ForgotPassword:"+code)
-		err = json.Unmarshal([]byte(storedCode), &userData)
 		if err != nil {
-			return err
+			if errors.Is(err, redis.Nil) {
+				code = utils.GenerateRandomString(64)
+				userData = &ForgotPassword{User: user, Code: code}
+				newForgotUser, marshalErr := json.Marshal(userData)
+				if marshalErr != nil {
+					return marshalErr
+				}
+				if err = app.Server.Cache.SetCache(context.Background(), "ForgotPasswordCode:"+user.Email, code, time.Minute*15); err != nil {
+					return err
+				}
+				if err = app.Server.Cache.SetCache(context.Background(), "ForgotPassword:"+code, newForgotUser, time.Minute*15); err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			err = json.Unmarshal([]byte(storedCode), &userData)
+			if err != nil {
+				return err
+			}
 		}
+	}
+	if userData == nil || userData.User == nil || userData.Code != code {
+		return errors.New("invalid password reset state")
 	}
 
 	var buffer bytes.Buffer

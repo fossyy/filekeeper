@@ -42,7 +42,10 @@ func main() {
 	endpoint := utils.Getenv("S3_ENDPOINT")
 	accessKey := utils.Getenv("S3_ACCESS_KEY")
 	secretKey := utils.Getenv("S3_SECRET_KEY")
-	S3 := storage.NewS3(bucket, region, endpoint, accessKey, secretKey)
+	S3, err := storage.NewS3(bucket, region, endpoint, accessKey, secretKey)
+	if err != nil {
+		panic(fmt.Errorf("initialize S3: %w", err))
+	}
 
 	app.Server = app.NewClientServer(clientAddr, middleware.Handler(client.SetupRoutes()), *logger.Logger(), database, cacheServer, encryption.NewAesEncryption(), S3, mailServer)
 

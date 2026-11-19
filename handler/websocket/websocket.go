@@ -12,6 +12,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var upgrader = websocket.Upgrader{
@@ -51,12 +52,43 @@ func GET(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		handlerWS(upgrade, userSession)
+		return
 	}
-
+	http.Error(w, "WebSocket upgrade required", http.StatusUpgradeRequired)
 }
 
 func handlerWS(conn *websocket.Conn, userSession types.User) {
 	defer conn.Close()
+	conn.SetReadLimit(16 << 10)
+	if err := conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+	conn.SetPongHandler(func(string) error {
+		return conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	})
+	conn.SetPingHandler(func(data string) error {
+		if err := conn.SetReadDeadline(time.Now().Add(60 * time.Second)); err != nil {
+			return err
+		}
+		return conn.WriteControl(websocket.PongMessage, []byte(data), time.Now().Add(5*time.Second))
+	})
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		ticker := time.NewTicker(25 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(5*time.Second)); err != nil {
+					return
+				}
+			case <-done:
+				return
+			}
+		}
+	}()
 	var err error
 	var message []byte
 
@@ -87,6 +119,10 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 				sendErrorResponse(conn, action.Action, "Internal Server Error")
 				continue
 			}
+			if !validUploadMetadata(uploadNewFile) {
+				sendErrorResponse(conn, action.Action, "Invalid file metadata")
+				continue
+			}
 			var file *models.File
 			file, err = app.Server.Database.GetUserFile(uploadNewFile.Name, userSession.UserID.String())
 			allowedFileTypes := []string{"jpg", "jpeg", "png", "gif", "bmp", "tiff", "pdf", "doc", "docx", "txt", "odt", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "tar", "gz", "7z", "bz2", "exe", "bin", "sh", "bat", "cmd", "msi", "apk"}
@@ -106,6 +142,17 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
+					allowance, allowanceErr := app.Server.Database.GetAllowance(userSession.UserID)
+					usage, usageErr := app.Server.Cache.CalculateUserStorageUsage(context.Background(), userSession.UserID.String())
+					fileCount, countErr := app.Server.Database.CountUserFiles(userSession.UserID.String())
+					if allowanceErr != nil || usageErr != nil || countErr != nil {
+						sendErrorResponse(conn, action.Action, "Unable to check storage limits")
+						continue
+					}
+					if usage > allowance.AllowanceByte || uploadNewFile.Size > allowance.AllowanceByte-usage || fileCount >= allowance.AllowanceFile {
+						sendErrorResponse(conn, action.Action, "Storage allowance exceeded")
+						continue
+					}
 					fileID := uuid.New()
 					newFile := models.File{
 						ID:         fileID,
@@ -129,8 +176,7 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 					err = app.Server.Cache.RemoveUserFilesCache(context.Background(), userSession.UserID)
 					if err != nil {
 						app.Server.Logger.Error(err.Error())
-						sendErrorResponse(conn, action.Action, "Error Creating File")
-						return
+						app.Server.Cache.RemoveUserFilesCache(context.Background(), userSession.UserID)
 					}
 
 					userFile, err := app.Server.Cache.GetFileDetail(context.Background(), fileID)
@@ -166,6 +212,18 @@ func handlerWS(conn *websocket.Conn, userSession types.User) {
 			continue
 		}
 	}
+}
+
+func validUploadMetadata(upload ActionUploadNewFile) bool {
+	const chunkSize = uint64(2 * 1024 * 1024)
+	const maxChunks = uint64(50_000)
+	if upload.Name == "" || upload.Chunk > maxChunks || (upload.Size == 0 && upload.Chunk != 0) {
+		return false
+	}
+	if upload.Size == 0 {
+		return true
+	}
+	return upload.Chunk == (upload.Size-1)/chunkSize+1
 }
 
 func sendErrorResponse(conn *websocket.Conn, action ActionType, message string) {

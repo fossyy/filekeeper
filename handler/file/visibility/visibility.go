@@ -1,9 +1,11 @@
 package visibilityHandler
 
 import (
+	"errors"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	fileView "github.com/fossyy/filekeeper/view/client/file"
+	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -12,6 +14,10 @@ func PUT(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
 	file, err := app.Server.Database.GetFile(fileID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.NotFound(w, r)
+			return
+		}
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return

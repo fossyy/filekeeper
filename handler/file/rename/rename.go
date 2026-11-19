@@ -1,10 +1,13 @@
 package renameFileHandler
 
 import (
+	"errors"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
 	fileView "github.com/fossyy/filekeeper/view/client/file"
+	"gorm.io/gorm"
 	"net/http"
+	"strings"
 )
 
 func PATCH(w http.ResponseWriter, r *http.Request) {
@@ -14,17 +17,21 @@ func PATCH(w http.ResponseWriter, r *http.Request) {
 
 	file, err := app.Server.Database.GetFile(fileID)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.NotFound(w, r)
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
 	}
 
 	if userSession.UserID != file.OwnerID {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
-	if newName == "" {
+	if newName == "" || len(newName) > 255 || strings.ContainsAny(newName, "/\\") {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

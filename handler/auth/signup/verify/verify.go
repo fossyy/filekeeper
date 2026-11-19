@@ -1,13 +1,13 @@
 package signupVerifyHandler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/handler/auth/signup"
 	signupView "github.com/fossyy/filekeeper/view/client/auth/signup"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 	"net/http"
 
 	"github.com/fossyy/filekeeper/types"
@@ -15,7 +15,7 @@ import (
 
 func GET(w http.ResponseWriter, r *http.Request) {
 	code := r.PathValue("code")
-	userDataStr, err := app.Server.Cache.GetCache(context.Background(), "UnverifiedUser:"+code)
+	userDataStr, err := app.Server.Cache.GetCache(r.Context(), "UnverifiedUser:"+code)
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			w.WriteHeader(http.StatusNotFound)
@@ -33,9 +33,17 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	if unverifiedUser.User == nil || unverifiedUser.Code != code {
+		http.Error(w, "Invalid verification code", http.StatusNotFound)
+		return
+	}
 
 	err = app.Server.Database.CreateUser(unverifiedUser.User)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			http.Error(w, "Invalid verification code", http.StatusNotFound)
+			return
+		}
 		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
 			Code:    0,
 			Message: "Email or Username has already been registered",
@@ -48,18 +56,16 @@ func GET(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	err = app.Server.Cache.DeleteCache(context.Background(), "UnverifiedUser:"+code)
+	err = app.Server.Cache.DeleteCache(r.Context(), "UnverifiedUser:"+code)
 	if err != nil {
-		app.Server.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
-
-	err = app.Server.Cache.DeleteCache(context.Background(), "VerificationCode:"+unverifiedUser.User.Email)
+	err = app.Server.Cache.DeleteCache(r.Context(), "VerificationCode:"+unverifiedUser.User.Email)
 	if err != nil {
-		app.Server.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
 		return
 	}
 

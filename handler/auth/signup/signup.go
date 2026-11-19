@@ -12,6 +12,7 @@ import (
 	"github.com/fossyy/filekeeper/view/client/email"
 	"github.com/redis/go-redis/v9"
 	"net/http"
+	"net/mail"
 	"time"
 
 	"github.com/fossyy/filekeeper/types"
@@ -48,21 +49,21 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	userEmail := r.Form.Get("email")
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
-	isValid := utils.ValidatePassword(password)
-	if !isValid {
-		component := signupView.Main("Filekeeper - Sign up Page", types.Message{
-			Code:    0,
-			Message: "Password is invalid",
-		})
-		err := component.Render(r.Context(), w)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			app.Server.Logger.Error(err.Error())
-			return
-		}
+	if !utils.ValidatePassword(password) {
+		http.Error(w, "Password is invalid", http.StatusBadRequest)
+		return
+	}
+	parsedEmail, emailErr := mail.ParseAddress(userEmail)
+	if emailErr != nil || parsedEmail.Address != userEmail || len(username) == 0 || len(username) > 64 {
+		http.Error(w, "Invalid account details", http.StatusBadRequest)
 		return
 	}
 	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		http.Error(w, "Unable to create account", http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
 
 	newUser := models.User{
 		UserID:   uuid.New(),
@@ -115,6 +116,9 @@ func verifyEmail(user *models.User) error {
 		}
 	} else {
 		code = storedCode
+	}
+	if code == "" {
+		return errors.New("invalid verification state")
 	}
 
 	err = emailView.RegistrationEmail(user.Username, fmt.Sprintf("https://%s/auth/signup/verify/%s", utils.Getenv("DOMAIN"), code)).Render(context.Background(), &buffer)

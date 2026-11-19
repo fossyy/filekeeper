@@ -208,6 +208,12 @@ func (r *RedisServer) CalculateUserStorageUsage(ctx context.Context, ownerID str
 }
 
 func (r *RedisServer) GetFileChunks(ctx context.Context, fileID, ownerID uuid.UUID, totalChunk uint64) (*types.FileState, error) {
+	if totalChunk > 50_000 {
+		return nil, fmt.Errorf("invalid total chunk count")
+	}
+	if totalChunk == 0 {
+		return &types.FileState{Done: true, Chunk: map[string]bool{}}, nil
+	}
 	cacheKey := fmt.Sprintf(FileChunkCacheKey, fileID.String())
 	fileJSON, err := r.GetCache(ctx, cacheKey)
 	if err != nil {

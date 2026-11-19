@@ -18,6 +18,10 @@ func POST(w http.ResponseWriter, r *http.Request) {
 	userSession := r.Context().Value("user").(types.User)
 	currentPassword := r.Form.Get("currentPassword")
 	password := r.Form.Get("password")
+	if !utils.ValidatePassword(password) {
+		http.Error(w, "Password is invalid", http.StatusBadRequest)
+		return
+	}
 	user, err := app.Server.Cache.GetUser(r.Context(), userSession.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

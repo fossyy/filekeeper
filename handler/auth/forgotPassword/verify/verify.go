@@ -57,6 +57,10 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		app.Server.Logger.Error(err.Error())
 		return
 	}
+	if userData == nil || userData.User == nil || userData.Code != code {
+		http.Error(w, "Invalid reset code", http.StatusNotFound)
+		return
+	}
 
 	err = r.ParseForm()
 	if err != nil {
@@ -95,28 +99,25 @@ func POST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.Server.Cache.DeleteCache(r.Context(), "ForgotPasswordCode:"+userData.User.Email)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		app.Server.Logger.Error(err.Error())
-		return
-	}
-
 	err = app.Server.Cache.DeleteCache(r.Context(), "ForgotPassword:"+code)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
 	}
-
-	err = session.RemoveAllSessions(userData.User.Email)
+	err = app.Server.Cache.DeleteCache(r.Context(), "ForgotPasswordCode:"+userData.User.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
 		return
 	}
-
 	err = app.Server.Cache.RemoveUserCache(r.Context(), userData.User.Email)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Server.Logger.Error(err.Error())
+		return
+	}
+	err = session.RemoveAllSessions(userData.User.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.Server.Logger.Error(err.Error())
