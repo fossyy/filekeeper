@@ -5,13 +5,14 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/fossyy/filekeeper/app"
 	"github.com/fossyy/filekeeper/types"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -29,29 +30,10 @@ func init() {
 }
 
 func ClientIP(request *http.Request) string {
-	ip := request.Header.Get("Cf-Connecting-IP")
-	if ip != "" {
+	if ip, _, err := net.SplitHostPort(request.RemoteAddr); err == nil {
 		return ip
 	}
-	ip = request.Header.Get("X-Real-IP")
-	if ip == "" {
-		ip = request.Header.Get("X-Forwarded-For")
-		if ip == "" {
-			ip = request.RemoteAddr
-		}
-	}
-
-	if strings.Contains(ip, ",") {
-		ips := strings.Split(ip, ",")
-		ip = strings.TrimSpace(ips[0])
-	}
-
-	if strings.Contains(ip, ":") {
-		ips := strings.Split(ip, ":")
-		ip = ips[0]
-	}
-
-	return ip
+	return strings.Trim(request.RemoteAddr, "[]")
 }
 
 func HashPassword(password string) (string, error) {
@@ -65,7 +47,7 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 func ValidatePassword(password string) bool {
-	if len(password) < 8 {
+	if len(password) < 8 || len(password) > 72 || !utf8.ValidString(password) {
 		return false
 	}
 
@@ -80,6 +62,8 @@ func ValidatePassword(password string) bool {
 			hasNumber = true
 		case unicode.IsUpper(char):
 			hasUppercase = true
+		case !unicode.IsSpace(char) && !unicode.IsLetter(char) && !unicode.IsNumber(char):
+			continue
 		}
 	}
 
@@ -108,10 +92,7 @@ func Getenv(key string) string {
 	}
 
 	if os.Getenv("HOSTNAME") == "" {
-		err := godotenv.Load(".env")
-		if err != nil {
-			app.Server.Logger.Error("Error loading .env file:", err)
-		}
+		_ = godotenv.Load(".env")
 	}
 
 	val := os.Getenv(key)
